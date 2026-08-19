@@ -89,7 +89,7 @@ Nginx 对外提供 HTTPS，并反向代理到 `http://127.0.0.1:8080`。`APP_BAS
 复制 `.env.example` 为 `.env`，设置公网 HTTPS 地址；Client ID 可以稍后在管理台“设置”中保存。生产部署直接拉取公开 GHCR 固定版本镜像，不需要在宝塔服务器构建源码：
 
 ```bash
-docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.2
+docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.3
 docker compose up -d --no-build app
 docker compose ps
 curl --fail http://127.0.0.1:8080/healthz
@@ -158,7 +158,7 @@ docker compose up -d app
 curl -fsSL https://github.com/wyk335858575/outlook-mail-manager/releases/latest/download/update.sh | bash
 ```
 
-脚本只在本次升级期间运行，自动识别 amd64/arm64，下载临时 Cosign 和 updater，验证当前 Release 标签对应的 GitHub Actions OIDC 身份、签名 manifest、文件哈希和固定镜像 digest。它会先创建 SQLite 一致性备份，升级后轮询 `/healthz`；失败时恢复旧 `.env`、旧镜像和升级前数据库。完整流程见 [单次升级与回滚](docs/online-update.md)。
+脚本只在本次升级期间运行，自动识别 amd64/arm64，下载临时 Cosign 和 updater，验证当前 Release 标签对应的 GitHub Actions OIDC 身份、签名 manifest、文件哈希和固定镜像 digest。它会停止旧应用，再由已验证的新镜像创建并逐表核对 SQLite 一致性备份；升级后轮询 `/healthz`，失败时先用可信镜像恢复数据库，再切回旧镜像。完整流程和异常恢复见 [单次升级与回滚](docs/online-update.md)。
 
 ## 版本规则
 
@@ -197,3 +197,4 @@ npm --prefix web run build
 - 开发、测试和提交规范：[CONTRIBUTING.md](CONTRIBUTING.md)
 - 版本记录：[CHANGELOG.md](CHANGELOG.md)
 - 许可证：GNU Affero General Public License v3.0，见 [LICENSE](LICENSE)
+

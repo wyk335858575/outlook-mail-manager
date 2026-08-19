@@ -108,7 +108,7 @@ func TestRunOnceCompletesUsingTemporaryCosignBinary(t *testing.T) {
 	runner := func(_ context.Context, name string, args ...string) ([]byte, error) {
 		joined := name + " " + strings.Join(args, " ")
 		commands = append(commands, joined)
-		if strings.Contains(joined, "exec -T app /usr/local/bin/outlook-mail-manager backup") {
+		if strings.Contains(joined, "run --rm --no-deps app backup-for-update") {
 			return []byte("backup created: outlook-manager-20260819T000000Z.db (10 bytes)"), nil
 		}
 		return []byte("ok"), nil
@@ -127,6 +127,14 @@ func TestRunOnceCompletesUsingTemporaryCosignBinary(t *testing.T) {
 	}
 	if len(commands) < 2 || !strings.HasPrefix(commands[0], "/tmp/cosign verify-blob ") {
 		t.Fatalf("commands = %v", commands)
+	}
+	joinedCommands := strings.Join(commands, "\n")
+	pullAt := strings.Index(joinedCommands, "docker pull ghcr.io/owner/repo@sha256:")
+	stopAt := strings.Index(joinedCommands, " stop app")
+	backupAt := strings.Index(joinedCommands, "run --rm --no-deps app backup-for-update")
+	startAt := strings.Index(joinedCommands, "up -d --no-build --force-recreate app")
+	if pullAt < 0 || stopAt < pullAt || backupAt < stopAt || startAt < backupAt {
+		t.Fatalf("unsafe update command order: %v", commands)
 	}
 	data, err := os.ReadFile(filepath.Join(deployDir, ".env"))
 	if err != nil {
@@ -373,6 +381,7 @@ func TestRestartFailureRunsRollbackAndDoesNotReportSuccess(t *testing.T) {
 	var firstUp atomic.Bool
 	var stopSeen atomic.Bool
 	var forceRecreateCount atomic.Int32
+	var restoreSawNewConfig atomic.Bool
 	runner := func(_ context.Context, name string, args ...string) ([]byte, error) {
 		joined := name + " " + strings.Join(args, " ")
 		if strings.Contains(joined, " stop app") {
@@ -382,8 +391,12 @@ func TestRestartFailureRunsRollbackAndDoesNotReportSuccess(t *testing.T) {
 			forceRecreateCount.Add(1)
 		}
 		switch {
-		case strings.Contains(joined, "exec -T app /usr/local/bin/outlook-mail-manager backup"):
+		case strings.Contains(joined, "run --rm --no-deps app backup-for-update"):
 			return []byte("backup created: outlook-manager-20260819T000000Z.db (10 bytes)"), nil
+		case strings.Contains(joined, "run --rm --no-deps app restore"):
+			data, _ := os.ReadFile(filepath.Join(deployDir, ".env"))
+			restoreSawNewConfig.Store(strings.Contains(string(data), "APP_VERSION=1.0.0"))
+			return []byte("restore completed"), nil
 		case strings.Contains(joined, "compose") && strings.Contains(joined, " up -d --no-build --force-recreate app") && !firstUp.Swap(true):
 			return nil, context.DeadlineExceeded
 		case strings.Contains(joined, " logs --no-color --tail 80 app"):
@@ -418,11 +431,62 @@ func TestRestartFailureRunsRollbackAndDoesNotReportSuccess(t *testing.T) {
 	if !stopSeen.Load() || forceRecreateCount.Load() != 2 {
 		t.Fatalf("stop seen = %v, force recreate count = %d", stopSeen.Load(), forceRecreateCount.Load())
 	}
+	if !restoreSawNewConfig.Load() {
+		t.Fatal("rollback restore did not run with the verified new image configuration")
+	}
 	data, err := os.ReadFile(filepath.Join(deployDir, ".env"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if string(data) != "APP_VERSION=0.11.0\nAPP_IMAGE=old\n" {
+		t.Fatalf("environment was not restored: %q", data)
+	}
+}
+
+func TestBackupFailureRestartsPreviousDeploymentWithoutRestoringDatabase(t *testing.T) {
+	releaseServer := signedReleaseServer(t, "v1.0.1", "owner/repo", "ghcr.io/owner/repo")
+	defer releaseServer.Close()
+	health := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) }))
+	defer health.Close()
+	deployDir := t.TempDir()
+	previous := "APP_VERSION=1.0.0\nAPP_IMAGE=ghcr.io/owner/repo:1.0.0\n"
+	if err := os.WriteFile(filepath.Join(deployDir, ".env"), []byte(previous), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var restoreCalled atomic.Bool
+	var restartCalled atomic.Bool
+	runner := func(_ context.Context, name string, args ...string) ([]byte, error) {
+		joined := name + " " + strings.Join(args, " ")
+		switch {
+		case strings.Contains(joined, "run --rm --no-deps app backup-for-update"):
+			return nil, errors.New("missing app_settings row")
+		case strings.Contains(joined, " app restore "):
+			restoreCalled.Store(true)
+		case strings.Contains(joined, "up -d --no-build --force-recreate app"):
+			restartCalled.Store(true)
+		}
+		return []byte("ok"), nil
+	}
+	service, err := New(Config{
+		Repository: "owner/repo", Image: "ghcr.io/owner/repo", DeployDir: deployDir, StateDir: t.TempDir(),
+		GitHubAPIBaseURL: releaseServer.URL, HTTPClient: releaseServer.Client(), HealthURL: health.URL,
+		CosignBinary: "/tmp/cosign", RunCommand: runner,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	job, err := service.RunOnce(context.Background(), nil)
+	if err == nil || job.State != "failed" || !strings.Contains(job.Error, "create update backup") {
+		t.Fatalf("RunOnce() job = %+v, error = %v", job, err)
+	}
+	if restoreCalled.Load() || !restartCalled.Load() {
+		t.Fatalf("restore called = %v, restart called = %v", restoreCalled.Load(), restartCalled.Load())
+	}
+	data, err := os.ReadFile(filepath.Join(deployDir, ".env"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != previous {
 		t.Fatalf("environment was not restored: %q", data)
 	}
 }
@@ -445,3 +509,4 @@ func signedReleaseServer(t *testing.T, tag, repository, image string) *httptest.
 	}))
 	return server
 }
+

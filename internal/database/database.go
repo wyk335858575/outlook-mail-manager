@@ -64,8 +64,30 @@ func Open(ctx context.Context, dataDir string) (*Store, error) {
 		db.Close()
 		return nil, err
 	}
+	if err := store.validateInvariants(ctx); err != nil {
+		db.Close()
+		return nil, err
+	}
 
 	return store, nil
+}
+
+func (s *Store) validateInvariants(ctx context.Context) error {
+	var settings int
+	if err := s.DB.QueryRowContext(ctx, `SELECT COUNT(*) FROM app_settings WHERE id = 1`).Scan(&settings); err != nil {
+		return fmt.Errorf("validate database settings: %w", err)
+	}
+	if settings != 1 {
+		return fmt.Errorf("database invariant failed: expected one app_settings row, found %d; restore a known-good backup", settings)
+	}
+	var admins int
+	if err := s.DB.QueryRowContext(ctx, `SELECT COUNT(*) FROM admins`).Scan(&admins); err != nil {
+		return fmt.Errorf("validate database administrators: %w", err)
+	}
+	if admins > 1 {
+		return fmt.Errorf("database invariant failed: expected at most one administrator, found %d", admins)
+	}
+	return nil
 }
 
 func (s *Store) Close() error {
@@ -189,3 +211,4 @@ func migrationVersion(name string) (int, error) {
 	}
 	return version, nil
 }
+

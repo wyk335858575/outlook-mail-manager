@@ -151,3 +151,139 @@ func TestRestoreReplacesStaleTemporaryFile(t *testing.T) {
 		t.Fatalf("restored database: %v", err)
 	}
 }
+
+func TestCreateUpdateBackupPreservesAllApplicationRows(t *testing.T) {
+	ctx := context.Background()
+	dataDir := t.TempDir()
+	store, err := database.Open(ctx, dataDir)
+	if err != nil {
+		t.Fatalf("open database: %v", err)
+	}
+	if _, err := store.DB.ExecContext(ctx, `
+		INSERT INTO accounts (public_id, imported_email, created_at_utc, updated_at_utc)
+		VALUES ('acc_backup', 'backup@example.com', '2026-08-19T00:00:00Z', '2026-08-19T00:00:00Z')
+	`); err != nil {
+		t.Fatalf("insert account: %v", err)
+	}
+	if err := store.Close(); err != nil {
+		t.Fatalf("close database: %v", err)
+	}
+	backup, err := CreateUpdateBackup(ctx, dataDir)
+	if err != nil {
+		t.Fatalf("CreateUpdateBackup() error = %v", err)
+	}
+	backupDB, err := sql.Open("sqlite", "file:"+filepath.ToSlash(filepath.Join(dataDir, "backups", backup.Name))+"?mode=ro")
+	if err != nil {
+		t.Fatalf("open backup: %v", err)
+	}
+	defer backupDB.Close()
+	var accounts, settings int
+	if err := backupDB.QueryRow(`SELECT COUNT(*) FROM accounts`).Scan(&accounts); err != nil {
+		t.Fatalf("count backup accounts: %v", err)
+	}
+	if err := backupDB.QueryRow(`SELECT COUNT(*) FROM app_settings WHERE id = 1`).Scan(&settings); err != nil {
+		t.Fatalf("count backup settings: %v", err)
+	}
+	if accounts != 1 || settings != 1 {
+		t.Fatalf("backup rows = accounts:%d settings:%d", accounts, settings)
+	}
+}
+
+func TestCreateUpdateBackupRejectsMissingSettings(t *testing.T) {
+	ctx := context.Background()
+	dataDir := t.TempDir()
+	store, err := database.Open(ctx, dataDir)
+	if err != nil {
+		t.Fatalf("open database: %v", err)
+	}
+	if _, err := store.DB.ExecContext(ctx, `DELETE FROM app_settings`); err != nil {
+		t.Fatalf("delete settings: %v", err)
+	}
+	if err := store.Close(); err != nil {
+		t.Fatalf("close database: %v", err)
+	}
+	if _, err := CreateUpdateBackup(ctx, dataDir); err == nil || !strings.Contains(err.Error(), "expected one application settings row") {
+		t.Fatalf("CreateUpdateBackup() error = %v", err)
+	}
+	entries, err := os.ReadDir(filepath.Join(dataDir, "backups"))
+	if err != nil {
+		t.Fatalf("read backup directory: %v", err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("invalid update backup was retained: %v", entries)
+	}
+}
+
+func TestRestorePreservesPreviousDatabaseAsReadableSafetyCopy(t *testing.T) {
+	ctx := context.Background()
+	targetDir := t.TempDir()
+	target, err := database.Open(ctx, targetDir)
+	if err != nil {
+		t.Fatalf("open target: %v", err)
+	}
+	if _, err := target.DB.ExecContext(ctx, `UPDATE app_metadata SET value = 'previous' WHERE key = 'installation_state'`); err != nil {
+		t.Fatalf("update target: %v", err)
+	}
+	if err := target.Close(); err != nil {
+		t.Fatalf("close target: %v", err)
+	}
+	sourceDir := t.TempDir()
+	source, err := database.Open(ctx, sourceDir)
+	if err != nil {
+		t.Fatalf("open source: %v", err)
+	}
+	if err := source.Close(); err != nil {
+		t.Fatalf("close source: %v", err)
+	}
+	safety, err := Restore(targetDir, source.DatabasePath)
+	if err != nil {
+		t.Fatalf("Restore() error = %v", err)
+	}
+	if safety == "" {
+		t.Fatal("Restore() did not preserve the previous database")
+	}
+	safetyDB, err := sql.Open("sqlite", "file:"+filepath.ToSlash(safety)+"?mode=ro")
+	if err != nil {
+		t.Fatalf("open safety database: %v", err)
+	}
+	defer safetyDB.Close()
+	var value string
+	if err := safetyDB.QueryRow(`SELECT value FROM app_metadata WHERE key = 'installation_state'`).Scan(&value); err != nil {
+		t.Fatalf("read safety database: %v", err)
+	}
+	if value != "previous" {
+		t.Fatalf("safety database value = %q", value)
+	}
+}
+
+func TestRestoreRejectsStructurallyValidDatabaseMissingSettings(t *testing.T) {
+	ctx := context.Background()
+	sourceDir := t.TempDir()
+	source, err := database.Open(ctx, sourceDir)
+	if err != nil {
+		t.Fatalf("open source: %v", err)
+	}
+	if _, err := source.DB.ExecContext(ctx, `DELETE FROM app_settings`); err != nil {
+		t.Fatalf("delete source settings: %v", err)
+	}
+	if err := source.Close(); err != nil {
+		t.Fatalf("close source: %v", err)
+	}
+	targetDir := t.TempDir()
+	target, err := database.Open(ctx, targetDir)
+	if err != nil {
+		t.Fatalf("open target: %v", err)
+	}
+	if err := target.Close(); err != nil {
+		t.Fatalf("close target: %v", err)
+	}
+	if _, err := Restore(targetDir, source.DatabasePath); err == nil || !strings.Contains(err.Error(), "application data validation") {
+		t.Fatalf("Restore() error = %v", err)
+	}
+	valid, err := database.Open(ctx, targetDir)
+	if err != nil {
+		t.Fatalf("target was changed by rejected restore: %v", err)
+	}
+	valid.Close()
+}
+

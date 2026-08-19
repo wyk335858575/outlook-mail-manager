@@ -46,6 +46,11 @@ func run(args []string) error {
 				return errors.New("usage: outlook-mail-manager backup")
 			}
 			return createBackup(cfg.DataDir)
+		case "backup-for-update":
+			if len(args) != 1 {
+				return errors.New("usage: outlook-mail-manager backup-for-update")
+			}
+			return createUpdateBackup(cfg.DataDir)
 		case "restore":
 			if len(args) != 2 {
 				return errors.New("usage: outlook-mail-manager restore <backup.db>")
@@ -172,3 +177,15 @@ func createBackup(dataDir string) error {
 	fmt.Printf("backup created: %s (%d bytes, sha256 %s)\n", backup.Name, backup.SizeBytes, backup.SHA256)
 	return nil
 }
+
+func createUpdateBackup(dataDir string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	backup, err := maintenance.CreateUpdateBackup(ctx, dataDir)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("backup created: %s (%d bytes, sha256 %s)\n", backup.Name, backup.SizeBytes, backup.SHA256)
+	return nil
+}
+

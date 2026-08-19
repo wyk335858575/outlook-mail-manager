@@ -280,12 +280,6 @@ func (s *Service) runJob(parent context.Context, job Job, lock *processLock, pro
 		return job
 	}
 	job.Version = manifest.Version
-	set("backing_up", "正在创建升级前一致性备份")
-	backupName, err := s.createBackup(ctx)
-	if err != nil {
-		fail(err)
-		return job
-	}
 	set("verifying", "正在验证固定镜像摘要和发布身份")
 	imageRef := manifest.Image + "@" + manifest.Digest
 	if _, err := s.config.RunCommand(ctx, s.config.CosignBinary, "verify", imageRef,
@@ -299,15 +293,36 @@ func (s *Service) runJob(parent context.Context, job Job, lock *processLock, pro
 		fail(fmt.Errorf("pull image: %w", err))
 		return job
 	}
-	set("restarting", "正在切换版本并重启应用")
 	if err := updateEnvFile(envPath, previousEnv, imageRef, manifest.Version); err != nil {
 		fail(err)
 		return job
 	}
-	_, err = s.compose(ctx, "stop", s.config.ComposeService)
-	if err == nil {
-		_, err = s.compose(ctx, "up", "-d", "--no-build", "--force-recreate", s.config.ComposeService)
+	set("backing_up", "正在停止应用并由已验证的新镜像创建一致性备份")
+	if _, err = s.compose(ctx, "stop", s.config.ComposeService); err != nil {
+		recoveryCtx, cancelRecovery := context.WithTimeout(context.Background(), 3*time.Minute)
+		recoveryErr := s.restorePreviousDeployment(recoveryCtx, envPath, previousEnv)
+		cancelRecovery()
+		if recoveryErr != nil {
+			fail(fmt.Errorf("stop application before update backup: %v; restore previous deployment: %w", err, recoveryErr))
+		} else {
+			fail(fmt.Errorf("stop application before update backup: %w", err))
+		}
+		return job
 	}
+	backupName, err := s.createBackup(ctx)
+	if err != nil {
+		recoveryCtx, cancelRecovery := context.WithTimeout(context.Background(), 3*time.Minute)
+		recoveryErr := s.restorePreviousDeployment(recoveryCtx, envPath, previousEnv)
+		cancelRecovery()
+		if recoveryErr != nil {
+			fail(fmt.Errorf("%v; restore previous deployment: %w", err, recoveryErr))
+		} else {
+			fail(err)
+		}
+		return job
+	}
+	set("restarting", "正在启动新版本并执行健康检查")
+	_, err = s.compose(ctx, "up", "-d", "--no-build", "--force-recreate", s.config.ComposeService)
 	if err == nil {
 		err = s.waitForHealth(ctx, 90*time.Second)
 	}
@@ -440,7 +455,7 @@ func (s *Service) getJSON(ctx context.Context, rawURL string, target any) error 
 }
 
 func (s *Service) createBackup(ctx context.Context) (string, error) {
-	output, err := s.compose(ctx, "exec", "-T", s.config.ComposeService, "/usr/local/bin/outlook-mail-manager", "backup")
+	output, err := s.compose(ctx, "run", "--rm", "--no-deps", s.config.ComposeService, "backup-for-update")
 	if err != nil {
 		return "", fmt.Errorf("create update backup: %w", err)
 	}
@@ -452,15 +467,25 @@ func (s *Service) createBackup(ctx context.Context) (string, error) {
 }
 
 func (s *Service) rollback(ctx context.Context, envPath string, previousEnv []byte, backupName string) error {
-	if err := atomicWrite(envPath, previousEnv, 0o600); err != nil {
-		return err
-	}
 	_, _ = s.compose(ctx, "stop", s.config.ComposeService)
-	if _, err := s.compose(ctx, "run", "--rm", s.config.ComposeService, "restore", "/data/backups/"+backupName); err != nil {
-		return err
+	if _, err := s.compose(ctx, "run", "--rm", "--no-deps", s.config.ComposeService, "restore", "/data/backups/"+backupName); err != nil {
+		return fmt.Errorf("restore update backup with verified image: %w", err)
+	}
+	if err := atomicWrite(envPath, previousEnv, 0o600); err != nil {
+		return fmt.Errorf("restore previous deployment configuration: %w", err)
 	}
 	if _, err := s.compose(ctx, "up", "-d", "--no-build", "--force-recreate", s.config.ComposeService); err != nil {
-		return err
+		return fmt.Errorf("restart previous application image: %w", err)
+	}
+	return s.waitForHealth(ctx, 90*time.Second)
+}
+
+func (s *Service) restorePreviousDeployment(ctx context.Context, envPath string, previousEnv []byte) error {
+	if err := atomicWrite(envPath, previousEnv, 0o600); err != nil {
+		return fmt.Errorf("restore previous deployment configuration: %w", err)
+	}
+	if _, err := s.compose(ctx, "up", "-d", "--no-build", "--force-recreate", s.config.ComposeService); err != nil {
+		return fmt.Errorf("restart previous application image: %w", err)
 	}
 	return s.waitForHealth(ctx, 90*time.Second)
 }
@@ -682,3 +707,4 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(value)
 }
+

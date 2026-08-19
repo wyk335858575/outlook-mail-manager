@@ -91,6 +91,44 @@ func New(db *sql.DB, dataDir string, options Options) (*Service, error) {
 }
 
 func (s *Service) CreateBackup(ctx context.Context) (Backup, error) {
+	return s.createBackup(ctx, false)
+}
+
+// CreateUpdateBackup creates a verified backup while the application container
+// is stopped. It deliberately opens SQLite without running application migrations.
+func CreateUpdateBackup(ctx context.Context, dataDir string) (Backup, error) {
+	absolute, err := filepath.Abs(strings.TrimSpace(dataDir))
+	if err != nil || strings.TrimSpace(dataDir) == "" {
+		return Backup{}, errors.New("resolve update backup data directory")
+	}
+	databasePath := filepath.Join(absolute, "outlook-manager.db")
+	if info, err := os.Stat(databasePath); err != nil || !info.Mode().IsRegular() {
+		return Backup{}, errors.New("update backup source is not a database file")
+	}
+	db, err := sql.Open("sqlite", "file:"+filepath.ToSlash(databasePath)+"?_pragma=busy_timeout(5000)&_pragma=foreign_keys(1)")
+	if err != nil {
+		return Backup{}, fmt.Errorf("open update backup database: %w", err)
+	}
+	db.SetMaxOpenConns(1)
+	defer db.Close()
+	if err := db.PingContext(ctx); err != nil {
+		return Backup{}, fmt.Errorf("ping update backup database: %w", err)
+	}
+	var busy, logFrames, checkpointedFrames int
+	if err := db.QueryRowContext(ctx, `PRAGMA wal_checkpoint(TRUNCATE)`).Scan(&busy, &logFrames, &checkpointedFrames); err != nil {
+		return Backup{}, fmt.Errorf("checkpoint database before update backup: %w", err)
+	}
+	if busy != 0 || checkpointedFrames != logFrames {
+		return Backup{}, fmt.Errorf("checkpoint database before update backup: busy=%d frames=%d checkpointed=%d", busy, logFrames, checkpointedFrames)
+	}
+	service, err := New(db, absolute, Options{})
+	if err != nil {
+		return Backup{}, err
+	}
+	return service.createBackup(ctx, true)
+}
+
+func (s *Service) createBackup(ctx context.Context, strict bool) (Backup, error) {
 	backupDir := filepath.Join(s.dataDir, "backups")
 	if err := os.MkdirAll(backupDir, 0o700); err != nil {
 		return Backup{}, fmt.Errorf("create backup directory: %w", err)
@@ -108,8 +146,23 @@ func (s *Service) CreateBackup(ctx context.Context) (Backup, error) {
 	if _, err := s.db.ExecContext(ctx, "VACUUM INTO '"+escapeSQLiteLiteral(filepath.ToSlash(path))+"'"); err != nil {
 		return Backup{}, fmt.Errorf("create SQLite backup: %w", err)
 	}
+	if strict {
+		if err := validateApplicationDatabase(ctx, s.db); err != nil {
+			_ = os.Remove(path)
+			return Backup{}, fmt.Errorf("validate update backup source: %w", err)
+		}
+		if err := verifySQLiteIntegrity(path); err != nil {
+			_ = os.Remove(path)
+			return Backup{}, err
+		}
+		if err := compareDatabaseCounts(ctx, s.db, path); err != nil {
+			_ = os.Remove(path)
+			return Backup{}, fmt.Errorf("validate update backup contents: %w", err)
+		}
+	}
 	backup, err := inspectBackup(path)
 	if err != nil {
+		_ = os.Remove(path)
 		return Backup{}, err
 	}
 	_ = s.recordAudit(ctx, "backup.created", name, map[string]any{"sha256": backup.SHA256, "size_bytes": backup.SizeBytes})
@@ -206,7 +259,10 @@ func Restore(dataDir, sourcePath string) (string, error) {
 	if info, err := os.Stat(sourcePath); err != nil || info.IsDir() {
 		return "", errors.New("restore source is not a database file")
 	}
-	if err := verifySQLite(sourcePath); err != nil {
+	if err := verifySQLiteIntegrity(sourcePath); err != nil {
+		return "", err
+	}
+	if err := validateSQLiteApplicationDatabase(sourcePath); err != nil {
 		return "", err
 	}
 	if err := os.MkdirAll(dataDir, 0o700); err != nil {
@@ -224,28 +280,50 @@ func Restore(dataDir, sourcePath string) (string, error) {
 		_ = os.Remove(temporary)
 		return "", err
 	}
-	safety := ""
 	if _, err := os.Stat(target); err == nil {
-		safety = target + ".before-restore-" + time.Now().UTC().Format("20060102T150405Z")
+		if err := checkpointSQLite(target); err != nil {
+			_ = os.Remove(temporary)
+			return "", fmt.Errorf("checkpoint current database before restore: %w", err)
+		}
+	}
+	safety := ""
+	stamp := time.Now().UTC().Format("20060102T150405Z")
+	archived := make([][2]string, 0, 3)
+	if _, err := os.Stat(target); err == nil {
+		safety = target + ".before-restore-" + stamp
 		if err := os.Rename(target, safety); err != nil {
 			_ = os.Remove(temporary)
 			return "", fmt.Errorf("preserve current database: %w", err)
 		}
+		archived = append(archived, [2]string{safety, target})
+		for _, suffix := range []string{"-wal", "-shm"} {
+			currentSidecar, safetySidecar := target+suffix, safety+suffix
+			if _, err := os.Stat(currentSidecar); err == nil {
+				if err := os.Rename(currentSidecar, safetySidecar); err != nil {
+					restoreArchivedFiles(archived)
+					_ = os.Remove(temporary)
+					return "", fmt.Errorf("preserve current database sidecar: %w", err)
+				}
+				archived = append(archived, [2]string{safetySidecar, currentSidecar})
+			}
+		}
 	}
 	if err := os.Rename(temporary, target); err != nil {
-		if safety != "" {
-			_ = os.Rename(safety, target)
-		}
+		restoreArchivedFiles(archived)
 		return "", fmt.Errorf("activate restored database: %w", err)
 	}
-	for _, suffix := range []string{"-wal", "-shm"} {
-		path := target + suffix
-		if _, err := os.Stat(path); err == nil {
-			archived := path + ".before-restore-" + time.Now().UTC().Format("20060102T150405Z")
-			_ = os.Rename(path, archived)
-		}
+	if err := verifySQLiteIntegrity(target); err != nil {
+		_ = os.Remove(target)
+		restoreArchivedFiles(archived)
+		return "", fmt.Errorf("verify activated restore database: %w", err)
 	}
 	return safety, nil
+}
+
+func restoreArchivedFiles(archived [][2]string) {
+	for index := len(archived) - 1; index >= 0; index-- {
+		_ = os.Rename(archived[index][0], archived[index][1])
+	}
 }
 
 func inspectBackup(path string) (Backup, error) {
@@ -269,6 +347,14 @@ func inspectBackup(path string) (Backup, error) {
 }
 
 func verifySQLite(path string) error {
+	return verifySQLitePragma(path, "quick_check")
+}
+
+func verifySQLiteIntegrity(path string) error {
+	return verifySQLitePragma(path, "integrity_check")
+}
+
+func verifySQLitePragma(path, pragma string) error {
 	dsn := "file:" + filepath.ToSlash(path) + "?mode=ro"
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
@@ -276,8 +362,103 @@ func verifySQLite(path string) error {
 	}
 	defer db.Close()
 	var result string
-	if err := db.QueryRow(`PRAGMA quick_check`).Scan(&result); err != nil || result != "ok" {
+	if err := db.QueryRow("PRAGMA " + pragma).Scan(&result); err != nil || result != "ok" {
 		return errors.New("restore database failed integrity check")
+	}
+	return nil
+}
+
+func checkpointSQLite(path string) error {
+	db, err := sql.Open("sqlite", "file:"+filepath.ToSlash(path)+"?_pragma=busy_timeout(5000)")
+	if err != nil {
+		return err
+	}
+	db.SetMaxOpenConns(1)
+	defer db.Close()
+	var busy, logFrames, checkpointedFrames int
+	if err := db.QueryRow(`PRAGMA wal_checkpoint(TRUNCATE)`).Scan(&busy, &logFrames, &checkpointedFrames); err != nil {
+		return err
+	}
+	if busy != 0 || checkpointedFrames != logFrames {
+		return fmt.Errorf("database is busy: busy=%d frames=%d checkpointed=%d", busy, logFrames, checkpointedFrames)
+	}
+	return nil
+}
+
+func validateApplicationDatabase(ctx context.Context, db *sql.DB) error {
+	var version int
+	if err := db.QueryRowContext(ctx, `SELECT COALESCE(MAX(version), 0) FROM schema_migrations`).Scan(&version); err != nil {
+		return fmt.Errorf("read schema version: %w", err)
+	}
+	if version >= 6 {
+		var settings int
+		if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM app_settings WHERE id = 1`).Scan(&settings); err != nil {
+			return fmt.Errorf("read application settings: %w", err)
+		}
+		if settings != 1 {
+			return fmt.Errorf("expected one application settings row, found %d", settings)
+		}
+	}
+	var admins int
+	if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM admins`).Scan(&admins); err != nil {
+		return fmt.Errorf("read administrators: %w", err)
+	}
+	if admins > 1 {
+		return fmt.Errorf("expected at most one administrator, found %d", admins)
+	}
+	return nil
+}
+
+func validateSQLiteApplicationDatabase(path string) error {
+	db, err := sql.Open("sqlite", "file:"+filepath.ToSlash(path)+"?mode=ro")
+	if err != nil {
+		return fmt.Errorf("open application database for validation: %w", err)
+	}
+	defer db.Close()
+	if err := validateApplicationDatabase(context.Background(), db); err != nil {
+		return fmt.Errorf("restore database failed application data validation: %w", err)
+	}
+	return nil
+}
+
+func compareDatabaseCounts(ctx context.Context, source *sql.DB, backupPath string) error {
+	backup, err := sql.Open("sqlite", "file:"+filepath.ToSlash(backupPath)+"?mode=ro")
+	if err != nil {
+		return err
+	}
+	defer backup.Close()
+	rows, err := source.QueryContext(ctx, `SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name`)
+	if err != nil {
+		return err
+	}
+	tables := make([]string, 0)
+	for rows.Next() {
+		var table string
+		if err := rows.Scan(&table); err != nil {
+			rows.Close()
+			return err
+		}
+		tables = append(tables, table)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return err
+	}
+	if err := rows.Close(); err != nil {
+		return err
+	}
+	for _, table := range tables {
+		quoted := `"` + strings.ReplaceAll(table, `"`, `""`) + `"`
+		var sourceCount, backupCount int64
+		if err := source.QueryRowContext(ctx, `SELECT COUNT(*) FROM `+quoted).Scan(&sourceCount); err != nil {
+			return fmt.Errorf("count source table %s: %w", table, err)
+		}
+		if err := backup.QueryRowContext(ctx, `SELECT COUNT(*) FROM `+quoted).Scan(&backupCount); err != nil {
+			return fmt.Errorf("count backup table %s: %w", table, err)
+		}
+		if sourceCount != backupCount {
+			return fmt.Errorf("table %s row count changed from %d to %d", table, sourceCount, backupCount)
+		}
 	}
 	return nil
 }
@@ -326,3 +507,4 @@ func randomID(source io.Reader) (string, error) {
 }
 
 func escapeSQLiteLiteral(value string) string { return strings.ReplaceAll(value, "'", "''") }
+

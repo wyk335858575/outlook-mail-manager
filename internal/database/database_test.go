@@ -86,6 +86,24 @@ func TestOpenAppliesMigrationsIdempotently(t *testing.T) {
 	}
 }
 
+func TestOpenRejectsDatabaseMissingSingletonSettings(t *testing.T) {
+	ctx := context.Background()
+	dataDir := t.TempDir()
+	store, err := Open(ctx, dataDir)
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	if _, err := store.DB.ExecContext(ctx, `DELETE FROM app_settings`); err != nil {
+		t.Fatalf("delete settings: %v", err)
+	}
+	if err := store.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+	if _, err := Open(ctx, dataDir); err == nil || !strings.Contains(err.Error(), "database invariant failed") {
+		t.Fatalf("Open() error = %v, want database invariant failure", err)
+	}
+}
+
 func TestMailSearchMigrationKeepsFTSInSync(t *testing.T) {
 	store, err := Open(context.Background(), t.TempDir())
 	if err != nil {
@@ -266,3 +284,4 @@ func TestSQLitePathSupportsWindowsDriveLetters(t *testing.T) {
 		t.Fatalf("database path = %q, want Unicode directory", databasePath)
 	}
 }
+
