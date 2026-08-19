@@ -1,0 +1,186 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Prepared release tag
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: release-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Require execution from the prepared tag
+        env:
+          EXPECTED_TAG: ${{ inputs.tag }}
+        run: |
+          test "$GITHUB_REF_TYPE" = "tag"
+          test "$GITHUB_REF_NAME" = "$EXPECTED_TAG"
+          printf '%s' "$EXPECTED_TAG" | grep -Eq '^v1\.0\.(0|[1-9][0-9]*)$'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: "1.26.6"
+          cache: true
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Validate sequential release version
+        run: node scripts/version.mjs release-check
+      - name: Test and build frontend
+        working-directory: web
+        run: |
+          npm ci
+          npm test
+          npm run typecheck
+          npm run build
+      - name: Test and vet backend
+        run: |
+          go test -race ./...
+          go vet ./...
+
+  updater:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        include:
+          - goarch: amd64
+            suffix: linux-amd64
+          - goarch: arm64
+            suffix: linux-arm64
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: "1.26.6"
+          cache: true
+      - name: Build updater
+        env:
+          CGO_ENABLED: "0"
+          GOOS: linux
+          GOARCH: ${{ matrix.goarch }}
+        run: go build -trimpath -ldflags="-s -w" -o "outlook-mail-manager-updater-${{ matrix.suffix }}" ./cmd/updater
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: updater-${{ matrix.suffix }}
+          path: outlook-mail-manager-updater-${{ matrix.suffix }}
+
+  image:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+      image: ${{ steps.image.outputs.name }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - id: version
+        run: echo "value=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+      - id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        with:
+          images: ${{ steps.image.outputs.name }}
+          tags: type=raw,value=${{ steps.version.outputs.value }}
+      - id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: APP_VERSION=${{ steps.version.outputs.value }}
+      - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+      - name: Sign fixed image digest with GitHub OIDC
+        env:
+          IMAGE: ${{ steps.image.outputs.name }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: cosign sign --yes "$IMAGE@$DIGEST"
+      - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          image: ${{ steps.image.outputs.name }}@${{ steps.build.outputs.digest }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+          upload-artifact: false
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-image-metadata
+          path: sbom.spdx.json
+
+  publish:
+    needs: [updater, image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: updater-*
+          merge-multiple: true
+          path: release
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-image-metadata
+          path: release
+      - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+      - name: Create and sign release assets
+        env:
+          IMAGE: ${{ needs.image.outputs.image }}
+          DIGEST: ${{ needs.image.outputs.digest }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION="${TAG#v}"
+          jq -n \
+            --arg version "$VERSION" \
+            --arg tag "$TAG" \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg image "$IMAGE" \
+            --arg digest "$DIGEST" \
+            '{version:$version,tag:$tag,repository:$repository,image:$image,digest:$digest}' \
+            > release/release-manifest.json
+          (
+            cd release
+            find . -maxdepth 1 -type f ! -name 'SHA256SUMS' ! -name '*.bundle' -printf '%f\0' \
+              | sort -z \
+              | xargs -0 sha256sum > SHA256SUMS
+          )
+          cosign sign-blob --yes --bundle release/release-manifest.json.bundle release/release-manifest.json
+          cosign sign-blob --yes --bundle release/SHA256SUMS.bundle release/SHA256SUMS
+          for binary in release/outlook-mail-manager-updater-linux-*; do
+            cosign sign-blob --yes --bundle "$binary.bundle" "$binary"
+          done
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" release/* --verify-tag --generate-notes --title "$GITHUB_REF_NAME"

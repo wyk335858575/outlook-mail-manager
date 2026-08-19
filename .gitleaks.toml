@@ -1,0 +1,12 @@
+title = "Outlook Mail Manager secret scanning"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Argon2 algorithm identifier is a fixed public constant, not an API key"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''internal[\\/]auth[\\/]password\.go$''']
+regexes = ['''passwordAlgorithm\s*=\s*"argon2id-v19"''']

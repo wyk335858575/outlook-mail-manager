@@ -1,0 +1,27 @@
+[Unit]
+Description=Outlook Mail Manager restricted update helper
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+Group=outlook-mail-manager
+EnvironmentFile=/etc/outlook-mail-manager/updater.env
+ExecStart=/usr/local/libexec/outlook-mail-manager-updater
+Restart=on-failure
+RestartSec=5s
+RuntimeDirectory=outlook-mail-manager-updater
+RuntimeDirectoryMode=0750
+StateDirectory=outlook-mail-manager-updater
+StateDirectoryMode=0700
+Environment=HOME=/var/lib/outlook-mail-manager-updater
+UMask=0007
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/www/wwwroot/outlook-mail-manager /var/lib/outlook-mail-manager-updater /run/outlook-mail-manager-updater
+
+[Install]
+WantedBy=multi-user.target

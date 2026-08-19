@@ -1,0 +1,49 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: "1.26.6"
+          cache: true
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Check release version files
+        run: node scripts/version.mjs check
+
+      - name: Install frontend dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Test and build frontend
+        working-directory: web
+        run: |
+          npm test
+          npm run typecheck
+          npm run build
+
+      - name: Test and vet backend
+        run: |
+          go test -race ./...
+          go vet ./...
+          go build ./cmd/server
+          go build ./cmd/updater
+
+      - name: Build container
+        run: docker build --build-arg APP_VERSION=ci -t outlook-mail-manager:ci .
