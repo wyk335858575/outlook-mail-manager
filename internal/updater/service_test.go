@@ -95,6 +95,48 @@ func TestManifestAndImageIdentityAreBoundToReleaseTag(t *testing.T) {
 	}
 }
 
+func TestRunOnceCompletesUsingTemporaryCosignBinary(t *testing.T) {
+	releaseServer := signedReleaseServer(t, "v1.0.1", "owner/repo", "ghcr.io/owner/repo")
+	defer releaseServer.Close()
+	health := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) }))
+	defer health.Close()
+	deployDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(deployDir, ".env"), []byte("APP_VERSION=1.0.0\nAPP_IMAGE=ghcr.io/owner/repo:1.0.0\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var commands []string
+	runner := func(_ context.Context, name string, args ...string) ([]byte, error) {
+		joined := name + " " + strings.Join(args, " ")
+		commands = append(commands, joined)
+		if strings.Contains(joined, "exec -T app /usr/local/bin/outlook-mail-manager backup") {
+			return []byte("backup created: outlook-manager-20260819T000000Z.db (10 bytes)"), nil
+		}
+		return []byte("ok"), nil
+	}
+	service, err := New(Config{
+		Repository: "owner/repo", Image: "ghcr.io/owner/repo", DeployDir: deployDir, StateDir: t.TempDir(),
+		GitHubAPIBaseURL: releaseServer.URL, HTTPClient: releaseServer.Client(), HealthURL: health.URL,
+		CosignBinary: "/tmp/cosign", RunCommand: runner,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	job, err := service.RunOnce(context.Background(), nil)
+	if err != nil || job.State != "completed" || job.Version != "1.0.1" {
+		t.Fatalf("RunOnce() job = %+v, error = %v", job, err)
+	}
+	if len(commands) < 2 || !strings.HasPrefix(commands[0], "/tmp/cosign verify-blob ") {
+		t.Fatalf("commands = %v", commands)
+	}
+	data, err := os.ReadFile(filepath.Join(deployDir, ".env"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), "APP_VERSION=1.0.1") || !strings.Contains(string(data), "APP_IMAGE=ghcr.io/owner/repo@sha256:") {
+		t.Fatalf("updated environment = %q", data)
+	}
+}
+
 func TestManifestVerificationFailureStopsBeforeParsing(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

@@ -1,25 +1,20 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Activity, CheckCircle2, Database, DownloadCloud, HardDrive, LoaderCircle, LogOut, RefreshCw, Save, Trash2, TriangleAlert } from 'lucide-react'
+import { Activity, CheckCircle2, Copy, Database, HardDrive, LoaderCircle, LogOut, RefreshCw, Save, Trash2, TriangleAlert } from 'lucide-react'
 
 import { APIError, type AuthStatus } from '../api/auth'
-import { createBackup, deleteBackup, fetchBackups, fetchDetailedHealth, fetchUpdateJob, fetchUpdateStatus, startUpdate, type Backup } from '../api/maintenance'
+import { createBackup, deleteBackup, fetchBackups, fetchDetailedHealth, fetchUpdateStatus, type Backup } from '../api/maintenance'
 import { AppFrame } from '../components/AppFrame'
 
 export function HealthDashboard({ status, onLogout, loggingOut, logoutError }: { status: AuthStatus; onLogout: () => void; loggingOut: boolean; logoutError: string }) {
   const queryClient = useQueryClient()
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState('')
-  const [updateJobID, setUpdateJobID] = useState('')
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
   const healthQuery = useQuery({ queryKey: ['detailed-health'], queryFn: ({ signal }) => fetchDetailedHealth(signal), refetchInterval: 30_000 })
   const backupsQuery = useQuery({ queryKey: ['backups'], queryFn: ({ signal }) => fetchBackups(signal) })
   const updateStatusQuery = useQuery({ queryKey: ['update-status'], queryFn: ({ signal }) => fetchUpdateStatus(signal), retry: false })
-  const updateJobQuery = useQuery({
-    queryKey: ['update-job', updateJobID], queryFn: ({ signal }) => fetchUpdateJob(updateJobID, signal), enabled: updateJobID !== '',
-    retry: true, retryDelay: 2500, refetchInterval: (query) => ['completed', 'failed'].includes(query.state.data?.state ?? '') ? false : 2000,
-  })
   const health = healthQuery.data
 
   async function backup() {
@@ -44,14 +39,12 @@ export function HealthDashboard({ status, onLogout, loggingOut, logoutError }: {
     } catch (reason) { setError(messageFor(reason, '无法删除备份')) } finally { setDeleting('') }
   }
 
-  async function updateApplication() {
-    if (!status.csrf_token || !window.confirm('确定开始在线更新吗？系统将先创建备份，更新期间服务会短暂重启。')) return
+  async function copyUpdateCommand(command: string) {
     setError(''); setNotice('')
     try {
-      const job = await startUpdate(status.csrf_token)
-      setUpdateJobID(job.id)
-      queryClient.setQueryData(['update-job', job.id], job)
-    } catch (reason) { setError(messageFor(reason, '无法启动在线更新')) }
+      await navigator.clipboard.writeText(command)
+      setNotice('升级命令已复制，请在宝塔 root 终端中执行')
+    } catch { setError('浏览器无法复制升级命令') }
   }
 
   return <AppFrame active="health"><main className="main-workspace operations-workspace"><header className="workspace-header operations-header"><div><p className="eyebrow">System readiness</p><h1>健康与备份</h1></div><div className="header-actions"><button className="primary-button" type="button" disabled={creating} onClick={() => void backup()}>{creating ? <LoaderCircle className="is-spinning" size={17} /> : <Save size={17} />} 创建备份</button><button className="secondary-button logout-button" type="button" onClick={onLogout} disabled={loggingOut}><LogOut size={17} />{loggingOut ? '正在退出' : '退出登录'}</button></div></header>
@@ -61,10 +54,9 @@ export function HealthDashboard({ status, onLogout, loggingOut, logoutError }: {
       {(health.maintenance.failed_notifications > 0 || health.maintenance.cleanup_failures > 0 || health.mail.disk.level !== 'normal') && <section className="health-alert"><TriangleAlert size={20} /><div><strong>需要处理的运行状态</strong><span>通知失败 {health.maintenance.failed_notifications} 条 · 清理失败 {health.maintenance.cleanup_failures} 条 · 磁盘状态 {diskLabel(health.mail.disk.level)}</span></div></section>}
     </>}
     <section className="operations-section update-section"><div className="section-commandbar"><div><strong>版本与在线更新</strong><span>仅接受配置仓库中由 GitHub Actions OIDC/Cosign 签名的正式版本。</span></div><button className="icon-command" type="button" title="重新检查版本" aria-label="重新检查版本" onClick={() => void updateStatusQuery.refetch()}><RefreshCw className={updateStatusQuery.isFetching ? 'is-spinning' : ''} size={16} /></button></div>
-      {updateStatusQuery.isPending ? <div className="operations-empty"><LoaderCircle className="is-spinning" size={18} />正在检查 GitHub Releases</div> : updateStatusQuery.isError || !updateStatusQuery.data ? <div className="health-alert"><TriangleAlert size={18} /><strong>版本检查暂时不可用</strong></div> : <div className="update-overview"><div><span>当前版本</span><strong>{updateStatusQuery.data.current_version}</strong></div><div><span>最新稳定版</span><strong>{updateStatusQuery.data.latest_version || '未配置'}</strong></div><div><span>检查时间</span><strong>{formatDate(updateStatusQuery.data.checked_at)}</strong></div>{updateStatusQuery.data.can_update && !updateJobID ? <button className="primary-button" type="button" onClick={() => void updateApplication()}><DownloadCloud size={17} />一键更新</button> : <p>{updateStatusQuery.data.reason}</p>}</div>}
+      {updateStatusQuery.isPending ? <div className="operations-empty"><LoaderCircle className="is-spinning" size={18} />正在检查 GitHub Releases</div> : updateStatusQuery.isError || !updateStatusQuery.data ? <div className="health-alert"><TriangleAlert size={18} /><strong>版本检查暂时不可用</strong></div> : <div className="update-overview"><div><span>当前版本</span><strong>{updateStatusQuery.data.current_version}</strong></div><div><span>最新稳定版</span><strong>{updateStatusQuery.data.latest_version || '未配置'}</strong></div><div><span>检查时间</span><strong>{formatDate(updateStatusQuery.data.checked_at)}</strong></div>{updateStatusQuery.data.update_available && updateStatusQuery.data.update_command ? <button className="primary-button" type="button" onClick={() => void copyUpdateCommand(updateStatusQuery.data.update_command!)}><Copy size={17} />复制升级命令</button> : <p>{updateStatusQuery.data.reason}</p>}</div>}
       {updateStatusQuery.data?.release_notes && <details className="release-notes"><summary>查看更新说明</summary><p>{updateStatusQuery.data.release_notes}</p></details>}
-      {updateStatusQuery.data && !updateStatusQuery.data.updater_available && <p className="field-hint">未安装宿主机更新助手时只提供版本检测。完整安装步骤见项目文档 <code>docs/online-update.md</code>。</p>}
-      {updateJobID && <div className={`update-job state-${updateJobQuery.data?.state ?? 'loading'}`}>{updateJobQuery.isPending ? <LoaderCircle className="is-spinning" size={18} /> : updateJobQuery.data?.state === 'completed' ? <CheckCircle2 size={18} /> : updateJobQuery.data?.state === 'failed' ? <TriangleAlert size={18} /> : <LoaderCircle className="is-spinning" size={18} />}<div><strong>{updateJobQuery.data?.message || '正在重新连接更新助手'}</strong><span>{updateJobQuery.data?.error || (updateJobQuery.data?.version ? `目标版本 ${updateJobQuery.data.version}` : '应用重启期间页面会自动继续轮询')}</span></div></div>}
+      {updateStatusQuery.data?.update_available && updateStatusQuery.data.update_command && <div className="update-command"><code>{updateStatusQuery.data.update_command}</code></div>}
     </section>
     <section className="operations-section"><div className="section-commandbar"><div><strong>一致性备份</strong><span>备份由 SQLite 在线生成并记录 SHA-256；恢复操作仅允许在服务停止时执行。</span></div><button className="icon-command" type="button" title="刷新备份" aria-label="刷新备份" onClick={() => void backupsQuery.refetch()}><RefreshCw size={16} /></button></div><div className="operations-table backup-table"><div className="operations-table-head"><span>创建时间</span><span>文件</span><span>大小</span><span>SHA-256</span><span>操作</span></div>{backupsQuery.isPending ? <div className="operations-empty"><LoaderCircle className="is-spinning" size={18} />正在读取备份</div> : (backupsQuery.data?.backups.length ?? 0) === 0 ? <div className="operations-empty">尚无备份</div> : backupsQuery.data?.backups.map((item) => <div className="operations-row" key={`${item.name}-${item.sha256}`}><time>{formatDate(item.created_at)}</time><strong>{item.name}</strong><span>{formatBytes(item.size_bytes)}</span><code title={item.sha256}>{item.sha256}</code><button className="icon-command danger-command" type="button" title="删除备份" aria-label={`删除备份 ${item.name}`} disabled={deleting !== ''} onClick={() => void removeBackup(item)}>{deleting === item.name ? <LoaderCircle className="is-spinning" size={16} /> : <Trash2 size={16} />}</button></div>)}</div></section>
   </main></AppFrame>

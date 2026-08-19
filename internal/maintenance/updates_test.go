@@ -42,6 +42,9 @@ func TestUpdateStatusReadsLatestStableReleaseWithoutEnablingMissingHelper(t *tes
 	if status.UpdaterAvailable || status.CanUpdate {
 		t.Fatalf("missing updater unexpectedly enabled update: %+v", status)
 	}
+	if status.UpdateCommand != "curl -fsSL https://github.com/owner/outlook-mail-manager/releases/latest/download/update.sh | bash" {
+		t.Fatalf("update command = %q", status.UpdateCommand)
+	}
 }
 
 func TestUpdateStatusRejectsPrereleaseAndUnexpectedVersionLine(t *testing.T) {

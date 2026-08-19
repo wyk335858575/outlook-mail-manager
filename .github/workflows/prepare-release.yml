@@ -32,7 +32,9 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - name: Validate the next release version
-        run: node scripts/version.mjs prepare-check
+        run: |
+          node scripts/version.mjs prepare-check
+          sh -n deploy/update.sh
       - name: Test and build frontend
         working-directory: web
         run: |

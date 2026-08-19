@@ -40,7 +40,9 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - name: Validate sequential release version
-        run: node scripts/version.mjs release-check
+        run: |
+          node scripts/version.mjs release-check
+          sh -n deploy/update.sh
       - name: Test and build frontend
         working-directory: web
         run: |
@@ -120,6 +122,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: APP_VERSION=${{ steps.version.outputs.value }}
       - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+        with:
+          cosign-release: v2.6.4
       - name: Sign fixed image digest with GitHub OIDC
         env:
           IMAGE: ${{ steps.image.outputs.name }}
@@ -154,6 +158,8 @@ jobs:
           name: release-image-metadata
           path: release
       - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+        with:
+          cosign-release: v2.6.4
       - name: Create and sign release assets
         env:
           IMAGE: ${{ needs.image.outputs.image }}
@@ -161,6 +167,7 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           VERSION="${TAG#v}"
+          install -m 0755 deploy/update.sh release/update.sh
           jq -n \
             --arg version "$VERSION" \
             --arg tag "$TAG" \
@@ -177,8 +184,8 @@ jobs:
           )
           cosign sign-blob --yes --bundle release/release-manifest.json.bundle release/release-manifest.json
           cosign sign-blob --yes --bundle release/SHA256SUMS.bundle release/SHA256SUMS
-          for binary in release/outlook-mail-manager-updater-linux-*; do
-            cosign sign-blob --yes --bundle "$binary.bundle" "$binary"
+          for artifact in release/outlook-mail-manager-updater-linux-* release/update.sh; do
+            cosign sign-blob --yes --bundle "$artifact.bundle" "$artifact"
           done
       - name: Create GitHub Release
         env:

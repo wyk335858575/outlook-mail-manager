@@ -29,6 +29,7 @@ export type UpdateStatus = {
   update_available: boolean
   updater_available: boolean
   can_update: boolean
+  update_command?: string
   reason?: string
 }
 

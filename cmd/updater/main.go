@@ -29,10 +29,29 @@ func run() error {
 		DeployDir:      env("UPDATER_DEPLOY_DIR", "/opt/outlook-mail-manager"),
 		StateDir:       env("UPDATER_STATE_DIR", "/var/lib/outlook-mail-manager-updater"),
 		ComposeService: env("UPDATER_COMPOSE_SERVICE", "app"), HealthURL: env("UPDATER_HEALTH_URL", "http://127.0.0.1:8080/healthz"),
+		CosignBinary:     env("UPDATER_COSIGN_BINARY", "cosign"),
 		CosignOIDCIssuer: os.Getenv("UPDATER_COSIGN_OIDC_ISSUER"),
 	})
 	if err != nil {
 		return err
+	}
+	if len(os.Args) == 2 && os.Args[1] == "--once" {
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		defer stop()
+		job, err := service.RunOnce(ctx, func(job updater.Job) {
+			fmt.Printf("[%s] %s\n", job.State, job.Message)
+		})
+		if err != nil {
+			detail := job.Error
+			if detail == "" {
+				detail = err.Error()
+			}
+			return fmt.Errorf("single update failed: %s", detail)
+		}
+		return nil
+	}
+	if len(os.Args) != 1 {
+		return errors.New("usage: outlook-mail-manager-updater [--once]")
 	}
 	if err := os.MkdirAll(filepath.Dir(socketPath), 0o750); err != nil {
 		return err

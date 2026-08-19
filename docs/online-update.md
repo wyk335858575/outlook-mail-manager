@@ -1,105 +1,78 @@
-# 在线更新助手安装与回滚
+# 单次升级与回滚
 
-在线更新由宿主机 root 服务执行，Web 容器只通过权限受控的 Unix Socket 请求固定流程。不要把 `/var/run/docker.sock` 挂载到应用容器。
+在线更新采用“单次升级脚本 + GitHub Release”模式。服务器不安装常驻 updater 或 systemd 服务，Web 容器也不挂载 Docker Socket；只有管理员在宝塔 root 终端执行命令时，临时更新器才会运行。
 
 ## 前提
 
-- Linux 宝塔服务器，已安装 Docker Compose v2。
-- 已安装 Cosign，并可通过 `cosign version` 验证。
-- 项目位于 `/www/wwwroot/outlook-mail-manager`。
-- GitHub 仓库已经发布正式 `v1.0.N` Release，GHCR 镜像必须公开。
-- Release 包含签名的 `release-manifest.json`、`SHA256SUMS`、对应架构 updater 二进制及各自 `.bundle`。
+- Linux 宝塔服务器已安装 Docker Compose v2。
+- 项目目录为 `/www/wwwroot/outlook-mail-manager`，其中存在 `.env`。
+- GitHub Release 和 GHCR 镜像均为公开状态。
+- `.env` 中的 `APP_UPDATE_REPOSITORY`、`APP_IMAGE` 指向同一个项目；官方部署可直接使用示例默认值。
 
-## 配置项目
+## 一键升级
 
-在项目 `.env` 中填写自己的仓库和镜像，不能保留 `owner`：
+建议先登录管理台，在“健康与备份”确认数据库状态正常。随后打开宝塔“终端”，以 root 身份执行：
 
-```dotenv
-APP_VERSION=1.0.0
-APP_UPDATE_REPOSITORY=wyk335858575/outlook-mail-manager
-APP_IMAGE=ghcr.io/wyk335858575/outlook-mail-manager:1.0.0
-APP_UPDATE_SOCKET=/run/outlook-mail-manager-updater/updater.sock
+```bash
+curl -fsSL https://github.com/wyk335858575/outlook-mail-manager/releases/latest/download/update.sh | bash
 ```
 
-从同一个 Release 下载以下四个文件到项目根目录：
+项目不在默认目录时使用：
 
-- `outlook-mail-manager-updater-linux-amd64` 或 `outlook-mail-manager-updater-linux-arm64`
-- 上述二进制对应的 `.bundle`
-- `SHA256SUMS`
-- `SHA256SUMS.bundle`
+```bash
+curl -fsSL https://github.com/wyk335858575/outlook-mail-manager/releases/latest/download/update.sh \
+  | DEPLOY_DIR=/你的项目目录 bash
+```
 
-安装脚本从项目 `.env` 读取仓库、镜像和版本，使用精确的 `release.yml@refs/tags/v1.0.N` 身份验证二进制和校验和。任何文件缺失、哈希不符或签名来自其他标签时都会在安装 systemd 服务前停止。
+脚本不会安装持久化程序。Cosign、updater 和验证文件全部放在权限受限的临时目录，命令结束后自动删除。
+
+## 安全流程
+
+1. 从 GitHub 最新正式 Release 读取严格的 `v1.0.N` 标签。
+2. 根据 amd64 或 arm64 架构下载临时 Cosign，并按脚本内固定 SHA-256 校验。
+3. 下载 `SHA256SUMS`、release manifest、对应架构 updater 及其 Cosign bundle。
+4. 将所有签名严格绑定到当前仓库的 `release.yml@refs/tags/v1.0.N` GitHub Actions OIDC 身份。
+5. 校验 manifest 中的仓库、镜像、版本、标签和固定镜像 digest。
+6. 通过应用内置备份命令创建 SQLite 一致性备份。
+7. 验证并拉取 `image@sha256:...`，原子更新 `.env` 后重启应用。
+8. 轮询 `/healthz`；失败时恢复旧配置、旧镜像和升级前数据库。
+
+脚本使用部署目录中的跨进程文件锁，重复执行时不会同时启动两个升级任务。它不读取或输出管理员密码、邮箱 OAuth token、API token 或数据库内容。
+
+## 查看结果
 
 ```bash
 cd /www/wwwroot/outlook-mail-manager
-chmod +x deploy/install-updater.sh
-sudo ./deploy/install-updater.sh /www/wwwroot/outlook-mail-manager
+grep -E '^(APP_VERSION|APP_UPDATE_REPOSITORY|APP_IMAGE)=' .env
+docker compose ps
+curl --fail http://127.0.0.1:8080/healthz
 ```
 
-安装脚本创建 `outlook-mail-manager` 系统组，将 updater 安装到 `/usr/local/libexec`，安装 systemd 单元，并把 Unix Socket 组 ID 写入项目 `.env`。它不会修改管理员密码、数据库或 OAuth token。
+健康页应显示新的当前版本。升级前备份仍保存在 Docker 数据卷的 `/data/backups` 中。
 
-## 配置更新助手
+## 常见错误
 
-编辑 `/etc/outlook-mail-manager/updater.env`：
-
-```dotenv
-APP_UPDATE_REPOSITORY=wyk335858575/outlook-mail-manager
-APP_IMAGE=ghcr.io/wyk335858575/outlook-mail-manager
-UPDATER_DEPLOY_DIR=/www/wwwroot/outlook-mail-manager
-UPDATER_STATE_DIR=/var/lib/outlook-mail-manager-updater
-UPDATER_SOCKET_PATH=/run/outlook-mail-manager-updater/updater.sock
-UPDATER_COMPOSE_SERVICE=app
-UPDATER_HEALTH_URL=http://127.0.0.1:8080/healthz
-UPDATER_COSIGN_OIDC_ISSUER=https://token.actions.githubusercontent.com
-```
-
-安装脚本会自动生成该配置。签名身份不能通过环境变量放宽：程序始终根据配置仓库和目标 Release 标签精确匹配 `.github/workflows/release.yml@refs/tags/v1.0.N`。Fork 必须先在项目 `.env` 中改成自己的仓库和 GHCR 镜像，再重新运行安装脚本。
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl restart outlook-mail-manager-updater
-sudo systemctl status outlook-mail-manager-updater
-docker compose up -d app
-```
-
-登录管理台打开“健康与备份”。页面应显示当前版本、最新稳定版、检查时间和“一键更新”。按钮不存在时检查仓库配置、Socket 文件和容器的补充组 ID：
-
-```bash
-ls -l /run/outlook-mail-manager-updater/updater.sock
-grep UPDATER_SOCKET_GID .env
-docker compose exec app id
-journalctl -u outlook-mail-manager-updater -n 100 --no-pager
-```
-
-## 更新流程
-
-1. updater 读取配置仓库的最新非草稿、非预发布 `v1.0.N` Release。
-2. 在解析 manifest 前验证其 Cosign bundle 和当前标签的精确 GitHub Actions OIDC 身份。
-3. 验证 manifest 的仓库、镜像、tag、版本和 SHA-256 digest，再创建 SQLite 一致性备份。
-4. 使用相同的精确标签身份验证 `image@digest`。
-5. 拉取固定 digest，原子修改 `.env` 中的 `APP_IMAGE` 与 `APP_VERSION`。
-6. `docker compose up -d --no-build app`，持续轮询 `/healthz`。
-7. 成功后保留升级前备份；失败则恢复旧 `.env`、旧镜像和升级前数据库。
-
-更新任务存放在 `/var/lib/outlook-mail-manager-updater/jobs`，因此应用容器重启期间健康页可以重新连接并继续显示结果。若宿主机 updater 本身重启，未完成任务会明确标记为已中断，不会永久停留在处理中；开始更新还会取得跨进程文件锁，禁止两个助手同时修改部署。
-
-## 从 GitHub 一键发布
-
-维护者先运行 `node scripts/version.mjs bump` 并填写 CHANGELOG，提交到 `main` 后打开 GitHub 的 Actions 页面，选择 `prepare release`，点击 `Run workflow`。该工作流验证版本连续性和完整测试，创建注释标签后在标签引用上触发 `release` 工作流。后者构建多架构镜像、Cosign 签名、SBOM、updater 和 Release 资产。
-
-第一次发布镜像后，在 GitHub 个人主页的 Packages 中打开 `outlook-mail-manager`，进入 Package settings，将可见性改为 Public。在线更新助手不保存 GitHub token，因此私有 GHCR 包无法用于默认安装方式。
+- `找不到 .env`：确认项目是否位于默认目录，或通过 `DEPLOY_DIR` 指定实际目录。
+- `需要 Docker Compose v2`：先在宝塔 Docker 管理器中升级 Compose 插件。
+- `签名验证失败`：不要绕过验证；确认使用官方 Release，Fork 则必须发布自己的签名 Release 并修改 `.env`。
+- `GitHub 返回 404`：确认仓库、Release 和 GHCR Package 均为 Public。
+- `当前已是最新稳定版`：无需操作，命令会安全退出。
 
 ## 手动回滚
 
-自动回滚失败时先停止服务，不要执行 `docker compose down -v`：
+自动回滚失败时先停止应用，不要执行 `docker compose down -v`：
 
 ```bash
 cd /www/wwwroot/outlook-mail-manager
 docker compose stop app
-# 将 .env 中 APP_IMAGE 和 APP_VERSION 改回上一个已知正常版本
+# 把 .env 中 APP_IMAGE 和 APP_VERSION 改回上一个正常版本
 docker compose run --rm app restore /data/backups/outlook-manager-YYYYMMDDTHHMMSSZ.db
 docker compose up -d --no-build app
 curl --fail http://127.0.0.1:8080/healthz
 ```
 
-数据库恢复会保留恢复前文件。恢复后登录管理台，检查 schema、管理员登录、至少一个账号授权、delta 同步状态和最近备份。
+恢复后登录管理台，检查管理员登录、数据库 schema、至少一个账号授权和最近同步状态。
+
+## Fork 发布
+
+Fork 用户需要在 `.env` 中填写自己的仓库和 GHCR 镜像。`release.yml` 会把 `update.sh`、两个架构的 updater、manifest、SBOM、`SHA256SUMS` 和对应 Cosign bundle 一起发布。健康页生成的命令会自动使用配置仓库。

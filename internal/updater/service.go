@@ -27,6 +27,7 @@ type Config struct {
 	StateDir         string
 	ComposeService   string
 	HealthURL        string
+	CosignBinary     string
 	CosignOIDCIssuer string
 	GitHubAPIBaseURL string
 	HTTPClient       *http.Client
@@ -98,6 +99,9 @@ func New(config Config) (*Service, error) {
 	}
 	if config.HealthURL == "" {
 		config.HealthURL = "http://127.0.0.1:8080/healthz"
+	}
+	if config.CosignBinary == "" {
+		config.CosignBinary = "cosign"
 	}
 	if config.CosignOIDCIssuer == "" {
 		config.CosignOIDCIssuer = "https://token.actions.githubusercontent.com"
@@ -181,8 +185,41 @@ func (s *Service) startJob(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "cannot persist update job", http.StatusInternalServerError)
 		return
 	}
-	go s.runJob(job, lock)
+	go s.runJob(context.Background(), job, lock, nil)
 	writeJSON(w, http.StatusAccepted, job)
+}
+
+func (s *Service) RunOnce(ctx context.Context, progress func(Job)) (Job, error) {
+	s.mu.Lock()
+	if s.running {
+		s.mu.Unlock()
+		return Job{}, errUpdateLocked
+	}
+	lock, err := acquireProcessLock(filepath.Join(s.config.DeployDir, ".outlook-mail-manager-update.lock"))
+	if err != nil {
+		s.mu.Unlock()
+		return Job{}, err
+	}
+	s.running = true
+	s.mu.Unlock()
+
+	now := s.config.Now().UTC()
+	job := Job{ID: randomID(), State: "queued", Message: "准备执行单次更新", CreatedAt: now, UpdatedAt: now}
+	if err := s.saveJob(job); err != nil {
+		_ = lock.Close()
+		s.mu.Lock()
+		s.running = false
+		s.mu.Unlock()
+		return Job{}, fmt.Errorf("persist update job: %w", err)
+	}
+	if progress != nil {
+		progress(job)
+	}
+	job = s.runJob(ctx, job, lock, progress)
+	if job.State != "completed" {
+		return job, errors.New(job.Error)
+	}
+	return job, nil
 }
 
 func (s *Service) getJob(w http.ResponseWriter, r *http.Request) {
@@ -203,60 +240,63 @@ func (s *Service) getJob(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, job)
 }
 
-func (s *Service) runJob(job Job, lock *processLock) {
+func (s *Service) runJob(parent context.Context, job Job, lock *processLock, progress func(Job)) Job {
 	defer func() {
 		_ = lock.Close()
 		s.mu.Lock()
 		s.running = false
 		s.mu.Unlock()
 	}()
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	ctx, cancel := context.WithTimeout(parent, 15*time.Minute)
 	defer cancel()
 	set := func(state, message string) {
 		job.State, job.Message, job.UpdatedAt = state, message, s.config.Now().UTC()
 		_ = s.saveJob(job)
+		if progress != nil {
+			progress(job)
+		}
 	}
 	set("checking", "正在读取最新稳定版")
 	release, manifest, err := s.fetchRelease(ctx)
 	if err != nil {
 		s.failJob(&job, err)
-		return
+		return job
 	}
 	envPath := filepath.Join(s.config.DeployDir, ".env")
 	previousEnv, err := os.ReadFile(envPath)
 	if err != nil {
 		s.failJob(&job, fmt.Errorf("read deployment environment: %w", err))
-		return
+		return job
 	}
 	currentVersion := envValue(previousEnv, "APP_VERSION")
 	if !versionGreater(manifest.Version, currentVersion) {
 		s.failJob(&job, fmt.Errorf("refuse update from %s to %s: downgrade and same-version updates are not allowed", currentVersion, manifest.Version))
-		return
+		return job
 	}
 	job.Version = manifest.Version
 	set("backing_up", "正在创建升级前一致性备份")
 	backupName, err := s.createBackup(ctx)
 	if err != nil {
 		s.failJob(&job, err)
-		return
+		return job
 	}
 	set("verifying", "正在验证固定镜像摘要和发布身份")
 	imageRef := manifest.Image + "@" + manifest.Digest
-	if _, err := s.config.RunCommand(ctx, "cosign", "verify", imageRef,
+	if _, err := s.config.RunCommand(ctx, s.config.CosignBinary, "verify", imageRef,
 		"--certificate-identity", s.releaseIdentity(release.TagName),
 		"--certificate-oidc-issuer", s.config.CosignOIDCIssuer); err != nil {
 		s.failJob(&job, fmt.Errorf("verify signed image: %w", err))
-		return
+		return job
 	}
 	set("pulling", "正在拉取已验证的固定镜像")
 	if _, err := s.config.RunCommand(ctx, "docker", "pull", imageRef); err != nil {
 		s.failJob(&job, fmt.Errorf("pull image: %w", err))
-		return
+		return job
 	}
 	set("restarting", "正在切换版本并重启应用")
 	if err := updateEnvFile(envPath, previousEnv, imageRef, manifest.Version); err != nil {
 		s.failJob(&job, err)
-		return
+		return job
 	}
 	_, err = s.compose(ctx, "up", "-d", "--no-build", s.config.ComposeService)
 	if err == nil {
@@ -270,12 +310,16 @@ func (s *Service) runJob(job Job, lock *processLock) {
 		} else {
 			s.failJob(&job, fmt.Errorf("update failed and was rolled back: %w", err))
 		}
-		return
+		return job
 	}
 	_ = release
 	now := s.config.Now().UTC()
 	job.State, job.Message, job.Error, job.UpdatedAt, job.CompletedAt = "completed", "更新完成，升级前备份已保留", "", now, &now
 	_ = s.saveJob(job)
+	if progress != nil {
+		progress(job)
+	}
+	return job
 }
 
 func (s *Service) fetchRelease(ctx context.Context) (release, Manifest, error) {
@@ -319,7 +363,7 @@ func (s *Service) fetchRelease(ctx context.Context) (release, Manifest, error) {
 	if err := os.WriteFile(bundlePath, bundleData, 0o600); err != nil {
 		return item, Manifest{}, fmt.Errorf("write release manifest bundle: %w", err)
 	}
-	if _, err := s.config.RunCommand(ctx, "cosign", "verify-blob", "--bundle", bundlePath,
+	if _, err := s.config.RunCommand(ctx, s.config.CosignBinary, "verify-blob", "--bundle", bundlePath,
 		"--certificate-identity", s.releaseIdentity(item.TagName),
 		"--certificate-oidc-issuer", s.config.CosignOIDCIssuer, manifestPath); err != nil {
 		return item, Manifest{}, fmt.Errorf("verify signed release manifest: %w", err)

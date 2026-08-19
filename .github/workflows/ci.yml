@@ -25,7 +25,9 @@ jobs:
           cache-dependency-path: web/package-lock.json
 
       - name: Check release version files
-        run: node scripts/version.mjs check
+        run: |
+          node scripts/version.mjs check
+          sh -n deploy/update.sh
 
       - name: Install frontend dependencies
         working-directory: web

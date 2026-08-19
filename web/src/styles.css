@@ -3760,6 +3760,21 @@ button:disabled {
   white-space: pre-wrap;
 }
 
+.update-command {
+  margin: 0 20px 16px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  border: 1px solid #cbd9e1;
+  border-radius: 5px;
+  background: #f4f8fa;
+}
+
+.update-command code {
+  color: #273640;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .update-job {
   display: flex;
   align-items: center;

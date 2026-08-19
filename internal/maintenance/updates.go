@@ -29,6 +29,7 @@ type UpdateStatus struct {
 	UpdateAvailable  bool      `json:"update_available"`
 	UpdaterAvailable bool      `json:"updater_available"`
 	CanUpdate        bool      `json:"can_update"`
+	UpdateCommand    string    `json:"update_command,omitempty"`
 	Reason           string    `json:"reason,omitempty"`
 }
 
@@ -66,11 +67,10 @@ func (s *Service) UpdateStatus(ctx context.Context) (UpdateStatus, error) {
 	status.ReleaseNotes = release.Body
 	status.ReleaseURL = release.HTMLURL
 	status.UpdateAvailable = versionGreater(status.LatestVersion, status.CurrentVersion)
-	status.UpdaterAvailable = s.updaterAvailable(ctx)
-	status.CanUpdate = status.UpdateAvailable && status.UpdaterAvailable
-	if !status.UpdaterAvailable {
-		status.Reason = "宿主机更新助手未安装或 Unix Socket 不可用"
-	} else if !status.UpdateAvailable {
+	status.UpdateCommand = "curl -fsSL https://github.com/" + s.updateRepository + "/releases/latest/download/update.sh | bash"
+	if status.UpdateAvailable {
+		status.Reason = "请在宝塔 root 终端执行单次升级脚本"
+	} else {
 		status.Reason = "当前已是最新稳定版"
 	}
 	return status, nil

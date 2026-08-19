@@ -89,14 +89,14 @@ Nginx 对外提供 HTTPS，并反向代理到 `http://127.0.0.1:8080`。`APP_BAS
 复制 `.env.example` 为 `.env`，设置公网 HTTPS 地址；Client ID 可以稍后在管理台“设置”中保存。生产部署直接拉取公开 GHCR 固定版本镜像，不需要在宝塔服务器构建源码：
 
 ```bash
-docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.0
+docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.1
 docker compose up -d --no-build app
 docker compose ps
 curl --fail http://127.0.0.1:8080/healthz
 docker compose logs --tail=100 app
 ```
 
-Compose 默认只把端口绑定到宿主机 `127.0.0.1:8080`，用于 Nginx 反向代理。生产镜像不包含 Node.js，数据保存在 `outlook_data` 卷中。应用容器不挂载 Docker Socket；在线更新由宿主机受限 updater 通过 Unix Socket 提供。宝塔面板拉取镜像、Compose 编排、digest 校验、HTTPS、故障排查、备份和更新的完整步骤见 [宝塔 Docker 镜像部署与运维](docs/baota-deployment.md)。
+Compose 默认只把端口绑定到宿主机 `127.0.0.1:8080`，用于 Nginx 反向代理。生产镜像不包含 Node.js，数据保存在 `outlook_data` 卷中。应用容器不挂载 Docker Socket；在线更新只在管理员主动执行 Release 脚本时临时运行。宝塔面板拉取镜像、Compose 编排、digest 校验、HTTPS、故障排查、备份和更新的完整步骤见 [宝塔 Docker 镜像部署与运维](docs/baota-deployment.md)。
 
 ## 分类、清理与通知
 
@@ -152,16 +152,13 @@ docker compose up -d app
 
 ## 在线更新
 
-健康页可以读取配置仓库的 GitHub Releases 最新稳定版。真正的一键更新需要安装宿主机 `outlook-mail-manager-updater`：
+健康页读取配置仓库的 GitHub Releases 最新稳定版，并在有新版本时显示可复制的宝塔终端命令。无需安装 systemd 服务或常驻更新助手：
 
-- updater 以 root 所有的 systemd 服务运行，只监听权限受控的 Unix Socket。
-- Web 容器只能发送开始更新和查询任务请求，不能提交命令、路径、镜像或降级版本。
-- updater 在解析 Release manifest 前先验证它的 Cosign bundle，并把清单和 GHCR 镜像签名严格绑定到当前 `v1.0.N` 标签，再按固定 digest 更新。
-- updater 创建 SQLite 一致性备份，重启后轮询 `/healthz`；健康检查失败时自动恢复旧配置、旧镜像和升级前数据库。
-- 安装 updater 前会验证二进制、`SHA256SUMS` 及其签名 bundle，拒绝来自其他版本或工作流身份的文件。
-- updater 未安装或仓库未配置时，健康页只显示版本检测和安装提示，不显示可执行按钮。
+```bash
+curl -fsSL https://github.com/wyk335858575/outlook-mail-manager/releases/latest/download/update.sh | bash
+```
 
-完整安装、权限、更新和回滚步骤见 [在线更新助手](docs/online-update.md)。
+脚本只在本次升级期间运行，自动识别 amd64/arm64，下载临时 Cosign 和 updater，验证当前 Release 标签对应的 GitHub Actions OIDC 身份、签名 manifest、文件哈希和固定镜像 digest。它会先创建 SQLite 一致性备份，升级后轮询 `/healthz`；失败时恢复旧 `.env`、旧镜像和升级前数据库。完整流程见 [单次升级与回滚](docs/online-update.md)。
 
 ## 版本规则
 
@@ -174,7 +171,7 @@ node scripts/version.mjs bump
 
 `bump` 会同步代码和部署文件中的机械版本字段；补充 CHANGELOG 后再次运行 `check`。发布时打开 GitHub 仓库的 Actions，选择 `prepare release` 并点击 `Run workflow`。工作流会重复测试、创建严格连续的 `v${VERSION}` 标签，再触发镜像签名和 GitHub Release；无需本地安装 `gh`。
 
-首次发布 GHCR 容器后，需要在 GitHub Packages 设置中确认 `outlook-mail-manager` 包为 Public。Fork 用户必须把 `.env` 和 updater 配置中的仓库、镜像替换为自己的地址，否则签名身份校验会拒绝更新。
+首次发布 GHCR 容器后，需要在 GitHub Packages 设置中确认 `outlook-mail-manager` 包为 Public。Fork 用户必须把 `.env` 中的仓库和镜像替换为自己的地址，否则签名身份校验会拒绝更新。
 
 ## 从旧版升级
 
@@ -200,4 +197,3 @@ npm --prefix web run build
 - 开发、测试和提交规范：[CONTRIBUTING.md](CONTRIBUTING.md)
 - 版本记录：[CHANGELOG.md](CHANGELOG.md)
 - 许可证：GNU Affero General Public License v3.0，见 [LICENSE](LICENSE)
-

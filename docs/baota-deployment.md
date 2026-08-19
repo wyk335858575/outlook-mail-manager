@@ -5,7 +5,7 @@
 当前正式镜像：
 
 ```text
-ghcr.io/wyk335858575/outlook-mail-manager:1.0.0
+ghcr.io/wyk335858575/outlook-mail-manager:1.0.1
 ```
 
 公开镜像无需 GitHub 账号或 token。服务器建议至少 2 核 CPU、2 GiB 内存和 10 GiB 可用磁盘。
@@ -43,11 +43,9 @@ APP_LISTEN_ADDR=:8080
 APP_DATA_DIR=/data
 APP_TIMEZONE=Asia/Shanghai
 APP_LOG_LEVEL=info
-APP_VERSION=1.0.0
+APP_VERSION=1.0.1
 APP_UPDATE_REPOSITORY=wyk335858575/outlook-mail-manager
-APP_IMAGE=ghcr.io/wyk335858575/outlook-mail-manager:1.0.0
-APP_UPDATE_SOCKET=/run/outlook-mail-manager-updater/updater.sock
-UPDATER_SOCKET_GID=10002
+APP_IMAGE=ghcr.io/wyk335858575/outlook-mail-manager:1.0.1
 # 可选：首次启动默认值，也可登录后在“设置”中保存
 MS_CLIENT_ID=
 ```
@@ -61,24 +59,24 @@ MS_CLIENT_ID=
 直接拉取固定版本，不使用 `latest`：
 
 ```bash
-docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.0
+docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.1
 ```
 
 核对镜像来源和 digest：
 
 ```bash
 docker image inspect \
-  ghcr.io/wyk335858575/outlook-mail-manager:1.0.0 \
+  ghcr.io/wyk335858575/outlook-mail-manager:1.0.1 \
   --format '{{index .RepoDigests 0}}'
 ```
 
-`v1.0.0` 应显示：
+`v1.0.1` 应显示：
 
 ```text
 ghcr.io/wyk335858575/outlook-mail-manager@sha256:20c06e1f2e9ca750cab02e87db9d1330d0486bac7138e8b99edb925c7d478147
 ```
 
-这个值还可以和 [v1.0.0 Release](https://github.com/wyk335858575/outlook-mail-manager/releases/tag/v1.0.0) 中签名的 `release-manifest.json` 比对。
+这个值还可以和 [v1.0.1 Release](https://github.com/wyk335858575/outlook-mail-manager/releases/tag/v1.0.1) 中签名的 `release-manifest.json` 比对。
 
 检查 Compose 最终配置并使用已拉取镜像启动：
 
@@ -98,9 +96,9 @@ docker compose logs --tail=100 app
 
 1. 打开“Docker” > “镜像”。
 2. 点击“拉取镜像”或“线上镜像”。
-3. 镜像地址填写 `ghcr.io/wyk335858575/outlook-mail-manager:1.0.0`，不要添加 `https://`。
+3. 镜像地址填写 `ghcr.io/wyk335858575/outlook-mail-manager:1.0.1`，不要添加 `https://`。
 4. 仓库用户名和密码留空；当前 GHCR 包是公开镜像。
-5. 等待下载完成，在本地镜像列表确认名称和 `1.0.0` 标签。
+5. 等待下载完成，在本地镜像列表确认名称和 `1.0.1` 标签。
 6. 打开“Docker” > “容器编排”，添加编排项目。
 7. 项目目录选择 `/www/wwwroot/outlook-mail-manager`，使用其中的 `docker-compose.yml`。
 8. 确认同目录已存在 `.env`，然后创建或启动编排。
@@ -151,7 +149,7 @@ add_header Referrer-Policy "no-referrer" always;
 
 ```bash
 docker logout ghcr.io
-docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.0
+docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.1
 ```
 
 ### `i/o timeout`、`TLS handshake timeout` 或 `context deadline exceeded`
@@ -231,7 +229,7 @@ docker compose logs --tail=200 app
 
 不要执行 `docker compose down -v`，否则会删除管理员、OAuth token、邮件索引和规则所在的数据卷。不要在生产环境使用 `latest`。
 
-`1.0.0` 起还可以安装宿主机更新助手，在管理台中检测 GitHub Release 并一键更新。助手不把 Docker Socket 暴露给 Web 容器，更新前会验证当前 Release 标签对应的 Cosign/GitHub Actions OIDC 身份、签名 manifest 和固定镜像 digest，失败时自动回滚。完整步骤见 [在线更新助手安装与回滚](online-update.md)。
+健康页可以检测 GitHub Release。出现新版本后，在宝塔 root 终端执行一条单次升级命令即可；不需要安装 systemd 服务，也不会把 Docker Socket 暴露给 Web 容器。脚本会验证当前 Release 标签对应的 Cosign/GitHub Actions OIDC 身份、签名 manifest 和固定镜像 digest，失败时自动回滚。完整步骤见 [单次升级与回滚](online-update.md)。
 
 ## 10. 官方参考
 
@@ -246,4 +244,3 @@ docker compose logs --tail=200 app
 - 处理 `reauth_required` 账号，不要反复尝试失效授权。
 - 磁盘达到 70% 时扩容或清理旧备份；90% 时程序进入仅同步元数据模式。
 - 定期测试至少一个系统通知通道和一个受限 API token。
-
