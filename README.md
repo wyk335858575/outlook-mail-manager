@@ -89,7 +89,7 @@ Nginx 对外提供 HTTPS，并反向代理到 `http://127.0.0.1:8080`。`APP_BAS
 复制 `.env.example` 为 `.env`，设置公网 HTTPS 地址；Client ID 可以稍后在管理台“设置”中保存。生产部署直接拉取公开 GHCR 固定版本镜像，不需要在宝塔服务器构建源码：
 
 ```bash
-docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.5
+docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.6
 docker compose up -d --no-build app
 docker compose ps
 curl --fail http://127.0.0.1:8080/healthz

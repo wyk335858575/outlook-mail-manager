@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Outlook 邮箱管理台</title>
+  <rect width="64" height="64" rx="14" fill="#0f6cbd"/>
+  <rect x="11" y="17" width="42" height="30" rx="5" fill="#fff"/>
+  <path d="m13 20 19 15 19-15" fill="none" stroke="#17212b" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+  <path d="M14 44h36" fill="none" stroke="#41b3e8" stroke-linecap="round" stroke-width="3"/>
+</svg>
