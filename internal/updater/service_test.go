@@ -259,6 +259,19 @@ func TestSeparateServicesRejectConcurrentUpdateJobs(t *testing.T) {
 	if response.Code != http.StatusConflict {
 		t.Fatalf("second status = %d", response.Code)
 	}
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		first.mu.Lock()
+		running := first.running
+		first.mu.Unlock()
+		if !running {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("first update job did not finish")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 func TestNewMarksInterruptedJobsFailed(t *testing.T) {
@@ -413,3 +426,4 @@ func signedReleaseServer(t *testing.T, tag, repository, image string) *httptest.
 	}))
 	return server
 }
+
