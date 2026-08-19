@@ -86,15 +86,17 @@ Nginx 对外提供 HTTPS，并反向代理到 `http://127.0.0.1:8080`。`APP_BAS
 
 ## Docker Compose
 
-复制 `.env.example` 为 `.env`，设置公网 HTTPS 地址；Client ID 可以稍后在管理台“设置”中保存，然后运行：
+复制 `.env.example` 为 `.env`，设置公网 HTTPS 地址；Client ID 可以稍后在管理台“设置”中保存。生产部署直接拉取公开 GHCR 固定版本镜像，不需要在宝塔服务器构建源码：
 
-```powershell
-docker compose up --build -d
+```bash
+docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.0
+docker compose up -d --no-build app
 docker compose ps
-docker compose logs -f app
+curl --fail http://127.0.0.1:8080/healthz
+docker compose logs --tail=100 app
 ```
 
-Compose 默认只把端口绑定到宿主机 `127.0.0.1:8080`，用于 Nginx 反向代理。生产镜像不包含 Node.js，数据保存在 `outlook_data` 卷中。应用容器不挂载 Docker Socket；在线更新由宿主机受限 updater 通过 Unix Socket 提供。
+Compose 默认只把端口绑定到宿主机 `127.0.0.1:8080`，用于 Nginx 反向代理。生产镜像不包含 Node.js，数据保存在 `outlook_data` 卷中。应用容器不挂载 Docker Socket；在线更新由宿主机受限 updater 通过 Unix Socket 提供。宝塔面板拉取镜像、Compose 编排、digest 校验、HTTPS、故障排查、备份和更新的完整步骤见 [宝塔 Docker 镜像部署与运维](docs/baota-deployment.md)。
 
 ## 分类、清理与通知
 
@@ -198,3 +200,4 @@ npm --prefix web run build
 - 开发、测试和提交规范：[CONTRIBUTING.md](CONTRIBUTING.md)
 - 版本记录：[CHANGELOG.md](CHANGELOG.md)
 - 许可证：GNU Affero General Public License v3.0，见 [LICENSE](LICENSE)
+
