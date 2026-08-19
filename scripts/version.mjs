@@ -33,6 +33,7 @@ function check(version) {
   if (packageLock.version !== version || packageLock.packages?.['']?.version !== version) failures.push('web/package-lock.json')
   if (!env.includes(`APP_VERSION=${version}`) || !env.includes(`outlook-mail-manager:${version}`)) failures.push('.env.example')
   if (!compose.includes(`APP_VERSION:-${version}`) || !compose.includes(`outlook-mail-manager:${version}`)) failures.push('docker-compose.yml')
+  if (/^\s+build:/m.test(compose)) failures.push('docker-compose.yml（生产编排禁止本地构建）')
   const changelogVersion = changelog.match(/^##\s+([^\s]+)/m)?.[1]
   if (changelogVersion !== version) failures.push('CHANGELOG.md')
 

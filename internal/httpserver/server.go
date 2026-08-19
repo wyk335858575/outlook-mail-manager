@@ -79,6 +79,9 @@ func spaHandler(assets fs.FS) http.Handler {
 		requested := strings.TrimPrefix(path.Clean(r.URL.Path), "/")
 		if requested != "." && requested != "" {
 			if info, err := fs.Stat(assets, requested); err == nil && !info.IsDir() {
+				if requested == "index.html" {
+					w.Header().Set("Cache-Control", "no-store")
+				}
 				files.ServeHTTP(w, r)
 				return
 			}
@@ -100,6 +103,7 @@ func spaHandler(assets fs.FS) http.Handler {
 		urlCopy := *r.URL
 		urlCopy.Path = "/"
 		clone.URL = &urlCopy
+		w.Header().Set("Cache-Control", "no-store")
 		files.ServeHTTP(w, clone)
 	})
 }

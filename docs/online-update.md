@@ -74,7 +74,7 @@ DATA_VOLUME=$(docker inspect "$CID" --format '{{range .Mounts}}{{if eq .Destinat
 
 docker run --rm --user 0 --entrypoint sh \
   -v "$DATA_VOLUME:/data:ro" \
-  ghcr.io/wyk335858575/outlook-mail-manager:1.0.3 -c '
+  ghcr.io/wyk335858575/outlook-mail-manager:1.0.4 -c '
     apk add --no-cache sqlite >/dev/null
     for db in /data/outlook-manager.db /data/outlook-manager.db.before-restore-* /data/backups/*.db; do
       [ -f "$db" ] || continue
@@ -82,18 +82,19 @@ docker run --rm --user 0 --entrypoint sh \
       ls -ln "$db"
       sqlite3 -readonly "$db" "
         PRAGMA quick_check;
-        SELECT \"schema\", COALESCE(MAX(version),0) FROM schema_migrations;
-        SELECT \"admins\", COUNT(*) FROM admins;
-        SELECT \"settings\", COUNT(*) FROM app_settings;
-        SELECT \"accounts\", COUNT(*) FROM accounts;
-        SELECT \"tokens\", COUNT(*) FROM account_tokens;
-        SELECT \"messages\", COUNT(*) FROM messages;
+        SELECT COALESCE(MAX(version),0) FROM schema_migrations;
+        SELECT COUNT(*) FROM admins;
+        SELECT COUNT(*) FROM app_settings;
+        SELECT COUNT(*) FROM accounts;
+        SELECT COUNT(*) FROM account_tokens;
+        SELECT COUNT(*) FROM messages;
       " 2>&1 || true
+      echo "顺序：quick_check / schema / admins / settings / accounts / tokens / messages"
     done
   '
 ```
 
-候选文件必须显示 `ok`、`settings|1`，并且账号、token 和邮件数量符合升级前实际情况。文件大不等于一定正确，不要只按大小选择。确定文件后，使用当前正式版镜像的 `restore` 命令恢复；恢复命令会再次执行完整性和业务数据检查，并保留当前数据库安全快照。
+候选文件必须显示 `ok`，settings 对应的计数必须为 `1`，并且账号、token 和邮件数量符合升级前实际情况。文件大不等于一定正确，不要只按大小选择。确定文件后，使用当前正式版镜像的 `restore` 命令恢复；恢复命令会再次执行完整性和业务数据检查，并保留当前数据库安全快照。
 
 ## 手动回滚
 

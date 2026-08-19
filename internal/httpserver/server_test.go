@@ -75,6 +75,29 @@ func TestSPAUsesIndexFallbackAndSecurityHeaders(t *testing.T) {
 	if response.Header().Get("Content-Security-Policy") == "" {
 		t.Fatal("Content-Security-Policy is missing")
 	}
+	if response.Header().Get("Cache-Control") != "no-store" {
+		t.Fatalf("Cache-Control = %q, want no-store", response.Header().Get("Cache-Control"))
+	}
+}
+
+func TestSPAIndexDisablesCaching(t *testing.T) {
+	store, err := database.Open(context.Background(), t.TempDir())
+	if err != nil {
+		t.Fatalf("database.Open() error = %v", err)
+	}
+	defer store.Close()
+
+	handler := testHandler(t, store)
+	for target, expectedStatus := range map[string]int{"/": http.StatusOK, "/index.html": http.StatusMovedPermanently} {
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, target, nil))
+		if response.Code != expectedStatus {
+			t.Fatalf("%s status = %d, want %d", target, response.Code, expectedStatus)
+		}
+		if response.Header().Get("Cache-Control") != "no-store" {
+			t.Fatalf("%s Cache-Control = %q, want no-store", target, response.Header().Get("Cache-Control"))
+		}
+	}
 }
 
 func TestSPADoesNotMaskMissingAssets(t *testing.T) {
