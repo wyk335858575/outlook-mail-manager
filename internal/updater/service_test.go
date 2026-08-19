@@ -227,6 +227,7 @@ func TestHandlerRejectsConcurrentUpdateJobs(t *testing.T) {
 	if second.Code != http.StatusConflict {
 		t.Fatalf("second status = %d", second.Code)
 	}
+	waitForServiceIdle(t, service)
 }
 
 func TestSeparateServicesRejectConcurrentUpdateJobs(t *testing.T) {
@@ -259,16 +260,21 @@ func TestSeparateServicesRejectConcurrentUpdateJobs(t *testing.T) {
 	if response.Code != http.StatusConflict {
 		t.Fatalf("second status = %d", response.Code)
 	}
+	waitForServiceIdle(t, first)
+}
+
+func waitForServiceIdle(t *testing.T, service *Service) {
+	t.Helper()
 	deadline := time.Now().Add(2 * time.Second)
 	for {
-		first.mu.Lock()
-		running := first.running
-		first.mu.Unlock()
+		service.mu.Lock()
+		running := service.running
+		service.mu.Unlock()
 		if !running {
 			break
 		}
 		if time.Now().After(deadline) {
-			t.Fatal("first update job did not finish")
+			t.Fatal("update job did not finish")
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
