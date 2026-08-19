@@ -21,6 +21,35 @@ func TestNewRejectsUntrustedImageRegistry(t *testing.T) {
 	}
 }
 
+func TestComposeEnvironmentUsesDeploymentEnvFileValues(t *testing.T) {
+	t.Setenv("APP_IMAGE", "ghcr.io/owner/repo@sha256:old")
+	t.Setenv("APP_VERSION", "1.0.3")
+	var captured []string
+	service, err := New(Config{
+		Repository: "owner/repo", Image: "ghcr.io/owner/repo", DeployDir: t.TempDir(), StateDir: t.TempDir(),
+		RunCommandWithEnv: func(_ context.Context, _ string, environment []string, _ ...string) ([]byte, error) {
+			captured = environment
+			return nil, nil
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.compose(context.Background(), "config"); err != nil {
+		t.Fatal(err)
+	}
+	if len(captured) == 0 {
+		t.Fatal("compose did not invoke the environment-aware command runner")
+	}
+	value := strings.Join(captured, "\x00")
+	if strings.Contains(value, "APP_IMAGE=") || strings.Contains(value, "APP_VERSION=") {
+		t.Fatalf("compose inherited deployment overrides: %v", captured)
+	}
+	if !strings.Contains(value, "PATH=") {
+		t.Fatalf("compose environment lost PATH: %v", captured)
+	}
+}
+
 func TestManifestMismatchStopsBeforeCommands(t *testing.T) {
 	var commandMu sync.Mutex
 	var commands []string

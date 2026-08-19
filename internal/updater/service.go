@@ -21,18 +21,19 @@ import (
 )
 
 type Config struct {
-	Repository       string
-	Image            string
-	DeployDir        string
-	StateDir         string
-	ComposeService   string
-	HealthURL        string
-	CosignBinary     string
-	CosignOIDCIssuer string
-	GitHubAPIBaseURL string
-	HTTPClient       *http.Client
-	RunCommand       func(context.Context, string, ...string) ([]byte, error)
-	Now              func() time.Time
+	Repository        string
+	Image             string
+	DeployDir         string
+	StateDir          string
+	ComposeService    string
+	HealthURL         string
+	CosignBinary      string
+	CosignOIDCIssuer  string
+	GitHubAPIBaseURL  string
+	HTTPClient        *http.Client
+	RunCommand        func(context.Context, string, ...string) ([]byte, error)
+	RunCommandWithEnv func(context.Context, string, []string, ...string) ([]byte, error)
+	Now               func() time.Time
 }
 
 type Service struct {
@@ -113,8 +114,18 @@ func New(config Config) (*Service, error) {
 	if config.HTTPClient == nil {
 		config.HTTPClient = &http.Client{Timeout: 20 * time.Second}
 	}
+	customRunner := config.RunCommand != nil
 	if config.RunCommand == nil {
 		config.RunCommand = runCommand
+	}
+	if config.RunCommandWithEnv == nil {
+		if customRunner {
+			config.RunCommandWithEnv = func(ctx context.Context, name string, _ []string, args ...string) ([]byte, error) {
+				return config.RunCommand(ctx, name, args...)
+			}
+		} else {
+			config.RunCommandWithEnv = runCommandWithEnv
+		}
 	}
 	if config.Now == nil {
 		config.Now = time.Now
@@ -528,7 +539,7 @@ func (s *Service) waitForHealth(ctx context.Context, timeout time.Duration) erro
 
 func (s *Service) compose(ctx context.Context, args ...string) ([]byte, error) {
 	base := []string{"compose", "--project-directory", s.config.DeployDir, "--env-file", filepath.Join(s.config.DeployDir, ".env")}
-	return s.config.RunCommand(ctx, "docker", append(base, args...)...)
+	return s.config.RunCommandWithEnv(ctx, "docker", composeEnvironment(os.Environ()), append(base, args...)...)
 }
 
 func (s *Service) failJob(job *Job, err error) {
@@ -662,7 +673,12 @@ func atomicWrite(path string, data []byte, mode os.FileMode) error {
 }
 
 func runCommand(ctx context.Context, name string, args ...string) ([]byte, error) {
+	return runCommandWithEnv(ctx, name, os.Environ(), args...)
+}
+
+func runCommandWithEnv(ctx context.Context, name string, environment []string, args ...string) ([]byte, error) {
 	command := exec.CommandContext(ctx, name, args...)
+	command.Env = environment
 	output, err := command.CombinedOutput()
 	if err != nil {
 		detail := commandOutput(output, 3000)
@@ -672,6 +688,18 @@ func runCommand(ctx context.Context, name string, args ...string) ([]byte, error
 		return output, fmt.Errorf("%s failed: %w", name, err)
 	}
 	return output, nil
+}
+
+func composeEnvironment(environment []string) []string {
+	filtered := make([]string, 0, len(environment))
+	for _, value := range environment {
+		key, _, ok := strings.Cut(value, "=")
+		if ok && (key == "APP_IMAGE" || key == "APP_VERSION") {
+			continue
+		}
+		filtered = append(filtered, value)
+	}
+	return filtered
 }
 
 func commandOutput(output []byte, limit int) string {

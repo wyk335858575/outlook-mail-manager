@@ -74,7 +74,7 @@ DATA_VOLUME=$(docker inspect "$CID" --format '{{range .Mounts}}{{if eq .Destinat
 
 docker run --rm --user 0 --entrypoint sh \
   -v "$DATA_VOLUME:/data:ro" \
-  ghcr.io/wyk335858575/outlook-mail-manager:1.0.4 -c '
+  ghcr.io/wyk335858575/outlook-mail-manager:1.0.5 -c '
     apk add --no-cache sqlite >/dev/null
     for db in /data/outlook-manager.db /data/outlook-manager.db.before-restore-* /data/backups/*.db; do
       [ -f "$db" ] || continue

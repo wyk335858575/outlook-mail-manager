@@ -1,5 +1,10 @@
 # 变更日志
 
+## 1.0.5 - 2026-08-20
+
+- 修复在线升级助手继承旧 `APP_IMAGE` 和 `APP_VERSION` 环境变量，导致备份阶段仍启动旧镜像并报 `unknown command "backup-for-update"`。
+- Compose 子进程现在始终以部署目录 `.env` 中的已验证镜像和版本为准，并增加环境覆盖回归测试。
+
 ## 1.0.4 - 2026-08-20
 
 - 生产 `docker-compose.yml` 移除本地 `build` 配置，服务器重建时只能使用已发布的 GHCR 镜像，避免旧源码覆盖正式镜像。
