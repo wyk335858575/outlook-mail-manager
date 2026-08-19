@@ -371,13 +371,23 @@ func TestRestartFailureRunsRollbackAndDoesNotReportSuccess(t *testing.T) {
 		t.Fatal(err)
 	}
 	var firstUp atomic.Bool
+	var stopSeen atomic.Bool
+	var forceRecreateCount atomic.Int32
 	runner := func(_ context.Context, name string, args ...string) ([]byte, error) {
 		joined := name + " " + strings.Join(args, " ")
+		if strings.Contains(joined, " stop app") {
+			stopSeen.Store(true)
+		}
+		if strings.Contains(joined, "--force-recreate app") {
+			forceRecreateCount.Add(1)
+		}
 		switch {
 		case strings.Contains(joined, "exec -T app /usr/local/bin/outlook-mail-manager backup"):
 			return []byte("backup created: outlook-manager-20260819T000000Z.db (10 bytes)"), nil
-		case strings.Contains(joined, "compose") && strings.Contains(joined, " up -d --no-build app") && !firstUp.Swap(true):
+		case strings.Contains(joined, "compose") && strings.Contains(joined, " up -d --no-build --force-recreate app") && !firstUp.Swap(true):
 			return nil, context.DeadlineExceeded
+		case strings.Contains(joined, " logs --no-color --tail 80 app"):
+			return []byte("startup failed: bind address already in use"), nil
 		default:
 			return []byte("ok"), nil
 		}
@@ -402,8 +412,11 @@ func TestRestartFailureRunsRollbackAndDoesNotReportSuccess(t *testing.T) {
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
-	if job.State != "failed" || !strings.Contains(job.Error, "rolled back") {
+	if job.State != "failed" || !strings.Contains(job.Error, "rolled back") || !strings.Contains(job.Error, "startup failed") {
 		t.Fatalf("job = %+v", job)
+	}
+	if !stopSeen.Load() || forceRecreateCount.Load() != 2 {
+		t.Fatalf("stop seen = %v, force recreate count = %d", stopSeen.Load(), forceRecreateCount.Load())
 	}
 	data, err := os.ReadFile(filepath.Join(deployDir, ".env"))
 	if err != nil {
@@ -432,4 +445,3 @@ func signedReleaseServer(t *testing.T, tag, repository, image string) *httptest.
 	}))
 	return server
 }
-

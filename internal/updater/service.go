@@ -247,7 +247,7 @@ func (s *Service) runJob(parent context.Context, job Job, lock *processLock, pro
 		s.running = false
 		s.mu.Unlock()
 	}()
-	ctx, cancel := context.WithTimeout(parent, 15*time.Minute)
+	ctx, cancel := context.WithTimeout(parent, 30*time.Minute)
 	defer cancel()
 	set := func(state, message string) {
 		job.State, job.Message, job.UpdatedAt = state, message, s.config.Now().UTC()
@@ -256,28 +256,34 @@ func (s *Service) runJob(parent context.Context, job Job, lock *processLock, pro
 			progress(job)
 		}
 	}
+	fail := func(err error) {
+		s.failJob(&job, err)
+		if progress != nil {
+			progress(job)
+		}
+	}
 	set("checking", "正在读取最新稳定版")
 	release, manifest, err := s.fetchRelease(ctx)
 	if err != nil {
-		s.failJob(&job, err)
+		fail(err)
 		return job
 	}
 	envPath := filepath.Join(s.config.DeployDir, ".env")
 	previousEnv, err := os.ReadFile(envPath)
 	if err != nil {
-		s.failJob(&job, fmt.Errorf("read deployment environment: %w", err))
+		fail(fmt.Errorf("read deployment environment: %w", err))
 		return job
 	}
 	currentVersion := envValue(previousEnv, "APP_VERSION")
 	if !versionGreater(manifest.Version, currentVersion) {
-		s.failJob(&job, fmt.Errorf("refuse update from %s to %s: downgrade and same-version updates are not allowed", currentVersion, manifest.Version))
+		fail(fmt.Errorf("refuse update from %s to %s: downgrade and same-version updates are not allowed", currentVersion, manifest.Version))
 		return job
 	}
 	job.Version = manifest.Version
 	set("backing_up", "正在创建升级前一致性备份")
 	backupName, err := s.createBackup(ctx)
 	if err != nil {
-		s.failJob(&job, err)
+		fail(err)
 		return job
 	}
 	set("verifying", "正在验证固定镜像摘要和发布身份")
@@ -285,30 +291,38 @@ func (s *Service) runJob(parent context.Context, job Job, lock *processLock, pro
 	if _, err := s.config.RunCommand(ctx, s.config.CosignBinary, "verify", imageRef,
 		"--certificate-identity", s.releaseIdentity(release.TagName),
 		"--certificate-oidc-issuer", s.config.CosignOIDCIssuer); err != nil {
-		s.failJob(&job, fmt.Errorf("verify signed image: %w", err))
+		fail(fmt.Errorf("verify signed image: %w", err))
 		return job
 	}
 	set("pulling", "正在拉取已验证的固定镜像")
 	if _, err := s.config.RunCommand(ctx, "docker", "pull", imageRef); err != nil {
-		s.failJob(&job, fmt.Errorf("pull image: %w", err))
+		fail(fmt.Errorf("pull image: %w", err))
 		return job
 	}
 	set("restarting", "正在切换版本并重启应用")
 	if err := updateEnvFile(envPath, previousEnv, imageRef, manifest.Version); err != nil {
-		s.failJob(&job, err)
+		fail(err)
 		return job
 	}
-	_, err = s.compose(ctx, "up", "-d", "--no-build", s.config.ComposeService)
+	_, err = s.compose(ctx, "stop", s.config.ComposeService)
+	if err == nil {
+		_, err = s.compose(ctx, "up", "-d", "--no-build", "--force-recreate", s.config.ComposeService)
+	}
 	if err == nil {
 		err = s.waitForHealth(ctx, 90*time.Second)
 	}
 	if err != nil {
+		diagnosticCtx, cancelDiagnostics := context.WithTimeout(context.Background(), 20*time.Second)
+		err = s.restartFailure(diagnosticCtx, err)
+		cancelDiagnostics()
 		set("rolling_back", "健康检查失败，正在恢复旧镜像、配置和数据库")
-		rollbackErr := s.rollback(ctx, envPath, previousEnv, backupName)
+		rollbackCtx, cancelRollback := context.WithTimeout(context.Background(), 3*time.Minute)
+		rollbackErr := s.rollback(rollbackCtx, envPath, previousEnv, backupName)
+		cancelRollback()
 		if rollbackErr != nil {
-			s.failJob(&job, fmt.Errorf("update failed: %v; rollback failed: %w", err, rollbackErr))
+			fail(fmt.Errorf("update failed: %v; rollback failed: %w", err, rollbackErr))
 		} else {
-			s.failJob(&job, fmt.Errorf("update failed and was rolled back: %w", err))
+			fail(fmt.Errorf("update failed and was rolled back: %w", err))
 		}
 		return job
 	}
@@ -445,10 +459,25 @@ func (s *Service) rollback(ctx context.Context, envPath string, previousEnv []by
 	if _, err := s.compose(ctx, "run", "--rm", s.config.ComposeService, "restore", "/data/backups/"+backupName); err != nil {
 		return err
 	}
-	if _, err := s.compose(ctx, "up", "-d", "--no-build", s.config.ComposeService); err != nil {
+	if _, err := s.compose(ctx, "up", "-d", "--no-build", "--force-recreate", s.config.ComposeService); err != nil {
 		return err
 	}
 	return s.waitForHealth(ctx, 90*time.Second)
+}
+
+func (s *Service) restartFailure(ctx context.Context, cause error) error {
+	parts := []string{cause.Error()}
+	if output, err := s.compose(ctx, "logs", "--no-color", "--tail", "80", s.config.ComposeService); err == nil {
+		if detail := commandOutput(output, 2400); detail != "" {
+			parts = append(parts, "container logs:\n"+detail)
+		}
+	}
+	if output, err := s.compose(ctx, "ps", "-a"); err == nil {
+		if detail := commandOutput(output, 800); detail != "" {
+			parts = append(parts, "container status:\n"+detail)
+		}
+	}
+	return errors.New(strings.Join(parts, "\n"))
 }
 
 func (s *Service) waitForHealth(ctx context.Context, timeout time.Duration) error {
@@ -611,9 +640,21 @@ func runCommand(ctx context.Context, name string, args ...string) ([]byte, error
 	command := exec.CommandContext(ctx, name, args...)
 	output, err := command.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("%s failed: %w", name, err)
+		detail := commandOutput(output, 3000)
+		if detail != "" {
+			return output, fmt.Errorf("%s failed: %w: %s", name, err, detail)
+		}
+		return output, fmt.Errorf("%s failed: %w", name, err)
 	}
 	return output, nil
+}
+
+func commandOutput(output []byte, limit int) string {
+	detail := strings.TrimSpace(strings.ReplaceAll(string(output), "\x00", ""))
+	if len(detail) > limit {
+		detail = detail[len(detail)-limit:]
+	}
+	return detail
 }
 
 func randomID() string {
@@ -629,8 +670,8 @@ func sanitizeError(err error) string {
 		return ""
 	}
 	value := err.Error()
-	if len(value) > 500 {
-		value = value[:500]
+	if len(value) > 4000 {
+		value = value[:4000]
 	}
 	return value
 }

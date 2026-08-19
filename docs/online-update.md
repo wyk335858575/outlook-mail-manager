@@ -37,6 +37,8 @@ curl -fsSL https://github.com/wyk335858575/outlook-mail-manager/releases/latest/
 7. 验证并拉取 `image@sha256:...`，原子更新 `.env` 后重启应用。
 8. 轮询 `/healthz`；失败时恢复旧配置、旧镜像和升级前数据库。
 
+切换时更新器会先停止旧容器，再使用固定镜像摘要强制重建服务。若新服务未通过健康检查，终端会先显示容器日志和 Compose 状态，然后使用独立回滚流程恢复旧版本。
+
 脚本使用部署目录中的跨进程文件锁，重复执行时不会同时启动两个升级任务。它不读取或输出管理员密码、邮箱 OAuth token、API token 或数据库内容。
 
 ## 查看结果
