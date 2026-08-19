@@ -507,4 +507,3 @@ func randomID(source io.Reader) (string, error) {
 }
 
 func escapeSQLiteLiteral(value string) string { return strings.ReplaceAll(value, "'", "''") }
-

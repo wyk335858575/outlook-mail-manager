@@ -188,4 +188,3 @@ func createUpdateBackup(dataDir string) error {
 	fmt.Printf("backup created: %s (%d bytes, sha256 %s)\n", backup.Name, backup.SizeBytes, backup.SHA256)
 	return nil
 }
-

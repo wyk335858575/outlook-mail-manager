@@ -284,4 +284,3 @@ func TestSQLitePathSupportsWindowsDriveLetters(t *testing.T) {
 		t.Fatalf("database path = %q, want Unicode directory", databasePath)
 	}
 }
-

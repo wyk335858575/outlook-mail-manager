@@ -113,4 +113,3 @@ curl --fail http://127.0.0.1:8080/healthz
 ## Fork 发布
 
 Fork 用户需要在 `.env` 中填写自己的仓库和 GHCR 镜像。`release.yml` 会把 `update.sh`、两个架构的 updater、manifest、SBOM、`SHA256SUMS` 和对应 Cosign bundle 一起发布。健康页生成的命令会自动使用配置仓库。
-

@@ -286,4 +286,3 @@ func TestRestoreRejectsStructurallyValidDatabaseMissingSettings(t *testing.T) {
 	}
 	valid.Close()
 }
-

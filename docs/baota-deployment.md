@@ -238,4 +238,3 @@ docker compose logs --tail=200 app
 - 处理 `reauth_required` 账号，不要反复尝试失效授权。
 - 磁盘达到 70% 时扩容或清理旧备份；90% 时程序进入仅同步元数据模式。
 - 定期测试至少一个系统通知通道和一个受限 API token。
-

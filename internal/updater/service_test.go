@@ -509,4 +509,3 @@ func signedReleaseServer(t *testing.T, tag, repository, image string) *httptest.
 	}))
 	return server
 }
-

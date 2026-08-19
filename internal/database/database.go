@@ -211,4 +211,3 @@ func migrationVersion(name string) (int, error) {
 	}
 	return version, nil
 }
-
