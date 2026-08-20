@@ -1,10 +1,12 @@
 import { apiRequest } from './auth'
 
 export type AccountStatus = 'pending' | 'active' | 'degraded' | 'reauth_required' | 'disabled'
+export type AccountAuthMethod = 'web' | 'oauth'
 
 export type Account = {
   public_id: string
   imported_email: string
+  auth_method: AccountAuthMethod
   primary_email?: string
   display_name?: string
   notes: string
@@ -40,6 +42,7 @@ export type AccountListResponse = {
   page: number
   page_size: number
   status_counts: AccountStatusCounts
+  auth_method_counts: Record<AccountAuthMethod, number>
 }
 
 export type BatchAccountItemResult = {

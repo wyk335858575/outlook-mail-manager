@@ -18,7 +18,7 @@ import (
 
 const (
 	defaultGraphBaseURL = "https://graph.microsoft.com/v1.0"
-	defaultSyncWindow   = 10 * time.Minute
+	defaultSyncWindow   = 5 * time.Second
 	defaultWorkers      = 4
 )
 

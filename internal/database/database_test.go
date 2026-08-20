@@ -35,8 +35,8 @@ func TestOpenAppliesMigrationsIdempotently(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CurrentVersion() error = %v", err)
 	}
-	if version != 14 {
-		t.Fatalf("CurrentVersion() = %d, want 14", version)
+	if version != 16 {
+		t.Fatalf("CurrentVersion() = %d, want 16", version)
 	}
 
 	var count int
@@ -52,7 +52,7 @@ func TestOpenAppliesMigrationsIdempotently(t *testing.T) {
 	).Scan(&syncInterval, &pageSize); err != nil {
 		t.Fatalf("query app_settings: %v", err)
 	}
-	if syncInterval != 600 || pageSize != 100 {
+	if syncInterval != 5 || pageSize != 100 {
 		t.Fatalf("app settings defaults = interval:%d page:%d", syncInterval, pageSize)
 	}
 	var defaultFolder string
@@ -83,6 +83,15 @@ func TestOpenAppliesMigrationsIdempotently(t *testing.T) {
 	}
 	if oauthClientIDColumn != 1 {
 		t.Fatalf("oauth_client_id columns = %d, want 1", oauthClientIDColumn)
+	}
+	var authMethodColumn int
+	if err := store.DB.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM pragma_table_info('accounts') WHERE name = 'auth_method'
+	`).Scan(&authMethodColumn); err != nil {
+		t.Fatalf("query account auth method column: %v", err)
+	}
+	if authMethodColumn != 1 {
+		t.Fatalf("auth_method columns = %d, want 1", authMethodColumn)
 	}
 }
 
@@ -243,7 +252,7 @@ func TestOpenMigratesPersonalRulesAndSyncSecondsFromVersion11(t *testing.T) {
 	}
 	defer store.Close()
 	version, err := store.CurrentVersion(context.Background())
-	if err != nil || version != 14 {
+	if err != nil || version != 16 {
 		t.Fatalf("schema version = %d, %v", version, err)
 	}
 	var copied, legacyFlag, seconds int
@@ -256,10 +265,10 @@ func TestOpenMigratesPersonalRulesAndSyncSecondsFromVersion11(t *testing.T) {
 	if err := store.DB.QueryRow(`SELECT sync_interval_seconds FROM app_settings WHERE id = 1`).Scan(&seconds); err != nil {
 		t.Fatalf("query migrated sync interval: %v", err)
 	}
-	if copied != 1 || legacyFlag != 0 || seconds != 600 {
+	if copied != 1 || legacyFlag != 0 || seconds != 5 {
 		t.Fatalf("migration result = copied:%d legacy:%d seconds:%d", copied, legacyFlag, seconds)
 	}
-	backups, err := filepath.Glob(filepath.Join(dataDir, "backups", "outlook-manager.before-v11-to-v14-*.db"))
+	backups, err := filepath.Glob(filepath.Join(dataDir, "backups", "outlook-manager.before-v11-to-v16-*.db"))
 	if err != nil || len(backups) != 1 {
 		t.Fatalf("migration backups = %v, %v", backups, err)
 	}

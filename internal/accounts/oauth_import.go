@@ -270,7 +270,7 @@ func (s *Service) processOAuthImportItem(ctx context.Context, jobID string, item
 			s.completeOAuthImportItem(ctx, jobID, itemID, "failed", "email_mismatch", "Microsoft 主邮箱与导入邮箱不一致，请改用设备码授权确认别名")
 			return
 		}
-		if err := s.persistAuthorizationWithClientID(ctx, existingID, existingPublic, token, profile, scopes, clientID, false); err != nil {
+		if err := s.persistAuthorizationWithClientID(ctx, existingID, existingPublic, token, profile, scopes, clientID, AuthMethodOAuth, false); err != nil {
 			s.completeOAuthImportItem(ctx, jobID, itemID, "failed", credentialErrorCode(err), credentialErrorMessage(err))
 			return
 		}
@@ -286,13 +286,13 @@ func (s *Service) processOAuthImportItem(ctx context.Context, jobID string, item
 		s.completeOAuthImportItem(ctx, jobID, itemID, "failed", "internal_error", "无法创建账号")
 		return
 	}
-	insert, err := s.db.ExecContext(ctx, `INSERT INTO accounts (public_id, imported_email, status, created_at_utc, updated_at_utc) VALUES (?, ?, 'pending', ?, ?)`, publicID, email, formatTime(now), formatTime(now))
+	insert, err := s.db.ExecContext(ctx, `INSERT INTO accounts (public_id, imported_email, auth_method, status, created_at_utc, updated_at_utc) VALUES (?, ?, ?, 'pending', ?, ?)`, publicID, email, AuthMethodOAuth, formatTime(now), formatTime(now))
 	if err != nil {
 		s.completeOAuthImportItem(ctx, jobID, itemID, "failed", "account_conflict", "账号已存在或无法创建")
 		return
 	}
 	accountID, _ := insert.LastInsertId()
-	if err := s.persistAuthorizationWithClientID(ctx, accountID, publicID, token, profile, scopes, clientID, false); err != nil {
+	if err := s.persistAuthorizationWithClientID(ctx, accountID, publicID, token, profile, scopes, clientID, AuthMethodOAuth, false); err != nil {
 		_, _ = s.db.ExecContext(ctx, `DELETE FROM accounts WHERE id = ? AND status = 'pending'`, accountID)
 		s.completeOAuthImportItem(ctx, jobID, itemID, "failed", credentialErrorCode(err), credentialErrorMessage(err))
 		return
@@ -369,7 +369,7 @@ func (s *Service) ReplaceOAuthCredentials(ctx context.Context, publicID, clientI
 	if microsoftID == "" && !strings.EqualFold(importedEmail, profileEmail(profile)) {
 		return errors.New("Microsoft primary email does not match imported email")
 	}
-	return s.persistAuthorizationWithClientID(ctx, accountID, publicID, token, profile, scopes, clientID, false)
+	return s.persistAuthorizationWithClientID(ctx, accountID, publicID, token, profile, scopes, clientID, AuthMethodOAuth, false)
 }
 
 func (s *Service) verifyMailboxAccess(ctx context.Context, accessToken string) error {
@@ -430,7 +430,7 @@ func (s *Service) UpdateAccount(ctx context.Context, publicID string, input Acco
 	if err != nil {
 		return Account{}, invalidImport("标签无效")
 	}
-	accountID, _, _, err := s.accountIdentity(ctx, strings.TrimSpace(publicID))
+	accountID, existingEmail, _, err := s.accountIdentity(ctx, strings.TrimSpace(publicID))
 	if err != nil {
 		return Account{}, err
 	}
@@ -472,6 +472,9 @@ func (s *Service) UpdateAccount(ctx context.Context, publicID string, input Acco
 	}
 	if err := tx.Commit(); err != nil {
 		return Account{}, err
+	}
+	if !strings.EqualFold(existingEmail, email) {
+		s.invalidateAuthorizationForAccountChange(accountID, existingEmail)
 	}
 	items, err := s.List(ctx, "")
 	if err != nil {

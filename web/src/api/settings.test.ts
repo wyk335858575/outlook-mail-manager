@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fetchSettings, type AppSettings, updateSettings } from './settings'
 
 const settings: AppSettings = {
-  sync_interval_seconds: 600,
+  sync_interval_seconds: 5,
   initial_sync_days: 30,
   body_cache_kib: 256,
   message_page_size: 100,

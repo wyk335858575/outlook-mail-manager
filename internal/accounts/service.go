@@ -29,6 +29,13 @@ const (
 	maxNotesBytes                = 500
 )
 
+type AuthMethod string
+
+const (
+	AuthMethodWeb   AuthMethod = "web"
+	AuthMethodOAuth AuthMethod = "oauth"
+)
+
 var (
 	ErrAccountNotFound           = errors.New("account not found")
 	ErrAccountDisabled           = errors.New("account is disabled")
@@ -82,6 +89,7 @@ type Service struct {
 type Account struct {
 	PublicID                string     `json:"public_id"`
 	ImportedEmail           string     `json:"imported_email"`
+	AuthMethod              AuthMethod `json:"auth_method"`
 	PrimaryEmail            string     `json:"primary_email,omitempty"`
 	DisplayName             string     `json:"display_name,omitempty"`
 	Notes                   string     `json:"notes"`
@@ -241,10 +249,10 @@ func (s *Service) Import(ctx context.Context, value string) (ImportResult, error
 			return ImportResult{}, err
 		}
 		insert, err := tx.ExecContext(ctx, `
-			INSERT INTO accounts (public_id, imported_email, notes, created_at_utc, updated_at_utc)
-			VALUES (?, ?, ?, ?, ?)
+			INSERT INTO accounts (public_id, imported_email, auth_method, notes, created_at_utc, updated_at_utc)
+			VALUES (?, ?, ?, ?, ?, ?)
 			ON CONFLICT(imported_email) DO NOTHING
-		`, publicID, row.email, row.notes, formatTime(now), formatTime(now))
+		`, publicID, row.email, AuthMethodWeb, row.notes, formatTime(now), formatTime(now))
 		if err != nil {
 			return ImportResult{}, fmt.Errorf("import account: %w", err)
 		}

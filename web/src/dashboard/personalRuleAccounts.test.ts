@@ -7,6 +7,7 @@ function account(index: number): Account {
   return {
     public_id: `acc_${index}`,
     imported_email: `imported-${index}@outlook.com`,
+    auth_method: 'web',
     primary_email: `primary-${index}@hotmail.com`,
     display_name: `Mailbox ${index}`,
     notes: '', status: 'active', consecutive_failures: 0, sync_failures: 0, sync_backlog: 0,

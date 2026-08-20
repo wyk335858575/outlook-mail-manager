@@ -66,15 +66,16 @@ func TestOAuthImportValidatesAndEncryptsCredentials(t *testing.T) {
 	}
 	var accountID int64
 	var refreshCipher, storedClientID string
+	var authMethod AuthMethod
 	if err := store.DB.QueryRow(`
-		SELECT a.id, t.refresh_token_ciphertext, t.oauth_client_id FROM accounts a
+		SELECT a.id, t.refresh_token_ciphertext, t.oauth_client_id, a.auth_method FROM accounts a
 		JOIN account_tokens t ON t.account_id = a.id WHERE a.imported_email = 'user@outlook.com'
-	`).Scan(&accountID, &refreshCipher, &storedClientID); err != nil {
+	`).Scan(&accountID, &refreshCipher, &storedClientID, &authMethod); err != nil {
 		t.Fatalf("load imported token: %v", err)
 	}
 	refreshToken, err := service.keyring.OpenString(refreshCipher, tokenAssociatedData(accountID, "refresh"))
-	if err != nil || refreshToken != "refresh-new" || storedClientID != testMicrosoftClientID {
-		t.Fatalf("stored credential = %q, %q, %v", refreshToken, storedClientID, err)
+	if err != nil || refreshToken != "refresh-new" || storedClientID != testMicrosoftClientID || authMethod != AuthMethodOAuth {
+		t.Fatalf("stored credential = %q, %q, %q, %v", refreshToken, storedClientID, authMethod, err)
 	}
 	var staged sql.NullString
 	if err := store.DB.QueryRow(`SELECT refresh_token_ciphertext FROM oauth_import_items WHERE job_public_id = ?`, job.ID).Scan(&staged); err != nil {
@@ -389,13 +390,16 @@ func TestUpdateAccountReplacesMetadata(t *testing.T) {
 		t.Fatalf("Import() error = %v", err)
 	}
 	items, _ := service.List(context.Background(), "")
+	if len(items) != 1 || items[0].AuthMethod != AuthMethodWeb {
+		t.Fatalf("basic import auth method = %+v", items)
+	}
 	updated, err := service.UpdateAccount(context.Background(), items[0].PublicID, AccountUpdate{
 		ImportedEmail: "new@outlook.com", Notes: "New note", Groups: []string{"Finance"}, Tags: []string{"important"},
 	})
 	if err != nil {
 		t.Fatalf("UpdateAccount() error = %v", err)
 	}
-	if updated.ImportedEmail != "new@outlook.com" || updated.Notes != "New note" || !containsName(updated.Groups, "Finance") || !containsName(updated.Tags, "important") {
+	if updated.ImportedEmail != "new@outlook.com" || updated.AuthMethod != AuthMethodWeb || updated.Notes != "New note" || !containsName(updated.Groups, "Finance") || !containsName(updated.Tags, "important") {
 		t.Fatalf("updated account = %+v", updated)
 	}
 }
@@ -607,6 +611,33 @@ func TestListAccountsSearchesMetadataAndPaginates(t *testing.T) {
 	result, err = service.ListAccounts(context.Background(), AccountListOptions{Query: "%_"})
 	if err != nil || len(result.Accounts) != 1 || result.Accounts[0].ImportedEmail != "beta@outlook.com" {
 		t.Fatalf("escaped wildcard search = %+v, error = %v", result, err)
+	}
+}
+
+func TestListAccountsAuthMethodCountsFollowStatusFilter(t *testing.T) {
+	service, store := newTestService(t, Options{})
+	if _, err := service.Import(context.Background(), "web@outlook.com\noauth@outlook.com"); err != nil {
+		t.Fatalf("Import() error = %v", err)
+	}
+	if _, err := store.DB.Exec(`
+		UPDATE accounts SET status = CASE imported_email
+			WHEN 'web@outlook.com' THEN 'active'
+			ELSE 'disabled'
+		END,
+		auth_method = CASE imported_email
+			WHEN 'web@outlook.com' THEN 'web'
+			ELSE 'oauth'
+		END
+	`); err != nil {
+		t.Fatalf("seed account types: %v", err)
+	}
+
+	result, err := service.ListAccounts(context.Background(), AccountListOptions{Status: "active", Page: 1, PageSize: 50})
+	if err != nil {
+		t.Fatalf("ListAccounts() error = %v", err)
+	}
+	if result.Total != 1 || result.AuthMethodCounts[string(AuthMethodWeb)] != 1 || result.AuthMethodCounts[string(AuthMethodOAuth)] != 0 {
+		t.Fatalf("filtered auth method counts = %+v", result)
 	}
 }
 

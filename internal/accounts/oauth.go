@@ -201,7 +201,7 @@ func (s *Service) ConfirmAuthorization(ctx context.Context, jobID string) (Autho
 	publicID := job.accountPublicID
 	s.jobsMu.Unlock()
 
-	err := s.persistAuthorizationWithClientID(ctx, accountID, publicID, token, profile, scopes, clientID, true)
+	err := s.persistAuthorizationWithClientID(ctx, accountID, publicID, token, profile, scopes, clientID, AuthMethodWeb, true)
 	s.finishAuthorization(jobID, err)
 	return s.Authorization(jobID)
 }
@@ -330,7 +330,7 @@ func (s *Service) pollAuthorization(ctx context.Context, jobID string) {
 	publicID := job.accountPublicID
 	s.jobsMu.Unlock()
 
-	err = s.persistAuthorizationWithClientID(ctx, accountID, publicID, token, profile, scopes, clientID, false)
+	err = s.persistAuthorizationWithClientID(ctx, accountID, publicID, token, profile, scopes, clientID, AuthMethodWeb, false)
 	s.finishAuthorization(jobID, err)
 }
 
@@ -347,7 +347,7 @@ func (s *Service) persistAuthorization(
 	if err != nil {
 		return err
 	}
-	return s.persistAuthorizationWithClientID(ctx, accountID, publicID, token, profile, scopes, config.ClientID, aliasConfirmed)
+	return s.persistAuthorizationWithClientID(ctx, accountID, publicID, token, profile, scopes, config.ClientID, AuthMethodWeb, aliasConfirmed)
 }
 
 func (s *Service) persistAuthorizationWithClientID(
@@ -358,8 +358,12 @@ func (s *Service) persistAuthorizationWithClientID(
 	profile microsoftProfile,
 	scopes []string,
 	clientID string,
+	authMethod AuthMethod,
 	aliasConfirmed bool,
 ) error {
+	if authMethod != AuthMethodWeb && authMethod != AuthMethodOAuth {
+		return errors.New("invalid account authorization method")
+	}
 	if profile.ID == "" || profileEmail(profile) == "" {
 		return errors.New("Microsoft profile is incomplete")
 	}
@@ -411,11 +415,11 @@ func (s *Service) persistAuthorizationWithClientID(
 		return fmt.Errorf("save account tokens: %w", err)
 	}
 	result, err := tx.ExecContext(ctx, `
-		UPDATE accounts SET microsoft_user_id = ?, primary_email = ?, display_name = ?,
+		UPDATE accounts SET auth_method = ?, microsoft_user_id = ?, primary_email = ?, display_name = ?,
 			status = 'active', reauth_reason = NULL, last_oauth_error = NULL,
 			consecutive_failures = 0, next_retry_at_utc = NULL,
 			last_graph_success_at_utc = ?, updated_at_utc = ? WHERE id = ? AND status != 'disabled'
-	`, profile.ID, strings.ToLower(profileEmail(profile)), profile.DisplayName,
+	`, authMethod, profile.ID, strings.ToLower(profileEmail(profile)), profile.DisplayName,
 		formatTime(now), formatTime(now), accountID)
 	if err != nil {
 		return fmt.Errorf("activate account: %w", err)
@@ -696,13 +700,21 @@ func (s *Service) authorizationInProgress(accountID int64) bool {
 }
 
 func (s *Service) cancelAccountAuthorization(accountID int64) {
+	s.invalidateAuthorization(accountID, "", "account_disabled", "账号已停用")
+}
+
+func (s *Service) invalidateAuthorizationForAccountChange(accountID int64, previousEmail string) {
+	s.invalidateAuthorization(accountID, previousEmail, "account_updated", "账号资料已更新，请重新开始授权")
+}
+
+func (s *Service) invalidateAuthorization(accountID int64, matchEmail, errorCode, message string) {
 	s.jobsMu.Lock()
 	defer s.jobsMu.Unlock()
 	jobID := s.accountJobs[accountID]
-	if job := s.jobs[jobID]; job != nil {
+	if job := s.jobs[jobID]; job != nil && (matchEmail == "" || strings.EqualFold(job.importedEmail, matchEmail)) {
 		job.cancel()
 		job.state = "failed"
-		job.errorCode = "account_disabled"
-		job.message = "账号已停用"
+		job.errorCode = errorCode
+		job.message = message
 	}
 }

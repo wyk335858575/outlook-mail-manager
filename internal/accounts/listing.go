@@ -21,11 +21,12 @@ type AccountListOptions struct {
 }
 
 type AccountList struct {
-	Accounts     []Account      `json:"accounts"`
-	Total        int            `json:"total"`
-	Page         int            `json:"page"`
-	PageSize     int            `json:"page_size"`
-	StatusCounts map[string]int `json:"status_counts"`
+	Accounts         []Account      `json:"accounts"`
+	Total            int            `json:"total"`
+	Page             int            `json:"page"`
+	PageSize         int            `json:"page_size"`
+	StatusCounts     map[string]int `json:"status_counts"`
+	AuthMethodCounts map[string]int `json:"auth_method_counts"`
 }
 
 func (s *Service) List(ctx context.Context, status string) ([]Account, error) {
@@ -61,6 +62,24 @@ func (s *Service) ListAccounts(ctx context.Context, options AccountListOptions) 
 	if err := countRows.Close(); err != nil {
 		return AccountList{}, fmt.Errorf("close account status counts: %w", err)
 	}
+	authMethodCounts := map[string]int{string(AuthMethodWeb): 0, string(AuthMethodOAuth): 0}
+	authCondition, authArgs := accountListCondition(options.Query, options.Status)
+	authRows, err := s.db.QueryContext(ctx, `SELECT a.auth_method, COUNT(*) FROM accounts a`+authCondition+` GROUP BY a.auth_method`, authArgs...)
+	if err != nil {
+		return AccountList{}, fmt.Errorf("count account authorization methods: %w", err)
+	}
+	for authRows.Next() {
+		var method string
+		var count int
+		if err := authRows.Scan(&method, &count); err != nil {
+			authRows.Close()
+			return AccountList{}, fmt.Errorf("scan account authorization method count: %w", err)
+		}
+		authMethodCounts[method] = count
+	}
+	if err := authRows.Close(); err != nil {
+		return AccountList{}, fmt.Errorf("close account authorization method counts: %w", err)
+	}
 
 	condition, args := accountListCondition(options.Query, options.Status)
 	var total int
@@ -85,7 +104,7 @@ func (s *Service) ListAccounts(ctx context.Context, options AccountListOptions) 
 	if page == 0 {
 		page = 1
 	}
-	return AccountList{Accounts: items, Total: total, Page: page, PageSize: options.PageSize, StatusCounts: counts}, nil
+	return AccountList{Accounts: items, Total: total, Page: page, PageSize: options.PageSize, StatusCounts: counts, AuthMethodCounts: authMethodCounts}, nil
 }
 
 func (s *Service) SelectAccountIDs(ctx context.Context, query, status string) ([]string, error) {
@@ -116,7 +135,7 @@ func (s *Service) SelectAccountIDs(ctx context.Context, query, status string) ([
 }
 
 const accountSelect = `
-	SELECT a.id, a.public_id, a.imported_email, COALESCE(a.primary_email, ''),
+	SELECT a.id, a.public_id, a.imported_email, a.auth_method, COALESCE(a.primary_email, ''),
 		COALESCE(a.display_name, ''), a.notes, a.status, COALESCE(a.reauth_reason, ''),
 		COALESCE(a.last_oauth_error, ''), a.consecutive_failures,
 		a.next_retry_at_utc, t.last_refresh_success_at_utc, a.last_graph_success_at_utc,
@@ -179,7 +198,7 @@ func (s *Service) scanAccounts(rows *sql.Rows) ([]Account, error) {
 		var nextRetry, refreshSuccess, graphSuccess, syncSuccess, syncNextRetry sql.NullString
 		var groups, tags string
 		if err := rows.Scan(
-			&accountID, &account.PublicID, &account.ImportedEmail, &account.PrimaryEmail,
+			&accountID, &account.PublicID, &account.ImportedEmail, &account.AuthMethod, &account.PrimaryEmail,
 			&account.DisplayName, &account.Notes, &account.Status, &account.ReauthReason,
 			&account.LastOAuthError, &account.ConsecutiveFailures,
 			&nextRetry, &refreshSuccess, &graphSuccess, &syncSuccess, &account.LastSyncError,

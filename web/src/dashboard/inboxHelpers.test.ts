@@ -4,8 +4,8 @@ import type { Account } from '../api/accounts'
 import { filterInboxAccounts, inboxRefreshInterval, removeItemByPublicID } from './inboxHelpers'
 
 const accounts = [
-  { public_id: 'acc_1', imported_email: 'imported@outlook.com', primary_email: 'primary@outlook.com', display_name: 'Finance Box' },
-  { public_id: 'acc_2', imported_email: 'other@hotmail.com', display_name: 'Other' },
+  { public_id: 'acc_1', imported_email: 'imported@outlook.com', auth_method: 'web', primary_email: 'primary@outlook.com', display_name: 'Finance Box' },
+  { public_id: 'acc_2', imported_email: 'other@hotmail.com', auth_method: 'oauth', display_name: 'Other' },
 ] as Account[]
 
 describe('inbox helpers', () => {

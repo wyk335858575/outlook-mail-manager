@@ -17,7 +17,7 @@ func TestSettingsPersistAndAffectMailLimits(t *testing.T) {
 		t.Fatalf("GetSettings() error = %v", err)
 	}
 	if defaults != (Settings{
-		SyncIntervalSeconds: 600,
+		SyncIntervalSeconds: 5,
 		InitialSyncDays:     30,
 		BodyCacheKiB:        256,
 		MessagePageSize:     100,

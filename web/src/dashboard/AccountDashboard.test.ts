@@ -1,12 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { microsoftAccountSignOutURL, type Account } from '../api/accounts'
-import { accountDeleteConfirmationMatches, copyAuthorizationEmail, failedBatchAccountIDs, nextAuthorizationAction, openMicrosoftAuthorizationPopup } from './AccountDashboard'
+import { accountDeleteConfirmationMatches, accountIdentityDisplay, copyAuthorizationEmail, failedBatchAccountIDs, nextAuthorizationAction, openMicrosoftAuthorizationPopup } from './AccountDashboard'
 
 function account(status: Account['status']): Account {
   return {
     public_id: `acc_${status}`,
     imported_email: `${status}@outlook.com`,
+    auth_method: 'web',
     notes: '',
     status,
     consecutive_failures: 0,
@@ -41,6 +42,47 @@ describe('account authorization queue', () => {
       account: undefined,
       disabled: true,
       label: '暂无待授权账号',
+    })
+  })
+
+  it('does not send O2 token accounts through webpage authorization', () => {
+    expect(nextAuthorizationAction([{ ...account('reauth_required'), auth_method: 'oauth' }], true, false, false)).toMatchObject({
+      account: undefined,
+      disabled: true,
+      label: '暂无待授权账号',
+    })
+  })
+})
+
+describe('account identity display', () => {
+  it('shows the Microsoft primary email first and the display name second', () => {
+    expect(accountIdentityDisplay({
+      imported_email: 'alias@outlook.com',
+      primary_email: 'primary@outlook.com',
+      display_name: 'Finance Box',
+    })).toEqual({
+      primaryEmail: 'primary@outlook.com',
+      displayName: 'Finance Box',
+    })
+  })
+
+  it('uses the imported email for an unauthorized account', () => {
+    expect(accountIdentityDisplay({
+      imported_email: 'pending@outlook.com',
+    })).toEqual({
+      primaryEmail: 'pending@outlook.com',
+      displayName: '',
+    })
+  })
+
+  it('does not duplicate the primary email when no distinct display name exists', () => {
+    expect(accountIdentityDisplay({
+      imported_email: 'alias@outlook.com',
+      primary_email: 'primary@outlook.com',
+      display_name: ' PRIMARY@OUTLOOK.COM ',
+    })).toEqual({
+      primaryEmail: 'primary@outlook.com',
+      displayName: '',
     })
   })
 })

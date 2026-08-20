@@ -60,13 +60,13 @@
 
 完整的注册步骤、权限说明、Client ID 更换规则和错误排查见 [注册并配置 Microsoft Client ID](docs/microsoft-client-id.md)。`MS_CLIENT_ID` 仍可作为首次启动的可选默认值；设置页保存后的数据库值优先。
 
-基础账号导入不得包含邮箱密码。为兼容现有数据，OAuth 凭据模式识别 `邮箱----密码----client_id----refresh_token`、Tab、逗号和分号格式；密码只在浏览器内用于判断字段位置，解析后立即丢弃，不会进入 HTTP 请求、日志、数据库、审计或导入结果。服务端只接收邮箱、Client ID 和 refresh token。
+网页授权账号导入不得包含邮箱密码。O2 令牌账号模式识别 `邮箱----密码----client_id----refresh_token`、Tab、逗号和分号格式；密码只在浏览器内用于判断字段位置，解析后立即丢弃，不会进入 HTTP 请求、日志、数据库、审计或导入结果。服务端只接收邮箱、Client ID 和 refresh token。
 
 OAuth 导入最多 1000 行、4 个并发验证。服务端使用 refresh token 换取新 token，检查必要权限并调用 `/me` 校验稳定 Microsoft 用户 ID。主邮箱与导入邮箱不一致时拒绝保存，要求改用设备码确认别名。已有账号默认跳过，只有明确勾选“覆盖已有授权”才会替换；任务完成后清除暂存的 refresh token 密文。
 
-账号列表可按邮箱、显示名称、分组、标签和备注搜索，使用服务端分页及最多 1000 个匹配账号的跨页全选，并支持批量启用、停用和删除本地账号数据。账号资料可编辑导入邮箱、分组、标签和备注；Microsoft 主邮箱、显示名称和稳定用户 ID 只读。“替换 OAuth 凭据”会先验证新 Client ID 与 refresh token，成功后原子替换，失败不会清空当前有效 token。
+账号列表可按授权来源分为“网页授权账号”和“O2 令牌账号”，并按邮箱、显示名称、分组、标签和备注搜索，使用服务端分页及最多 1000 个匹配账号的跨页全选，支持批量启用、停用和删除本地账号数据。账号资料可编辑导入邮箱、账号类型、分组、标签和备注；Microsoft 主邮箱、显示名称和稳定用户 ID 只读。“替换 O2 令牌”会先验证新 Client ID 与 refresh token，成功后原子替换，失败不会清空当前有效 token。
 
-完整格式、验证步骤、覆盖规则和错误排查见 [OAuth 凭据导入与账号编辑](docs/oauth-credential-import.md)。
+完整格式、验证步骤、覆盖规则和错误排查见 [O2 令牌账号导入与账号编辑](docs/oauth-credential-import.md)。
 
 ## 远程访问
 
@@ -89,7 +89,7 @@ Nginx 对外提供 HTTPS，并反向代理到 `http://127.0.0.1:8080`。`APP_BAS
 复制 `.env.example` 为 `.env`，设置公网 HTTPS 地址；Client ID 可以稍后在管理台“设置”中保存。生产部署直接拉取公开 GHCR 固定版本镜像，不需要在宝塔服务器构建源码：
 
 ```bash
-docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.6
+docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.7
 docker compose up -d --no-build app
 docker compose ps
 curl --fail http://127.0.0.1:8080/healthz
@@ -175,7 +175,7 @@ node scripts/version.mjs bump
 
 ## 从旧版升级
 
-当前数据库版本为 14。服务发现旧 schema 时会在迁移前自动执行 `VACUUM INTO` 一致性备份，再事务化升级。版本 12 创建独立个性化规则，版本 13 将同步周期从分钟迁移为秒，版本 14 创建加密的 OAuth 导入任务与任务明细表。内部开发版本 `0.11.0` 可直接升级到正式版 `1.0.0`，无需重新创建管理员。
+当前数据库版本为 16。服务发现旧 schema 时会在迁移前自动执行 `VACUUM INTO` 一致性备份，再事务化升级。版本 12 创建独立个性化规则，版本 13 将同步周期从分钟迁移为秒，版本 14 创建加密的 OAuth 导入任务与任务明细表，版本 15 记录账号来源（网页授权或 O2 令牌），版本 16 将未修改过的旧默认同步周期调整为 5 秒。内部开发版本 `0.11.0` 可直接升级到正式版 `1.0.0`，无需重新创建管理员。
 
 宝塔 HTTPS、Nginx 反向代理、升级和回滚步骤见 `docs/baota-deployment.md`。
 

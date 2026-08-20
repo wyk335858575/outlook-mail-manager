@@ -1,8 +1,8 @@
-# OAuth 凭据导入与账号编辑
+# O2 令牌账号导入与账号编辑
 
-账号管理提供“基础账号”和“OAuth 凭据”两种导入方式。基础账号用于之后逐个设备码授权；OAuth 凭据用于迁移你自己合法持有的 Client ID 与 refresh token。
+账号管理提供“网页授权账号”和“O2 令牌账号”两种导入方式。网页授权账号用于之后逐个设备码授权；O2 令牌账号用于迁移你自己合法持有的 Client ID 与 refresh token。
 
-## 基础账号
+## 网页授权账号
 
 每行可填写：
 
@@ -11,9 +11,9 @@ email,group,tags,notes
 user@example.com,Finance,payment|important,付款账号
 ```
 
-标签使用 `|` 分隔。基础账号导入不接受邮箱密码。
+标签使用 `|` 分隔。网页授权账号导入不接受邮箱密码。
 
-## OAuth 凭据
+## O2 令牌账号
 
 支持以下四种分隔符，单次最多 1000 行：
 
@@ -44,7 +44,7 @@ refresh token 可能被 Microsoft 撤销、因长期未使用失效，或在安�
 
 账号列表的编辑按钮允许修改导入邮箱、分组、标签和备注。Microsoft 主邮箱、显示名称和稳定用户 ID 来自 `/me`，不可手工修改。
 
-“替换 OAuth 凭据”要求重新输入 Client ID 与 refresh token。服务端先验证凭据属于同一稳定 Microsoft 用户 ID，再原子替换；验证或写入失败时保留当前有效 token。
+“替换 O2 令牌”要求重新输入 Client ID 与 refresh token。服务端先验证凭据属于同一稳定 Microsoft 用户 ID，再原子替换；验证或写入失败时保留当前有效 token。
 
 ## 常见结果
 

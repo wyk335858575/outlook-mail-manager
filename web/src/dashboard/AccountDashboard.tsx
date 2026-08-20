@@ -9,6 +9,7 @@ import {
   Clipboard,
   ExternalLink,
   FileUp,
+  Globe2,
   KeyRound,
   LockKeyhole,
   LoaderCircle,
@@ -48,6 +49,7 @@ import {
   startOAuthImport,
   updateAccount,
   type Account,
+  type AccountAuthMethod,
   type AccountStatus,
   type OAuthImportJob,
   type BatchAccountResult,
@@ -57,7 +59,7 @@ import { AppFrame } from '../components/AppFrame'
 import { parseOAuthCredentialImport } from './oauthImportParser'
 
 type StatusFilter = 'all' | AccountStatus
-type ImportMode = 'basic' | 'oauth'
+type ImportMode = AccountAuthMethod
 type PageSize = 25 | 50 | 100
 type BulkAction = 'enable' | 'disable' | 'delete'
 
@@ -108,7 +110,7 @@ export function nextAuthorizationAction(
   actionInProgress: boolean,
 ) {
   const account = accounts.find((item) =>
-    item.status === 'reauth_required' || item.status === 'pending',
+    item.auth_method === 'web' && (item.status === 'reauth_required' || item.status === 'pending'),
   )
   if (configPending) return { account, disabled: true, label: '正在读取配置' }
   if (!microsoftConfigured) return { account, disabled: true, label: '先配置 Client ID' }
@@ -125,6 +127,17 @@ export function accountDeleteConfirmationMatches(count: number, value: string) {
   return value === `删除 ${count} 个账号`
 }
 
+export function accountIdentityDisplay(account: Pick<Account, 'imported_email' | 'primary_email' | 'display_name'>) {
+  const primaryEmail = (account.primary_email || account.imported_email).trim()
+  const displayName = (account.display_name || '').trim()
+  return {
+    primaryEmail,
+    displayName: displayName && displayName.localeCompare(primaryEmail, undefined, { sensitivity: 'accent' }) !== 0
+      ? displayName
+      : '',
+  }
+}
+
 const statusOrder: StatusFilter[] = ['all', 'reauth_required', 'pending', 'degraded', 'active', 'disabled']
 
 const statusLabels: Record<StatusFilter, string> = {
@@ -134,6 +147,16 @@ const statusLabels: Record<StatusFilter, string> = {
   degraded: '同步异常',
   reauth_required: '需重授权',
   disabled: '已停用',
+}
+
+const authMethodLabels: Record<AccountAuthMethod, string> = {
+  web: '网页授权账号',
+  oauth: 'O2 令牌账号',
+}
+
+const authMethodDescriptions: Record<AccountAuthMethod, string> = {
+  web: '通过 Microsoft 网页设备码完成授权',
+  oauth: '使用 Client ID 和 refresh token 进行授权',
 }
 
 const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
@@ -167,7 +190,7 @@ export function AccountDashboard({
   const [bulkBusy, setBulkBusy] = useState(false)
   const [bulkMessage, setBulkMessage] = useState('')
   const [importOpen, setImportOpen] = useState(false)
-  const [importMode, setImportMode] = useState<ImportMode>('basic')
+  const [importMode, setImportMode] = useState<ImportMode>('web')
   const [importData, setImportData] = useState('')
   const [overwriteExisting, setOverwriteExisting] = useState(false)
   const [importError, setImportError] = useState('')
@@ -223,6 +246,11 @@ export function AccountDashboard({
   })
 
   const accounts = accountsQuery.data?.accounts ?? []
+  const accountsByMethod = useMemo<Record<AccountAuthMethod, Account[]>>(() => ({
+    web: accounts.filter((account) => account.auth_method === 'web'),
+    oauth: accounts.filter((account) => account.auth_method === 'oauth'),
+  }), [accounts])
+  const authMethodCounts = accountsQuery.data?.auth_method_counts ?? { web: 0, oauth: 0 }
   const searchCounts = accountsQuery.data?.status_counts
   const summaryCounts = summaryQuery.data?.status_counts
   const counts = useMemo<Record<StatusFilter, number>>(() => ({
@@ -280,7 +308,7 @@ export function AccountDashboard({
         const job = await startOAuthImport(parsed, overwriteExisting, status.csrf_token)
         setOAuthImportJobID(job.id)
         queryClient.setQueryData(['oauth-import', job.id], job)
-        setImportResult(`已提交 ${job.total} 个 OAuth 凭据，正在验证`)
+        setImportResult(`已提交 ${job.total} 个 O2 令牌，正在验证`)
       } else {
         const result = await importAccounts(importData, status.csrf_token)
         setImportResult(`已新增 ${result.created} 个账号，跳过 ${result.existing} 个已有账号`)
@@ -660,27 +688,48 @@ export function AccountDashboard({
               <strong>{overviewCounts.all === 0 ? '尚未导入账号' : '当前筛选没有账号'}</strong>
             </div>
           ) : (
-            <div className="account-table">
-              <div className="account-table-head" aria-hidden="true">
-                <span></span><span>账号</span><span>组织</span><span>状态</span><span>最近同步</span><span>操作</span>
-              </div>
-              {accounts.map((account) => (
-                <AccountRow
-                  key={account.public_id}
-                  account={account}
-                  selected={selectedAccounts.has(account.public_id)}
-                  busy={actionID === account.public_id}
-                  microsoftConfigured={microsoftConfigured}
-                  onAuthorize={() => void beginAuthorization(account)}
-                  onCheck={() => void verifyAccount(account)}
-                  onCleanupProtection={() => void changeCleanupProtection(account)}
-                  onDisabled={(disabled) => void changeDisabled(account, disabled)}
-                  onEdit={() => setEditingAccount(account)}
-                  onCredentials={() => setCredentialAccount(account)}
-                  onDelete={() => void removeAccount(account)}
-                  onSelection={(selected) => toggleAccount(account.public_id, selected)}
-                />
-              ))}
+            <div className="account-type-sections">
+              {(['web', 'oauth'] as AccountAuthMethod[]).map((method) => {
+                const items = accountsByMethod[method]
+                if (items.length === 0) return null
+                const icon = method === 'web' ? <Globe2 size={17} aria-hidden="true" /> : <KeyRound size={17} aria-hidden="true" />
+                return (
+                  <section className={`account-type-section account-type-${method}`} key={method} aria-labelledby={`account-type-${method}`}>
+                    <div className="account-type-heading">
+                      <div className="account-type-title">
+                        <span className="account-type-icon">{icon}</span>
+                        <div>
+                          <h3 id={`account-type-${method}`}>{authMethodLabels[method]}</h3>
+                          <p>{authMethodDescriptions[method]}</p>
+                        </div>
+                      </div>
+                      <strong>{authMethodCounts[method] ?? items.length} 个</strong>
+                    </div>
+                    <div className="account-table">
+                      <div className="account-table-head" aria-hidden="true">
+                        <span></span><span>账号</span><span>组织</span><span>状态</span><span>最近同步</span><span>操作</span>
+                      </div>
+                      {items.map((account) => (
+                        <AccountRow
+                          key={account.public_id}
+                          account={account}
+                          selected={selectedAccounts.has(account.public_id)}
+                          busy={actionID === account.public_id}
+                          microsoftConfigured={microsoftConfigured}
+                          onAuthorize={() => void beginAuthorization(account)}
+                          onCheck={() => void verifyAccount(account)}
+                          onCleanupProtection={() => void changeCleanupProtection(account)}
+                          onDisabled={(disabled) => void changeDisabled(account, disabled)}
+                          onEdit={() => setEditingAccount(account)}
+                          onCredentials={() => setCredentialAccount(account)}
+                          onDelete={() => void removeAccount(account)}
+                          onSelection={(selected) => toggleAccount(account.public_id, selected)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )
+              })}
             </div>
           )}
           {(accountsQuery.data?.total ?? 0) > 0 && <nav className="account-pagination" aria-label="账号分页">
@@ -703,26 +752,26 @@ export function AccountDashboard({
               </button>
             </div>
             <div className="settings-segmented import-mode-tabs" role="tablist" aria-label="导入方式">
-              <button type="button" role="tab" aria-selected={importMode === 'basic'} className={importMode === 'basic' ? 'is-selected' : ''} onClick={() => { setImportMode('basic'); setImportError(''); setImportResult(''); setOAuthImportJobID('') }}>基础账号</button>
-              <button type="button" role="tab" aria-selected={importMode === 'oauth'} className={importMode === 'oauth' ? 'is-selected' : ''} onClick={() => { setImportMode('oauth'); setImportError(''); setImportResult('') }}>OAuth 凭据</button>
+              <button type="button" role="tab" aria-selected={importMode === 'web'} className={importMode === 'web' ? 'is-selected' : ''} onClick={() => { setImportMode('web'); setImportError(''); setImportResult(''); setOAuthImportJobID('') }}>网页授权账号</button>
+              <button type="button" role="tab" aria-selected={importMode === 'oauth'} className={importMode === 'oauth' ? 'is-selected' : ''} onClick={() => { setImportMode('oauth'); setImportError(''); setImportResult('') }}>O2 令牌账号</button>
             </div>
-            <label className="field-label" htmlFor="account-import">{importMode === 'basic' ? '邮箱、分组、标签、备注' : '邮箱、密码、Client ID、refresh token'}</label>
+            <label className="field-label" htmlFor="account-import">{importMode === 'web' ? '邮箱、分组、标签、备注' : '邮箱、密码、Client ID、refresh token'}</label>
             <textarea
               id="account-import"
               value={importData}
               onChange={(event) => setImportData(event.target.value)}
-              placeholder={importMode === 'basic'
+              placeholder={importMode === 'web'
                 ? 'email,group,tags,notes\nuser@outlook.com,Personal,verification|important,Primary'
                 : 'user@outlook.com----password----client_id----refresh_token'}
               spellCheck={false}
               autoFocus
             />
-            {importMode === 'basic' ? (
+            {importMode === 'web' ? (
               <p className="field-hint">每行一个账号；标签用 | 分隔，不接受邮箱密码。</p>
             ) : (
               <>
-                <p className="field-hint">支持 ----、Tab、逗号和分号。密码仅在本浏览器中识别后丢弃；同邮箱的基础账号会自动补充 OAuth 授权。</p>
-                <label className="inline-check"><input type="checkbox" checked={overwriteExisting} onChange={(event) => setOverwriteExisting(event.target.checked)} />覆盖已经授权账号的 OAuth 凭据</label>
+                <p className="field-hint">支持 ----、Tab、逗号和分号。密码仅在本浏览器中识别后丢弃；同邮箱的网页授权账号会自动补充 O2 令牌。</p>
+                <label className="inline-check"><input type="checkbox" checked={overwriteExisting} onChange={(event) => setOverwriteExisting(event.target.checked)} />覆盖已经授权账号的 O2 令牌</label>
               </>
             )}
             {importError && <p className="form-error" role="alert">{importError}</p>}
@@ -807,10 +856,7 @@ function AccountRow({
   onSelection: (selected: boolean) => void
 }) {
   const needsAuthorization = account.status === 'pending' || account.status === 'reauth_required'
-  const identity = account.display_name || account.primary_email || account.imported_email
-  const secondary = account.primary_email && account.primary_email !== account.imported_email
-    ? `${account.imported_email} → ${account.primary_email}`
-    : account.imported_email
+  const identity = accountIdentityDisplay(account)
   const labels = [...account.groups.map((value) => ({ value, kind: 'group' })), ...account.tags.map((value) => ({ value, kind: 'tag' }))]
 
   return (
@@ -820,8 +866,7 @@ function AccountRow({
         <span className="visually-hidden">选择账号 {account.imported_email}</span>
       </label>
       <div className="account-identity">
-        <span className="account-avatar" aria-hidden="true">{identity.slice(0, 1).toUpperCase()}</span>
-        <div><strong>{identity}</strong><span>{secondary}</span>{account.notes && <small>{account.notes}</small>}</div>
+        <div><strong>{identity.primaryEmail}</strong>{identity.displayName && <span>{identity.displayName}</span>}{account.notes && <small>{account.notes}</small>}</div>
       </div>
       <div className="account-labels">
         {labels.length === 0 ? <span className="muted-value">未分组</span> : labels.map((label) => (
@@ -847,7 +892,7 @@ function AccountRow({
         <button className="icon-command" type="button" title="编辑账号资料" aria-label="编辑账号资料" onClick={onEdit} disabled={busy}>
           <Pencil size={17} />
         </button>
-        <button className="icon-command" type="button" title="替换 OAuth 凭据" aria-label="替换 OAuth 凭据" onClick={onCredentials} disabled={busy}>
+        <button className="icon-command" type="button" title="替换 O2 令牌" aria-label="替换 O2 令牌" onClick={onCredentials} disabled={busy}>
           <LockKeyhole size={17} />
         </button>
         {account.status === 'disabled' ? (
@@ -856,16 +901,18 @@ function AccountRow({
           </button>
         ) : (
           <>
-            <button
-              className="icon-command primary-command"
-              type="button"
-              title={needsAuthorization ? '开始授权' : '重新授权'}
-              aria-label={needsAuthorization ? '开始授权' : '重新授权'}
-              onClick={onAuthorize}
-              disabled={busy || !microsoftConfigured}
-            >
-              {busy ? <LoaderCircle className="is-spinning" size={17} /> : needsAuthorization ? <KeyRound size={17} /> : <RotateCcw size={17} />}
-            </button>
+            {account.auth_method === 'web' && (
+              <button
+                className="icon-command primary-command"
+                type="button"
+                title={needsAuthorization ? '开始网页授权' : '重新网页授权'}
+                aria-label={needsAuthorization ? '开始网页授权' : '重新网页授权'}
+                onClick={onAuthorize}
+                disabled={busy || !microsoftConfigured}
+              >
+                {busy ? <LoaderCircle className="is-spinning" size={17} /> : needsAuthorization ? <KeyRound size={17} /> : <RotateCcw size={17} />}
+              </button>
+            )}
             {(account.status === 'active' || account.status === 'degraded') && (
               <button className="icon-command" type="button" title="检查授权" aria-label="检查授权" onClick={onCheck} disabled={busy}>
                 <SearchCheck size={17} />
@@ -908,7 +955,7 @@ function BatchAccountDialog({
     ? '将删除这些账号在本管理器中的 Token、邮件缓存和同步记录，不会删除 Microsoft 邮箱或云端邮件。'
     : action === 'disable'
       ? '停用后将暂停这些账号的授权任务和邮件同步，现有本地数据仍会保留。'
-      : '已有 OAuth 凭据的账号将恢复同步并在后台限并发校验；授权实际失效时才会要求重新授权。'
+      : '已有 O2 令牌的账号将恢复同步并在后台限并发校验；授权实际失效时才会要求重新授权。'
   const confirmed = !deleting || accountDeleteConfirmationMatches(count, confirmation)
 
   return <div className="dialog-backdrop" role="presentation">
@@ -928,7 +975,7 @@ function OAuthImportProgress({ job }: { job: OAuthImportJob }) {
   const processed = job.state === 'completed' ? job.total : job.items.filter((item) => item.state !== 'queued' && item.state !== 'running').length
   return (
     <div className="oauth-import-progress" role="status">
-      <div><strong>{job.state === 'completed' ? '验证完成' : '正在验证 OAuth 凭据'}</strong><span>{processed} / {job.total}</span></div>
+      <div><strong>{job.state === 'completed' ? '验证完成' : '正在验证 O2 令牌'}</strong><span>{processed} / {job.total}</span></div>
       <progress max={job.total} value={processed} />
       {job.state === 'completed' && <p>新增 {job.created} · 更新 {job.updated} · 跳过 {job.skipped} · 失败 {job.failed}</p>}
       {job.items.some((item) => item.state === 'failed') && (
@@ -979,6 +1026,7 @@ function AccountEditDialog({
         <div className="dialog-heading"><div><p className="eyebrow">Account metadata</p><h2 id="account-edit-heading">编辑账号</h2></div><button className="field-icon-button" type="button" title="关闭" aria-label="关闭编辑" onClick={onClose}><X size={18} /></button></div>
         <div className="readonly-identity"><span>Microsoft 主邮箱</span><strong>{account.primary_email || '尚未授权'}</strong><small>显示名称：{account.display_name || '尚未获取'} · 稳定账号标识不可编辑</small></div>
         <label className="field-label">导入邮箱<input value={email} onChange={(event) => setEmail(event.target.value)} /></label>
+        <div className="readonly-identity"><span>账号类型</span><strong>{authMethodLabels[account.auth_method]}</strong><small>{authMethodDescriptions[account.auth_method]}</small></div>
         <label className="field-label">分组<input value={groups} onChange={(event) => setGroups(event.target.value)} placeholder="多个分组用逗号分隔" /></label>
         <label className="field-label">标签<input value={tags} onChange={(event) => setTags(event.target.value)} placeholder="多个标签用逗号分隔" /></label>
         <label className="field-label">备注<textarea value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={500} /></label>
@@ -1010,7 +1058,7 @@ function CredentialDialog({
       await onSave(account, clientID.trim(), refreshToken.trim())
       setRefreshToken('')
     } catch (reason) {
-      setError(messageFor(reason, '无法验证或替换 OAuth 凭据'))
+      setError(messageFor(reason, '无法验证或替换 O2 令牌'))
     } finally {
       setSaving(false)
     }
@@ -1019,7 +1067,7 @@ function CredentialDialog({
   return (
     <div className="dialog-backdrop" role="presentation">
       <section className="dialog-panel account-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="credential-heading">
-        <div className="dialog-heading"><div><p className="eyebrow">OAuth rotation</p><h2 id="credential-heading">替换 OAuth 凭据</h2></div><button className="field-icon-button" type="button" title="关闭" aria-label="关闭凭据替换" onClick={onClose}><X size={18} /></button></div>
+        <div className="dialog-heading"><div><p className="eyebrow">O2 token account</p><h2 id="credential-heading">替换 O2 令牌</h2></div><button className="field-icon-button" type="button" title="关闭" aria-label="关闭 O2 令牌替换" onClick={onClose}><X size={18} /></button></div>
         <p className="field-hint">目标账号：{account.imported_email}。新凭据通过 Microsoft 验证成功后才会原子替换，失败不会清除当前有效 token。</p>
         <label className="field-label">Client ID<input value={clientID} onChange={(event) => setClientID(event.target.value)} autoComplete="off" /></label>
         <label className="field-label">refresh token<textarea value={refreshToken} onChange={(event) => setRefreshToken(event.target.value)} autoComplete="off" spellCheck={false} /></label>

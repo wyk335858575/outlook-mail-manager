@@ -209,7 +209,7 @@ func TestMailAPIRequiresSessionAndCSRF(t *testing.T) {
 		t.Fatalf("batch read status = %d, calls = %#v, body = %s", response.Code, service.readPublics, response.Body.String())
 	}
 	response = performJSON(t, handler, http.MethodGet, "/api/settings", nil, cookie, "")
-	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"sync_interval_seconds":600`) {
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"sync_interval_seconds":5`) {
 		t.Fatalf("settings status = %d, body = %s", response.Code, response.Body.String())
 	}
 	settings := mailbox.DefaultSettings()

@@ -202,6 +202,61 @@ func TestAuthorizationRestartDiscardsWrongAccountJob(t *testing.T) {
 	waitAuthorization(t, service, second.ID, "confirmation_required")
 }
 
+func TestEditingImportedEmailInvalidatesStaleAuthorizationJob(t *testing.T) {
+	var deviceRequests atomic.Int32
+	provider := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/devicecode":
+			request := deviceRequests.Add(1)
+			writeProviderJSON(w, http.StatusOK, map[string]any{
+				"device_code": fmt.Sprintf("device-%d", request), "user_code": fmt.Sprintf("CODE-%d", request),
+				"verification_uri": "https://microsoft.com/devicelogin", "expires_in": 120, "interval": 60,
+			})
+		case "/token":
+			writeProviderJSON(w, http.StatusBadRequest, map[string]string{"error": "authorization_pending"})
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer provider.Close()
+
+	service, _ := newTestService(t, Options{
+		ClientID: testMicrosoftClientID, AuthorityBaseURL: provider.URL,
+		GraphBaseURL: provider.URL + "/v1.0", HTTPClient: provider.Client(),
+	})
+	if _, err := service.Import(context.Background(), "old@outlook.com"); err != nil {
+		t.Fatalf("Import() error = %v", err)
+	}
+	items, _ := service.List(context.Background(), "")
+	first, err := service.StartAuthorization(context.Background(), items[0].PublicID)
+	if err != nil {
+		t.Fatalf("first StartAuthorization() error = %v", err)
+	}
+
+	updated, err := service.UpdateAccount(context.Background(), items[0].PublicID, AccountUpdate{ImportedEmail: "new@outlook.com"})
+	if err != nil {
+		t.Fatalf("UpdateAccount() error = %v", err)
+	}
+	if updated.ImportedEmail != "new@outlook.com" {
+		t.Fatalf("updated account = %+v", updated)
+	}
+	stale, err := service.Authorization(first.ID)
+	if err != nil || stale.State != "failed" || stale.ErrorCode != "account_updated" {
+		t.Fatalf("stale authorization = %+v, error = %v", stale, err)
+	}
+
+	second, err := service.StartAuthorization(context.Background(), items[0].PublicID)
+	if err != nil {
+		t.Fatalf("second StartAuthorization() error = %v", err)
+	}
+	if second.ID == first.ID || second.ImportedEmail != "new@outlook.com" || second.UserCode != "CODE-2" {
+		t.Fatalf("new authorization = %+v, previous = %+v", second, first)
+	}
+	if _, err := service.Authorization(first.ID); !errors.Is(err, ErrAuthorizationNotFound) {
+		t.Fatalf("old authorization error = %v, want ErrAuthorizationNotFound", err)
+	}
+}
+
 func TestAuthorizationStartupFailureDoesNotLeaveStuckJob(t *testing.T) {
 	var deviceRequests atomic.Int32
 	provider := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
