@@ -64,7 +64,7 @@
 
 OAuth 导入最多 1000 行、4 个并发验证。服务端使用 refresh token 换取新 token，检查必要权限并调用 `/me` 校验稳定 Microsoft 用户 ID。主邮箱与导入邮箱不一致时拒绝保存，要求改用设备码确认别名。已有账号默认跳过，只有明确勾选“覆盖已有授权”才会替换；任务完成后清除暂存的 refresh token 密文。
 
-账号列表可按授权来源分为“网页授权账号”和“O2 令牌账号”，并按邮箱、显示名称、分组、标签和备注搜索，使用服务端分页及最多 1000 个匹配账号的跨页全选，支持批量启用、停用和删除本地账号数据。账号资料可编辑导入邮箱、账号类型、分组、标签和备注；Microsoft 主邮箱、显示名称和稳定用户 ID 只读。“替换 O2 令牌”会先验证新 Client ID 与 refresh token，成功后原子替换，失败不会清空当前有效 token。
+账号列表可按授权来源分为“网页授权账号”和“O2 令牌账号”，并按邮箱、显示名称、分组、标签和备注搜索，使用服务端分页及最多 1000 个匹配账号的跨页全选，支持批量启用、停用和删除本地账号数据。账号资料可编辑导入邮箱、分组、标签和备注；账号类型、Microsoft 主邮箱、显示名称和稳定用户 ID 只读。“替换 O2 令牌”会先验证新 Client ID 与 refresh token，成功后原子替换，失败不会清空当前有效 token。
 
 完整格式、验证步骤、覆盖规则和错误排查见 [O2 令牌账号导入与账号编辑](docs/oauth-credential-import.md)。
 
@@ -197,3 +197,4 @@ npm --prefix web run build
 - 开发、测试和提交规范：[CONTRIBUTING.md](CONTRIBUTING.md)
 - 版本记录：[CHANGELOG.md](CHANGELOG.md)
 - 许可证：GNU Affero General Public License v3.0，见 [LICENSE](LICENSE)
+
