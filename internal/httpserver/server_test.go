@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"bytes"
 	"context"
 	"io/fs"
 	"log/slog"
@@ -75,6 +76,9 @@ func TestSPAUsesIndexFallbackAndSecurityHeaders(t *testing.T) {
 	if response.Header().Get("Content-Security-Policy") == "" {
 		t.Fatal("Content-Security-Policy is missing")
 	}
+	if response.Header().Get("Referrer-Policy") != "no-referrer" {
+		t.Fatalf("Referrer-Policy = %q", response.Header().Get("Referrer-Policy"))
+	}
 	if response.Header().Get("Cache-Control") != "no-store" {
 		t.Fatalf("Cache-Control = %q, want no-store", response.Header().Get("Cache-Control"))
 	}
@@ -115,6 +119,23 @@ func TestSPADoesNotMaskMissingAssets(t *testing.T) {
 
 	if response.Code != http.StatusNotFound {
 		t.Fatalf("status = %d, want 404", response.Code)
+	}
+}
+
+func TestRequestLoggerDoesNotLogQueryCredentials(t *testing.T) {
+	var logs bytes.Buffer
+	handler := requestLogger(
+		slog.New(slog.NewTextHandler(&logs, nil)),
+		http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) }),
+	)
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/accounts?access_token=omm_log_secret", nil)
+	handler.ServeHTTP(httptest.NewRecorder(), request)
+
+	if strings.Contains(logs.String(), "omm_log_secret") || strings.Contains(logs.String(), "access_token") {
+		t.Fatalf("request log exposed query credentials: %s", logs.String())
+	}
+	if !strings.Contains(logs.String(), "path=/api/v1/accounts") {
+		t.Fatalf("request path missing from log: %s", logs.String())
 	}
 }
 

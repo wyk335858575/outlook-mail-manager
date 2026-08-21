@@ -4,7 +4,7 @@
 
 自托管的 Outlook/Hotmail 多账号收件管理器，提供安全 OAuth、增量同步、验证码提取、本地规则、通知和可恢复清理。项目面向单管理员和约 1000 个个人 Microsoft 邮箱，适合部署在 2 核 2 GiB 的 Linux VPS 或宝塔面板。
 
-面向单管理员的 Outlook/Hotmail 收件管理项目。当前支持个人 Microsoft 账号的设备码 OAuth、加密 token 自动刷新、增量收件同步、SQLite FTS5 搜索、本地分类、两阶段安全清理、Telegram/PushPlus/HMAC Webhook 通知、只读外部 API、附件流式下载、磁盘保护和一致性备份。
+面向单管理员的 Outlook/Hotmail 收件管理项目。当前支持个人 Microsoft 账号的设备码 OAuth、加密 token 自动刷新、增量收件同步、SQLite FTS5 搜索、本地分类、两阶段安全清理、Telegram/PushPlus/WXPush 通知、只读外部 API、附件流式下载、磁盘保护和一致性备份。
 
 项目永不收集邮箱密码，不申请 `Mail.Send`，不提供发信或永久删除功能。
 
@@ -104,12 +104,31 @@ Compose 默认只把端口绑定到宿主机 `127.0.0.1:8080`，用于 Nginx 反
 - 分类器只生成候选。管理员批准后，邮件先进入应用创建的待清理文件夹，并保留 14 天恢复期。
 - 宽限期结束后只移动到 Outlook“已删除邮件”，程序没有永久删除接口，也不会清空该文件夹。
 - 统一收件箱、个性化收件箱和验证码支持管理员手动将单封邮件移入 Outlook“已删除邮件”；失败时不会提前隐藏本地邮件，恢复仍在 Outlook 中完成。
-- 通知支持 Telegram、PushPlus 和带时间戳、投递 ID、SHA-256 HMAC 签名的 Webhook；通知不包含完整正文。
+- 通知支持 Telegram、PushPlus 和 WXPush；WXPush 已内置微信公众号模板消息直连，可包含最多 500 字符的纯文本正文预览，不包含完整正文。
 - 个性化收件箱使用独立规则筛选付款、返利或指定公司的重要邮件；是否发送通知仍由通知中心单独配置。
+
+### WXPush 配置
+
+本项目已把 WXPush 的微信公众号模板消息发送能力集成到 Go 服务中，不需要另行部署 WXPush 服务。在“通知中心”新建“WXPush”通道时直接填写：
+
+- `WX_APPID`、`WX_SECRET`：微信公众平台测试号或公众号的 AppID、AppSecret。
+- `WX_USERID`：接收消息用户的单个 OpenID；多人接收时分别创建多个通道。
+- `WX_TEMPLATE_ID`：微信模板消息 ID。
+
+测试号可在微信公众平台接口测试帐号页面获取 AppID、AppSecret 和关注用户 OpenID。新增模板时不能只填写固定文字（例如 `123`），请使用以下动态字段：
+
+```text
+通知类型：{{title.DATA}}
+寄件人：{{sender.DATA}}
+邮件标题：{{subject.DATA}}
+正文：{{body.DATA}}
+```
+
+程序仍会发送兼容旧模板的 `content` 字段，其中包含寄件人、邮件标题和正文预览。填写完成后必须先点击“测试配置”，确认微信收到动态测试消息后才能创建通道。程序只在进程内存缓存微信 access token，模板消息不设置点击跳转地址；AppSecret、OpenID 和 access token 不会出现在通道响应、审计或投递错误中。参考实现来源：<https://github.com/frankiejun/wxpush>。
 
 ## 只读外部 API
 
-在“API token”页面创建 token，并明确选择 scope、账号或分组范围，可选限制 IP/CIDR 和到期时间。完整 token 只显示一次，数据库只保存 SHA-256 哈希。
+在“API token”页面创建 token，并明确选择 scope、账号、分组或动态“全部账号”范围，可选限制 IP/CIDR 和到期时间。完整 token 只显示一次，数据库只保存 SHA-256 哈希。活跃 token 先撤销后才能永久删除。
 
 固定接口：
 
@@ -119,9 +138,9 @@ Compose 默认只把端口绑定到宿主机 `127.0.0.1:8080`，用于 Nginx 反
 - `GET /api/v1/otp/latest`
 - `GET /api/v1/health`
 
-所有请求使用 `Authorization: Bearer <token>`。邮件和验证码响应带 `Cache-Control: no-store`，API 不提供已读、星标、移动、清理或规则修改能力。
+程序调用推荐使用 `Authorization: Bearer <token>`；全部只读 GET 接口也支持 `access_token` 查询参数，可在管理台生成浏览器直开链接并直接查看 JSON。查询参数链接可能进入浏览器历史和代理访问日志，生产环境必须使用 HTTPS，并建议限制 token 的到期时间和允许 IP。邮件和验证码响应带 `Cache-Control: no-store`，API 不提供已读、星标、移动、清理或规则修改能力。
 
-创建 token、scope/账号范围、Bearer 请求、验证码 cURL/PowerShell/Node.js 示例与错误排查见 [只读 API 使用教程](docs/api-usage.md)。
+创建 token、scope/账号范围、浏览器链接、全部接口参数及 cURL/PowerShell/Node.js/C# 示例见 [只读 API 使用教程](docs/api-usage.md)。
 
 ## 备份与恢复
 
@@ -175,7 +194,7 @@ node scripts/version.mjs bump
 
 ## 从旧版升级
 
-当前数据库版本为 16。服务发现旧 schema 时会在迁移前自动执行 `VACUUM INTO` 一致性备份，再事务化升级。版本 12 创建独立个性化规则，版本 13 将同步周期从分钟迁移为秒，版本 14 创建加密的 OAuth 导入任务与任务明细表，版本 15 记录账号来源（网页授权或 O2 令牌），版本 16 将未修改过的旧默认同步周期调整为 5 秒。内部开发版本 `0.11.0` 可直接升级到正式版 `1.0.0`，无需重新创建管理员。
+当前数据库版本为 18。服务发现旧 schema 时会在迁移前自动执行 `VACUUM INTO` 一致性备份，再事务化升级。版本 12 创建独立个性化规则，版本 13 将同步周期从分钟迁移为秒，版本 14 创建加密的 OAuth 导入任务与任务明细表，版本 15 记录账号来源，版本 16 调整旧默认同步周期，版本 17 删除 HMAC Webhook，版本 18 停用旧 WXPush 网关配置并切换为内置直连。内部开发版本 `0.11.0` 可直接升级到正式版 `1.0.0`，无需重新创建管理员。
 
 宝塔 HTTPS、Nginx 反向代理、升级和回滚步骤见 `docs/baota-deployment.md`。
 
@@ -197,4 +216,3 @@ npm --prefix web run build
 - 开发、测试和提交规范：[CONTRIBUTING.md](CONTRIBUTING.md)
 - 版本记录：[CHANGELOG.md](CHANGELOG.md)
 - 许可证：GNU Affero General Public License v3.0，见 [LICENSE](LICENSE)
-

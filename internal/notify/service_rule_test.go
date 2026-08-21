@@ -26,8 +26,8 @@ func TestListRulesKeepsEveryEmptyConditionAsArray(t *testing.T) {
 	}
 	defer service.Close()
 	channel, err := service.CreateChannel(context.Background(), ChannelInput{
-		Name: "Webhook", Kind: "webhook", Enabled: true,
-		WebhookURL: "http://127.0.0.1:8089", WebhookSecret: "secret",
+		Name: "WXPush", Kind: "wxpush", Enabled: true,
+		WXPushAppID: "app-id", WXPushAppSecret: "app-secret", WXPushUserID: "open-id", WXPushTemplateID: "template-id",
 	})
 	if err != nil {
 		t.Fatalf("CreateChannel() error = %v", err)
@@ -37,6 +37,7 @@ func TestListRulesKeepsEveryEmptyConditionAsArray(t *testing.T) {
 		Name:            "Empty conditions",
 		Enabled:         true,
 		PersonalInbox:   true,
+		PersonalOnly:    true,
 		StartMinute:     -1,
 		EndMinute:       -1,
 	})
@@ -48,6 +49,9 @@ func TestListRulesKeepsEveryEmptyConditionAsArray(t *testing.T) {
 	}
 	if rule.PersonalInbox {
 		t.Fatal("legacy personal_inbox field must be normalized to false")
+	}
+	if !rule.PersonalOnly {
+		t.Fatal("personal_only field was not persisted")
 	}
 	encoded, err := json.Marshal(rule)
 	if err != nil {

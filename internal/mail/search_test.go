@@ -79,7 +79,7 @@ func TestSearchMessagesPersonalInboxUsesIndependentRules(t *testing.T) {
 	if _, err := store.DB.Exec(`
 		INSERT INTO notification_channels (
 			public_id, name, kind, config_ciphertext, enabled, system_enabled, created_at_utc, updated_at_utc
-		) VALUES ('channel_personal', '付款通知', 'webhook', 'sealed', 1, 0, ?, ?)
+		) VALUES ('channel_personal', '付款通知', 'wxpush', 'sealed', 1, 0, ?, ?)
 	`, now, now); err != nil {
 		t.Fatalf("insert notification channel: %v", err)
 	}

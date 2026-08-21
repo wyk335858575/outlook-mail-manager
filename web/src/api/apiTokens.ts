@@ -7,6 +7,7 @@ export type APIToken = {
   name: string
   prefix: string
   scopes: APIScope[]
+  all_accounts: boolean
   account_public_ids: string[]
   group_names: string[]
   ip_cidrs: string[]
@@ -25,6 +26,7 @@ export function fetchAPITokens(signal?: AbortSignal) {
 export function createAPIToken(input: {
   name: string
   scopes: APIScope[]
+  all_accounts: boolean
   account_public_ids: string[]
   group_names: string[]
   ip_cidrs: string[]
@@ -38,5 +40,11 @@ export function createAPIToken(input: {
 export function revokeAPIToken(publicID: string, csrfToken: string) {
   return apiRequest<void>(`/api/api-tokens/${encodeURIComponent(publicID)}/revoke`, {
     method: 'POST', headers: { 'X-CSRF-Token': csrfToken },
+  })
+}
+
+export function deleteAPIToken(publicID: string, csrfToken: string) {
+  return apiRequest<void>(`/api/api-tokens/${encodeURIComponent(publicID)}`, {
+    method: 'DELETE', headers: { 'X-CSRF-Token': csrfToken },
   })
 }

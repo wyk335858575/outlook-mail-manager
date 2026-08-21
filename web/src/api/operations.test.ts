@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createAPIToken } from './apiTokens'
+import { createAPIToken, deleteAPIToken } from './apiTokens'
 import { approveCleanup } from './classification'
 import { markMessagesRead } from './mail'
 import { fetchDetailedHealth } from './maintenance'
@@ -37,7 +37,7 @@ describe('operations APIs', () => {
     const response = { public_id: 'token_1', name: 'reader', prefix: 'omm_example', scopes: ['mail:read'], account_public_ids: ['acc_1'], group_names: [], ip_cidrs: [], created_at: '2026-08-17T12:00:00Z', secret: 'omm_secret' }
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(response), { status: 201 }))
     vi.stubGlobal('fetch', fetchMock)
-    await createAPIToken({ name: 'reader', scopes: ['mail:read'], account_public_ids: ['acc_1'], group_names: [], ip_cidrs: [] }, 'csrf-value')
+    await createAPIToken({ name: 'reader', scopes: ['mail:read'], all_accounts: false, account_public_ids: ['acc_1'], group_names: [], ip_cidrs: [] }, 'csrf-value')
     expect(fetchMock).toHaveBeenCalledWith('/api/api-tokens', expect.objectContaining({ cache: 'no-store', credentials: 'same-origin' }))
   })
 
@@ -46,5 +46,15 @@ describe('operations APIs', () => {
     vi.stubGlobal('fetch', fetchMock)
     await fetchDetailedHealth()
     expect(fetchMock).toHaveBeenCalledWith('/api/health/detail', expect.objectContaining({ cache: 'no-store' }))
+  })
+
+  it('deletes an inactive API token with CSRF protection', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+    vi.stubGlobal('fetch', fetchMock)
+    await deleteAPIToken('token_1', 'csrf-value')
+    expect(fetchMock).toHaveBeenCalledWith('/api/api-tokens/token_1', expect.objectContaining({
+      method: 'DELETE',
+      headers: expect.objectContaining({ 'X-CSRF-Token': 'csrf-value' }),
+    }))
   })
 })

@@ -15,8 +15,15 @@ import (
 func TestStartRecoversInterruptedDeliveries(t *testing.T) {
 	var requests atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requests.Add(1)
-		w.WriteHeader(http.StatusNoContent)
+		switch r.URL.Path {
+		case "/cgi-bin/stable_token":
+			_, _ = w.Write([]byte(`{"access_token":"test-token","expires_in":7200}`))
+		case "/cgi-bin/message/template/send":
+			requests.Add(1)
+			_, _ = w.Write([]byte(`{"errcode":0,"errmsg":"ok"}`))
+		default:
+			http.NotFound(w, r)
+		}
 	}))
 	defer server.Close()
 	store, err := database.Open(context.Background(), t.TempDir())
@@ -33,9 +40,10 @@ func TestStartRecoversInterruptedDeliveries(t *testing.T) {
 		t.Fatalf("New() error = %v", err)
 	}
 	defer service.Close()
+	service.wxPushBaseURL = server.URL
 	channel, err := service.CreateChannel(context.Background(), ChannelInput{
-		Name: "Webhook", Kind: "webhook", Enabled: true,
-		WebhookURL: server.URL, WebhookSecret: "secret",
+		Name: "WXPush", Kind: "wxpush", Enabled: true,
+		WXPushAppID: "app-id", WXPushAppSecret: "app-secret", WXPushUserID: "open-id", WXPushTemplateID: "template-id",
 	})
 	if err != nil {
 		t.Fatalf("CreateChannel() error = %v", err)
@@ -63,11 +71,11 @@ func TestStartRecoversInterruptedDeliveries(t *testing.T) {
 		}
 		if status == "sent" {
 			if requests.Load() != 1 {
-				t.Fatalf("webhook requests = %d, want 1", requests.Load())
+				t.Fatalf("WXPush requests = %d, want 1", requests.Load())
 			}
 			return
 		}
 		time.Sleep(20 * time.Millisecond)
 	}
-	t.Fatalf("interrupted delivery was not recovered; webhook requests = %d", requests.Load())
+	t.Fatalf("interrupted delivery was not recovered; WXPush requests = %d", requests.Load())
 }

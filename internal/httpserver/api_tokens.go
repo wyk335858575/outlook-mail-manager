@@ -14,6 +14,7 @@ type apiTokenService interface {
 	Create(context.Context, apitoken.TokenInput) (apitoken.CreatedToken, error)
 	List(context.Context) ([]apitoken.Token, error)
 	Revoke(context.Context, string) error
+	Delete(context.Context, string) error
 	Verify(context.Context, string, string, string) (apitoken.Grant, error)
 }
 
@@ -31,6 +32,7 @@ func (api *apiTokensAPI) register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/api-tokens", api.list)
 	mux.HandleFunc("POST /api/api-tokens", api.create)
 	mux.HandleFunc("POST /api/api-tokens/{public_id}/revoke", api.revoke)
+	mux.HandleFunc("DELETE /api/api-tokens/{public_id}", api.delete)
 }
 
 func (api *apiTokensAPI) list(w http.ResponseWriter, r *http.Request) {
@@ -74,12 +76,26 @@ func (api *apiTokensAPI) revoke(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (api *apiTokensAPI) delete(w http.ResponseWriter, r *http.Request) {
+	if !authorizeAdministrator(w, r, api.authService, api.logger, true) {
+		return
+	}
+	if err := api.service.Delete(r.Context(), r.PathValue("public_id")); err != nil {
+		api.writeError(w, err)
+		return
+	}
+	w.Header().Set("Cache-Control", "no-store")
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (api *apiTokensAPI) writeError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, apitoken.ErrInvalidTokenInput):
 		writeAPIError(w, http.StatusBadRequest, "invalid_api_token", "API token 的 scope、账号范围或 IP 范围无效")
 	case errors.Is(err, apitoken.ErrTokenNotFound):
 		writeAPIError(w, http.StatusNotFound, "api_token_not_found", "API token 不存在")
+	case errors.Is(err, apitoken.ErrTokenActive):
+		writeAPIError(w, http.StatusConflict, "token_active", "活跃 API token 必须先撤销")
 	default:
 		api.logger.Error("API token request failed", "event", "api_token_request_failed", "error", err)
 		writeAPIError(w, http.StatusInternalServerError, "api_token_request_failed", "API token 服务暂时无法完成请求")

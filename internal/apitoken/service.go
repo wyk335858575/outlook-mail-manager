@@ -22,6 +22,7 @@ const tokenPrefixLength = 12
 var (
 	ErrInvalidTokenInput = errors.New("invalid API token input")
 	ErrTokenNotFound     = errors.New("API token not found")
+	ErrTokenActive       = errors.New("API token is still active")
 	ErrUnauthorized      = errors.New("API token is unauthorized")
 	ErrScopeDenied       = errors.New("API token scope denied")
 	ErrAccountDenied     = errors.New("API token account scope denied")
@@ -41,6 +42,7 @@ type Service struct {
 type TokenInput struct {
 	Name             string     `json:"name"`
 	Scopes           []string   `json:"scopes"`
+	AllAccounts      bool       `json:"all_accounts"`
 	AccountPublicIDs []string   `json:"account_public_ids"`
 	GroupNames       []string   `json:"group_names"`
 	IPCIDRs          []string   `json:"ip_cidrs"`
@@ -52,6 +54,7 @@ type Token struct {
 	Name             string     `json:"name"`
 	Prefix           string     `json:"prefix"`
 	Scopes           []string   `json:"scopes"`
+	AllAccounts      bool       `json:"all_accounts"`
 	AccountPublicIDs []string   `json:"account_public_ids"`
 	GroupNames       []string   `json:"group_names"`
 	IPCIDRs          []string   `json:"ip_cidrs"`
@@ -69,6 +72,7 @@ type CreatedToken struct {
 type Grant struct {
 	TokenPublicID    string
 	Scopes           []string
+	AllAccounts      bool
 	AccountPublicIDs []string
 	GroupNames       []string
 }
@@ -105,8 +109,14 @@ func (s *Service) Create(ctx context.Context, input TokenInput) (CreatedToken, e
 		return CreatedToken{}, err
 	}
 	scopesJSON, _ := json.Marshal(uniqueStrings(input.Scopes))
-	accountsJSON, _ := json.Marshal(uniqueStrings(input.AccountPublicIDs))
-	groupsJSON, _ := json.Marshal(uniqueStrings(input.GroupNames))
+	accountPublicIDs := input.AccountPublicIDs
+	groupNames := input.GroupNames
+	if input.AllAccounts {
+		accountPublicIDs = nil
+		groupNames = nil
+	}
+	accountsJSON, _ := json.Marshal(uniqueStrings(accountPublicIDs))
+	groupsJSON, _ := json.Marshal(uniqueStrings(groupNames))
 	ipJSON, _ := json.Marshal(uniqueStrings(input.IPCIDRs))
 	var expires any
 	if input.ExpiresAt != nil {
@@ -116,10 +126,10 @@ func (s *Service) Create(ctx context.Context, input TokenInput) (CreatedToken, e
 	if _, err := s.db.ExecContext(ctx, `
 		INSERT INTO api_tokens (
 			public_id, name, token_prefix, token_hash, scopes_json, account_public_ids_json,
-			group_names_json, ip_cidrs_json, expires_at_utc, created_at_utc
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			group_names_json, ip_cidrs_json, all_accounts, expires_at_utc, created_at_utc
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`, publicID, strings.TrimSpace(input.Name), prefix, hex.EncodeToString(hash[:]), string(scopesJSON),
-		string(accountsJSON), string(groupsJSON), string(ipJSON), expires, formatTime(now)); err != nil {
+		string(accountsJSON), string(groupsJSON), string(ipJSON), input.AllAccounts, expires, formatTime(now)); err != nil {
 		return CreatedToken{}, fmt.Errorf("create API token: %w", err)
 	}
 	item, err := s.get(ctx, publicID)
@@ -133,7 +143,7 @@ func (s *Service) Create(ctx context.Context, input TokenInput) (CreatedToken, e
 func (s *Service) List(ctx context.Context) ([]Token, error) {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT public_id, name, token_prefix, scopes_json, account_public_ids_json, group_names_json,
-			ip_cidrs_json, expires_at_utc, last_used_at_utc, revoked_at_utc, created_at_utc
+			ip_cidrs_json, all_accounts, expires_at_utc, last_used_at_utc, revoked_at_utc, created_at_utc
 		FROM api_tokens ORDER BY created_at_utc DESC, id DESC
 	`)
 	if err != nil {
@@ -167,6 +177,42 @@ func (s *Service) Revoke(ctx context.Context, publicID string) error {
 	return nil
 }
 
+func (s *Service) Delete(ctx context.Context, publicID string) error {
+	publicID = strings.TrimSpace(publicID)
+	var revoked, expires sql.NullString
+	err := s.db.QueryRowContext(ctx, `
+		SELECT revoked_at_utc, expires_at_utc FROM api_tokens WHERE public_id = ?
+	`, publicID).Scan(&revoked, &expires)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrTokenNotFound
+	}
+	if err != nil {
+		return fmt.Errorf("load API token for deletion: %w", err)
+	}
+	if !revoked.Valid {
+		if !expires.Valid {
+			return ErrTokenActive
+		}
+		expiresAt, err := parseTime(expires.String)
+		if err != nil {
+			return fmt.Errorf("parse API token expiry: %w", err)
+		}
+		if expiresAt.After(s.now().UTC()) {
+			return ErrTokenActive
+		}
+	}
+	result, err := s.db.ExecContext(ctx, `DELETE FROM api_tokens WHERE public_id = ?`, publicID)
+	if err != nil {
+		return fmt.Errorf("delete API token: %w", err)
+	}
+	count, _ := result.RowsAffected()
+	if count == 0 {
+		return ErrTokenNotFound
+	}
+	_ = s.recordAudit(ctx, "api_token.deleted", publicID, nil)
+	return nil
+}
+
 func (s *Service) Verify(ctx context.Context, secret, remoteIP, requiredScope string) (Grant, error) {
 	secret = strings.TrimSpace(secret)
 	if len(secret) < tokenPrefixLength || !strings.HasPrefix(secret, "omm_") {
@@ -175,7 +221,7 @@ func (s *Service) Verify(ctx context.Context, secret, remoteIP, requiredScope st
 	prefix := secret[:tokenPrefixLength]
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT id, public_id, token_hash, scopes_json, account_public_ids_json,
-			group_names_json, ip_cidrs_json, expires_at_utc, revoked_at_utc
+			group_names_json, ip_cidrs_json, all_accounts, expires_at_utc, revoked_at_utc
 		FROM api_tokens WHERE token_prefix = ?
 	`, prefix)
 	if err != nil {
@@ -187,9 +233,10 @@ func (s *Service) Verify(ctx context.Context, secret, remoteIP, requiredScope st
 	for rows.Next() {
 		var id int64
 		var publicID, storedHash, scopesJSON, accountsJSON, groupsJSON, cidrsJSON string
+		var allAccounts bool
 		var expires, revoked sql.NullString
 		if err := rows.Scan(&id, &publicID, &storedHash, &scopesJSON, &accountsJSON, &groupsJSON,
-			&cidrsJSON, &expires, &revoked); err != nil {
+			&cidrsJSON, &allAccounts, &expires, &revoked); err != nil {
 			return Grant{}, fmt.Errorf("scan API token: %w", err)
 		}
 		decodedHash, err := hex.DecodeString(storedHash)
@@ -207,6 +254,7 @@ func (s *Service) Verify(ctx context.Context, secret, remoteIP, requiredScope st
 		}
 		var grant Grant
 		grant.TokenPublicID = publicID
+		grant.AllAccounts = allAccounts
 		var cidrs []string
 		if err := decodeLists([]decodeTarget{
 			{scopesJSON, &grant.Scopes}, {accountsJSON, &grant.AccountPublicIDs},
@@ -227,6 +275,9 @@ func (s *Service) Verify(ctx context.Context, secret, remoteIP, requiredScope st
 }
 
 func (g Grant) AllowsAccount(ctx context.Context, db *sql.DB, accountPublicID string) (bool, error) {
+	if g.AllAccounts {
+		return true, nil
+	}
 	if containsFold(g.AccountPublicIDs, accountPublicID) {
 		return true, nil
 	}
@@ -255,7 +306,7 @@ func (g Grant) AllowsAccount(ctx context.Context, db *sql.DB, accountPublicID st
 }
 
 func (s *Service) validateInput(ctx context.Context, input TokenInput) error {
-	if strings.TrimSpace(input.Name) == "" || len(input.Scopes) == 0 || len(input.AccountPublicIDs)+len(input.GroupNames) == 0 {
+	if strings.TrimSpace(input.Name) == "" || len(input.Scopes) == 0 || (!input.AllAccounts && len(input.AccountPublicIDs)+len(input.GroupNames) == 0) {
 		return ErrInvalidTokenInput
 	}
 	allowed := map[string]bool{"accounts:read": true, "mail:read": true, "otp:read": true, "system:read": true}
@@ -290,7 +341,7 @@ func (s *Service) validateInput(ctx context.Context, input TokenInput) error {
 func (s *Service) get(ctx context.Context, publicID string) (Token, error) {
 	row := s.db.QueryRowContext(ctx, `
 		SELECT public_id, name, token_prefix, scopes_json, account_public_ids_json, group_names_json,
-			ip_cidrs_json, expires_at_utc, last_used_at_utc, revoked_at_utc, created_at_utc
+			ip_cidrs_json, all_accounts, expires_at_utc, last_used_at_utc, revoked_at_utc, created_at_utc
 		FROM api_tokens WHERE public_id = ?
 	`, strings.TrimSpace(publicID))
 	item, err := scanToken(row)
@@ -305,11 +356,13 @@ type scanner interface{ Scan(...any) error }
 func scanToken(row scanner) (Token, error) {
 	var item Token
 	var scopesJSON, accountsJSON, groupsJSON, cidrsJSON, created string
+	var allAccounts bool
 	var expires, lastUsed, revoked sql.NullString
 	if err := row.Scan(&item.PublicID, &item.Name, &item.Prefix, &scopesJSON, &accountsJSON,
-		&groupsJSON, &cidrsJSON, &expires, &lastUsed, &revoked, &created); err != nil {
+		&groupsJSON, &cidrsJSON, &allAccounts, &expires, &lastUsed, &revoked, &created); err != nil {
 		return Token{}, err
 	}
+	item.AllAccounts = allAccounts
 	if err := decodeLists([]decodeTarget{
 		{scopesJSON, &item.Scopes}, {accountsJSON, &item.AccountPublicIDs},
 		{groupsJSON, &item.GroupNames}, {cidrsJSON, &item.IPCIDRs},

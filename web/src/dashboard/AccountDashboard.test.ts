@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { microsoftAccountSignOutURL, type Account } from '../api/accounts'
-import { accountDeleteConfirmationMatches, accountIdentityDisplay, copyAuthorizationEmail, failedBatchAccountIDs, nextAuthorizationAction, openMicrosoftAuthorizationPopup } from './AccountDashboard'
+import { accountAvatarInitial, accountDeleteConfirmationMatches, accountIdentityDisplay, copyAuthorizationEmail, failedBatchAccountIDs, nextAuthorizationAction, openMicrosoftAuthorizationPopup } from './AccountDashboard'
 
 function account(status: Account['status']): Account {
   return {
@@ -84,6 +84,15 @@ describe('account identity display', () => {
       primaryEmail: 'primary@outlook.com',
       displayName: '',
     })
+  })
+
+  it('always uses the email initial for the account avatar', () => {
+    expect(accountAvatarInitial({
+      imported_email: 'alias@outlook.com',
+      primary_email: 'primary@outlook.com',
+      display_name: 'Finance Box',
+    })).toBe('P')
+    expect(accountAvatarInitial({ imported_email: 'pending@outlook.com' })).toBe('P')
   })
 })
 

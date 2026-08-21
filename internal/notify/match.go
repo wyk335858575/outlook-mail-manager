@@ -12,12 +12,17 @@ type messageContext struct {
 	Category         string
 	SenderAddress    string
 	Subject          string
+	Body             string
 	VerificationCode string
+	Personal         bool
 	ReceivedAt       time.Time
 }
 
 func ruleMatches(rule Rule, message messageContext, location *time.Location) bool {
 	if !rule.Enabled {
+		return false
+	}
+	if rule.PersonalOnly && !message.Personal {
 		return false
 	}
 	if len(rule.AccountPublicIDs) > 0 && !containsFold(rule.AccountPublicIDs, message.AccountPublicID) {
@@ -77,6 +82,20 @@ func ruleMatches(rule Rule, message messageContext, location *time.Location) boo
 func containsFold(values []string, target string) bool {
 	for _, value := range values {
 		if strings.EqualFold(strings.TrimSpace(value), strings.TrimSpace(target)) {
+			return true
+		}
+	}
+	return false
+}
+
+func equalTrimmedFold(left, right string) bool {
+	return strings.EqualFold(strings.TrimSpace(left), strings.TrimSpace(right))
+}
+
+func containsSubjectKeyword(keywords []string, subject string) bool {
+	subject = strings.ToLower(subject)
+	for _, keyword := range keywords {
+		if strings.Contains(subject, strings.ToLower(strings.TrimSpace(keyword))) {
 			return true
 		}
 	}

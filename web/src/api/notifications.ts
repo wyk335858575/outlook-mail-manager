@@ -1,6 +1,6 @@
 import { apiRequest } from './auth'
 
-export type NotificationKind = 'telegram' | 'pushplus' | 'webhook'
+export type NotificationKind = 'telegram' | 'pushplus' | 'wxpush'
 
 export type NotificationChannel = {
   public_id: string
@@ -10,6 +10,7 @@ export type NotificationChannel = {
   system_enabled: boolean
   configured: boolean
   destination: string
+  needs_reconfiguration: boolean
   created_at: string
   updated_at: string
 }
@@ -23,8 +24,10 @@ export type NotificationChannelInput = {
   telegram_chat_id?: string
   pushplus_token?: string
   pushplus_topic?: string
-  webhook_url?: string
-  webhook_secret?: string
+  wxpush_app_id?: string
+  wxpush_app_secret?: string
+  wxpush_user_id?: string
+  wxpush_template_id?: string
 }
 
 export type NotificationRule = {
@@ -33,6 +36,7 @@ export type NotificationRule = {
   channel_name?: string
   name: string
   enabled: boolean
+  personal_only: boolean
   account_public_ids: string[]
   group_names: string[]
   tag_names: string[]
@@ -78,6 +82,12 @@ export function deleteNotificationChannel(publicID: string, csrfToken: string) {
 export function testNotificationChannel(publicID: string, csrfToken: string) {
   return apiRequest<NotificationDelivery>(`/api/notifications/channels/${encodeURIComponent(publicID)}/test`, {
     method: 'POST', headers: { 'X-CSRF-Token': csrfToken },
+  })
+}
+
+export function testNotificationConfig(input: NotificationChannelInput, csrfToken: string) {
+  return apiRequest<{ status: 'sent' }>('/api/notifications/channels/test-config', {
+    method: 'POST', headers: { 'X-CSRF-Token': csrfToken }, body: JSON.stringify(input),
   })
 }
 
