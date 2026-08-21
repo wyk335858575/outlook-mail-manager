@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -68,10 +69,40 @@ func TestUpdateStatusRejectsPrereleaseAndUnexpectedVersionLine(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if _, err := service.UpdateStatus(context.Background()); err == nil {
-				t.Fatal("UpdateStatus() accepted an unsupported release")
+			status, err := service.UpdateStatus(context.Background())
+			if err != nil {
+				t.Fatalf("UpdateStatus() returned an error: %v", err)
+			}
+			if status.LatestVersion != "" || !strings.Contains(status.Reason, "无法检查 GitHub Releases") {
+				t.Fatalf("unsupported release was not reported safely: %+v", status)
 			}
 		})
+	}
+}
+
+func TestUpdateStatusReturnsActionableReasonWhenGitHubIsUnavailable(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer server.Close()
+	store, err := database.Open(context.Background(), t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	service, err := New(store.DB, t.TempDir(), Options{
+		Version: "1.0.8", UpdateRepository: "owner/repo", UpdateImage: "ghcr.io/owner/repo",
+		GitHubAPIBaseURL: server.URL, HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	status, err := service.UpdateStatus(context.Background())
+	if err != nil {
+		t.Fatalf("UpdateStatus() returned an error: %v", err)
+	}
+	if !status.Configured || status.LatestVersion != "" || !strings.Contains(status.Reason, "无法检查 GitHub Releases") {
+		t.Fatalf("GitHub failure was not reported safely: %+v", status)
 	}
 }
 
@@ -80,3 +111,4 @@ func TestVersionGreaterUsesSemanticComponents(t *testing.T) {
 		t.Fatal("version comparison returned an unexpected result")
 	}
 }
+
