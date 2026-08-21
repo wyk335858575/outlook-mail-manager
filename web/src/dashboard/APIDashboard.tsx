@@ -228,4 +228,3 @@ function SecretDialog({ token, onClose, onGenerate }: { token: CreatedAPIToken; 
 function Empty({ text, loading = false }: { text: string; loading?: boolean }) { return <div className="operations-empty">{loading && <LoaderCircle className="is-spinning" size={18} />}{text}</div> }
 function formatDate(value: string) { return new Intl.DateTimeFormat('zh-CN', { dateStyle: 'short', timeStyle: 'short', hour12: false }).format(new Date(value)) }
 function messageFor(error: unknown, fallback: string) { return error instanceof APIError ? error.message : fallback }
-

@@ -19,4 +19,3 @@ export function buildOTPExamples(input: OTPExampleInput) {
     csharp: `using System.Net.Http.Headers;\n\nusing var client = new HttpClient();\nvar token = Environment.GetEnvironmentVariable("OMM_API_TOKEN")\n    ?? throw new InvalidOperationException("OMM_API_TOKEN is not set");\nclient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);\n\nusing var response = await client.GetAsync(${JSON.stringify(url)});\nresponse.EnsureSuccessStatusCode();\nConsole.WriteLine(await response.Content.ReadAsStringAsync());`,
   }
 }
-

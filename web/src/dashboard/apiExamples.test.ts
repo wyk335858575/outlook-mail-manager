@@ -28,4 +28,3 @@ describe('OTP API examples', () => {
     expect(examples.node).not.toContain('after')
   })
 })
-

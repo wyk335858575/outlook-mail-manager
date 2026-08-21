@@ -507,4 +507,3 @@ func (l *apiRateLimiter) Allow(key string, maximum int, duration time.Duration) 
 	l.windows[key] = window
 	return true
 }
-

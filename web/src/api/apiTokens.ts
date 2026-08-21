@@ -48,4 +48,3 @@ export function deleteAPIToken(publicID: string, csrfToken: string) {
     method: 'DELETE', headers: { 'X-CSRF-Token': csrfToken },
   })
 }
-

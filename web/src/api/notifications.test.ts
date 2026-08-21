@@ -26,4 +26,3 @@ describe('notification API', () => {
     expect(JSON.stringify(input)).not.toContain('wxpush_token')
   })
 })
-

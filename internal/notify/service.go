@@ -1273,4 +1273,3 @@ func maskValue(value string) string {
 	}
 	return strings.Repeat("*", len(value)-4) + value[len(value)-4:]
 }
-

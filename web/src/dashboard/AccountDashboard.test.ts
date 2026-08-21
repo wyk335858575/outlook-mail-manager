@@ -162,4 +162,3 @@ describe('account batch operations', () => {
     expect(accountDeleteConfirmationMatches(12, '删除 11 个账号')).toBe(false)
   })
 })
-

@@ -85,4 +85,3 @@ func personalRuleMatches(rule personalInboxRule, message messageContext) bool {
 	}
 	return !rule.RequireOTP || message.VerificationCode != ""
 }
-

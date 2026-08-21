@@ -117,4 +117,3 @@ func TestMailPayloadKeepsUnicodeFieldsValidWhenTruncated(t *testing.T) {
 		t.Fatalf("truncated notification field lengths = sender:%d subject:%d", len([]rune(payload.Sender)), len([]rune(payload.Subject)))
 	}
 }
-

@@ -110,4 +110,3 @@ func intersectsFold(left, right []string) bool {
 	}
 	return false
 }
-

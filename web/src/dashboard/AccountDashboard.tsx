@@ -1228,4 +1228,3 @@ function formatDate(value?: string) {
 function messageFor(error: unknown, fallback: string) {
   return error instanceof APIError ? error.message : fallback
 }
-

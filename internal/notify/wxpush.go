@@ -182,4 +182,3 @@ func wxPushSendError(code int) error {
 		return ErrWXPushAPI
 	}
 }
-

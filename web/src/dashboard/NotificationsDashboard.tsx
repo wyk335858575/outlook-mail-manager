@@ -306,4 +306,3 @@ function Empty({ text, loading = false }: { text: string; loading?: boolean }) {
 function kindLabel(kind: NotificationKind) { return kind === 'telegram' ? 'Telegram' : kind === 'pushplus' ? 'PushPlus' : 'WXPush' }
 function formatDate(value: string) { return new Intl.DateTimeFormat('zh-CN', { dateStyle: 'short', timeStyle: 'short', hour12: false }).format(new Date(value)) }
 function messageFor(error: unknown, fallback: string) { return error instanceof APIError ? error.message : fallback }
-

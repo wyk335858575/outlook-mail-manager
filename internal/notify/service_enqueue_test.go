@@ -141,4 +141,3 @@ func TestEnqueueMessageMatchesPersonalRulesAndDedupesPerChannel(t *testing.T) {
 		t.Fatalf("delivery count after non-personal message = %d, want 2", total)
 	}
 }
-
