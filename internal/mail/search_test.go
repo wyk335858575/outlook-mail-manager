@@ -309,3 +309,4 @@ func TestMarkMessagesReadUsesGraphBatches(t *testing.T) {
 		t.Fatalf("unread messages = %d, want 1", unread)
 	}
 }
+

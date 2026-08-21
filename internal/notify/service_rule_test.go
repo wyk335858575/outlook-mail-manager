@@ -63,3 +63,4 @@ func TestListRulesKeepsEveryEmptyConditionAsArray(t *testing.T) {
 		}
 	}
 }
+

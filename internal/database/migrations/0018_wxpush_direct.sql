@@ -17,3 +17,4 @@ UPDATE notification_channels
 SET enabled = 0,
     system_enabled = 0
 WHERE kind = 'wxpush';
+

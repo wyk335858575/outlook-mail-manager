@@ -490,3 +490,4 @@ func parseNullableTime(value sql.NullString) (*time.Time, error) {
 	}
 	return &parsed, nil
 }
+

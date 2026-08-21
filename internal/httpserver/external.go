@@ -1,1 +1,510 @@
-YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíçŸ9N‹Z–‹­¦ëeŠw¬ÕÁ…­…”¡ÑÑÁÍ•ÉÙ•È()¥µÁ½ÉÐ€ ($‰½¹Ñ•áÐˆ($‰‘…Ñ…‰…Í”½ÍÅ°ˆ($‰•¹½‘¥¹œ½‰…Í”ØÐˆ($‰•¹½‘¥¹œ½©Í½¸ˆ($‰•ÉÉ½ÉÌˆ($‰±½œ½Í±½œˆ($‰¹•Ðˆ($‰¹•Ð½¡ÑÑÀˆ($‰ÍÑÉ½¹Øˆ($‰ÍÑÉ¥¹Ìˆ($‰Íå¹Œˆ($‰Ñ¥µ”ˆ(($‰½ÕÑ±½½¬µµ…¥°µµ…¹…•È½¥¹Ñ•É¹…°½…Á¥Ñ½­•¸ˆ(%µ…¥±‰½à€‰½ÕÑ±½½¬µµ…¥°µµ…¹…•È½¥¹Ñ•É¹…°½µ…¥°ˆ(¤()ÑåÁ”•áÑ•É¹…±A$ÍÑÉÕÐì(%‘ˆ€€€€€€€€€€©ÍÅ°¹(%Ñ½­•¹Ì€€€€€…Á¥Q½­•¹M•ÉÙ¥”(%µ…¥°€€€€€€€µ…¥±M•ÉÙ¥”(%µ…¥¹Ñ•¹…¹”µ…¥¹Ñ•¹…¹•M•ÉÙ¥”(%±½•È€€€€€€©Í±½œ¹1½•È(%±¥µ¥Ñ•È€€€€€©…Á¥I…Ñ•1¥µ¥Ñ•È)ô()ÑåÁ”•áÑ•É¹…±½Õ¹ÐÍÑÉÕÐì(%AÕ‰±¥%€€€€ÍÑÉ¥¹œ€€€€©Í½¸è‰ÁÕ‰±¥}¥‰€(%9…µ”€€€€€€€€ÍÑÉ¥¹œ€€€€©Í½¸è‰¹…µ”‰€(%‘‘É•ÍÌ€€€€€ÍÑÉ¥¹œ€€€€©Í½¸è‰…‘‘É•ÍÌ‰€(%MÑ…ÑÕÌ€€€€€€ÍÑÉ¥¹œ€€€€©Í½¸è‰ÍÑ…ÑÕÌ‰€(%É½ÕÁÌ€€€€€€muÍÑÉ¥¹œ€€©Í½¸è‰É½ÕÁÌ‰€(%Q…Ì€€€€€€€€muÍÑÉ¥¹œ€€©Í½¸è‰Ñ…Ì‰€(%1…ÍÑMå¹•‘Ð€©Ñ¥µ”¹Q¥µ”©Í½¸è‰±…ÍÑ}Íå¹•‘}…Ð±½µ¥Ñ•µÁÑä‰€(%I•…ÕÑ¡I•…Í½¸ÍÑÉ¥¹œ€€€€©Í½¸è‰É•…ÕÑ¡}É•…Í½¸±½µ¥Ñ•µÁÑä‰€)ô()ÑåÁ”µ•ÍÍ…•ÕÉÍ½ÈÍÑÉÕÐì(%I••¥Ù•‘ÐÍÑÉ¥¹œ©Í½¸è‰É••¥Ù•‘}…Ð‰€(%AÕ‰±¥%€€ÍÑÉ¥¹œ©Í½¸è‰ÁÕ‰±¥}¥‰€)ô()™Õ¹Œ¹•ÝáÑ•É¹…±A$¡‘ˆ€©ÍÅ°¹°Ñ½­•¹Ì…Á¥Q½­•¹M•ÉÙ¥”°µ…¥°µ…¥±M•ÉÙ¥”°µ…¥¹Ñ•¹…¹”µ…¥¹Ñ•¹…¹•M•ÉÙ¥”°±½•È€©Í±½œ¹1½•È¤€©•áÑ•É¹…±A$ì(%É•ÑÕÉ¸€™•áÑ•É¹…±A%í‘ˆè‘ˆ°Ñ½­•¹ÌèÑ½­•¹Ì°µ…¥°èµ…¥°°µ…¥¹Ñ•¹…¹”èµ…¥¹Ñ•¹…¹”°±½•Èè±½•È°±¥µ¥Ñ•Èè¹•ÝA%I…Ñ•1¥µ¥Ñ•È ¥ô)ô()™Õ¹Œ€¡…Á¤€©•áÑ•É¹…±A$¤É•¥ÍÑ•È¡µÕà€©¡ÑÑÀ¹M•ÉÙ•5Õà¤ì(%µÕà¹!…¹‘±•Õ¹Œ ‰P€½…Á¤½ØÄ½…½Õ¹ÑÌˆ°…Á¤¹…½Õ¹ÑÌ¤(%µÕà¹!…¹‘±•Õ¹Œ ‰P€½…Á¤½ØÄ½µ•ÍÍ…•Ìˆ°…Á¤¹µ•ÍÍ…•Ì¤(%µÕà¹!…¹‘±•Õ¹Œ ‰P€½…Á¤½ØÄ½µ•ÍÍ…•Ì½íÁÕ‰±¥}¥‘ôˆ°…Á¤¹µ•ÍÍ…”¤(%µÕà¹!…¹‘±•Õ¹Œ ‰P€½…Á¤½ØÄ½½ÑÀ½±…Ñ•ÍÐˆ°…Á¤¹±…Ñ•ÍÑ=Q@¤(%µÕà¹!…¹‘±•Õ¹Œ ‰P€½…Á¤½ØÄ½¡•…±Ñ ˆ°…Á¤¹¡•…±Ñ ¤)ô()™Õ¹Œ€¡…Á¤€©•áÑ•É¹…±A$¤…½Õ¹ÑÌ¡Ü¡ÑÑÀ¹I•ÍÁ½¹Í•]É¥Ñ•È°È€©¡ÑÑÀ¹I•ÅÕ•ÍÐ¤ì(%É…¹Ð°½¬€èô…Á¤¹…ÕÑ¡½É¥é”¡Ü°È°€‰…½Õ¹ÑÌéÉ•…ˆ°€ØÀ¤(%¥˜€…½¬ì($%É•ÑÕÉ¸(%ô(%…±±½Ý•°•ÉÈ€èô…Á¤¹…±±½Ý•‘½Õ¹ÑÌ¡È¹½¹Ñ•áÐ ¤°É…¹Ð¤(%¥˜•ÉÈ€„ô¹¥°ì($%…Á¤¹¥¹Ñ•É¹…±ÉÉ½È¡Ü°•ÉÈ¤($%É•ÑÕÉ¸(%ô(%¥Ñ•µÌ€èôµ…­”¡mu•áÑ•É¹…±½Õ¹Ð°€À°±•¸¡…±±½Ý•¤¤(%™½È|°ÁÕ‰±¥%€èôÉ…¹”…±±½Ý•ì($%Ù…È¥Ñ•´•áÑ•É¹…±½Õ¹Ð($%Ù…ÈÍå¹•°É•…Í½¸ÍÅ°¹9Õ±±MÑÉ¥¹œ($%•ÉÈ€èô…Á¤¹‘ˆ¹EÕ•ÉåI½Ý½¹Ñ•áÐ¡È¹½¹Ñ•áÐ ¤°€($$%M1PÁÕ‰±¥}¥°($$$%=1M¡9U11%¡‘¥ÍÁ±…å}¹…µ”°€œœ¤°9U11%¡ÁÉ¥µ…Éå}•µ…¥°°€œœ¤°¥µÁ½ÉÑ•‘}•µ…¥°¤°($$$%=1M¡9U11%¡ÁÉ¥µ…Éå}•µ…¥°°€œœ¤°¥µÁ½ÉÑ•‘}•µ…¥°¤°ÍÑ…ÑÕÌ°($$$%±…ÍÑ}Íå¹}ÍÕ•ÍÍ}…Ñ}ÕÑŒ°É•…ÕÑ¡}É•…Í½¸($$%I=4…½Õ¹ÑÌ]!IÁÕ‰±¥}¥€ô€ü($%€°ÁÕ‰±¥%¤¹M…¸ ™¥Ñ•´¹AÕ‰±¥%°€™¥Ñ•´¹9…µ”°€™¥Ñ•´¹‘‘É•ÍÌ°€™¥Ñ•´¹MÑ…ÑÕÌ°€™Íå¹•°€™É•…Í½¸¤($%¥˜•ÉÈ€„ô¹¥°ì($$%…Á¤¹¥¹Ñ•É¹…±ÉÉ½È¡Ü°•ÉÈ¤($$%É•ÑÕÉ¸($%ô($%¥Ñ•´¹É½ÕÁÌ°|€ô…Á¤¹…½Õ¹Ñ1…‰•±Ì¡È¹½¹Ñ•áÐ ¤°ÁÕ‰±¥%°ÑÉÕ”¤($%¥Ñ•´¹Q…Ì°|€ô…Á¤¹…½Õ¹Ñ1…‰•±Ì¡È¹½¹Ñ•áÐ ¤°ÁÕ‰±¥%°™…±Í”¤($%¥Ñ•´¹1…ÍÑMå¹•‘Ð°•ÉÈ€ôÁ…ÉÍ•=ÁÑ¥½¹…±Q¥µ”¡Íå¹•¤($%¥˜•ÉÈ€„ô¹¥°ì($$%…Á¤¹¥¹Ñ•É¹…±ÉÉ½È¡Ü°•ÉÈ¤($$%É•ÑÕÉ¸($%ô($%¥Ñ•´¹I•…ÕÑ¡I•…Í½¸€ôÉ•…Í½¸¹MÑÉ¥¹œ($%¥Ñ•µÌ€ô…ÁÁ•¹¡¥Ñ•µÌ°¥Ñ•´¤(%ô(%ÝÉ¥Ñ•áÑ•É¹…±)M=8¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ=,°µ…ÁmÍÑÉ¥¹u…¹åì‰…½Õ¹ÑÌˆè¥Ñ•µÍô¤)ô()™Õ¹Œ€¡…Á¤€©•áÑ•É¹…±A$¤µ•ÍÍ…•Ì¡Ü¡ÑÑÀ¹I•ÍÁ½¹Í•]É¥Ñ•È°È€©¡ÑÑÀ¹I•ÅÕ•ÍÐ¤ì(%É…¹Ð°½¬€èô…Á¤¹…ÕÑ¡½É¥é”¡Ü°È°€‰µ…¥°éÉ•…ˆ°€ØÀ¤(%¥˜€…½¬ì($%É•ÑÕÉ¸(%ô(%…±±½Ý•°•ÉÈ€èô…Á¤¹…±±½Ý•‘½Õ¹ÑÌ¡È¹½¹Ñ•áÐ ¤°É…¹Ð¤(%¥˜•ÉÈ€„ô¹¥°ì($%…Á¤¹¥¹Ñ•É¹…±ÉÉ½È¡Ü°•ÉÈ¤($%É•ÑÕÉ¸(%ô(%¥˜±•¸¡…±±½Ý•¤€ôô€Àì($%ÝÉ¥Ñ•áÑ•É¹…±)M=8¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ=,°µ…ÁmÍÑÉ¥¹u…¹åì‰µ•ÍÍ…•Ìˆèmuµ…¥±‰½à¹5•ÍÍ…•MÕµµ…Éåíô°€‰¹•áÑ}ÕÉÍ½Èˆè€ˆ‰ô¤($%É•ÑÕÉ¸(%ô(%™¥±Ñ•È€èôµ…¥±‰½à¹5•ÍÍ…•¥±Ñ•Éì($%EÕ•ÉäèÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡È¹UI0¹EÕ•Éä ¤¹•Ð ‰Äˆ¤¤°É½ÕÀèÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡È¹UI0¹EÕ•Éä ¤¹•Ð ‰É½ÕÀˆ¤¤°($%Q…œèÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡È¹UI0¹EÕ•Éä ¤¹•Ð ‰Ñ…œˆ¤¤°…Ñ•½Éäèµ…¥±‰½à¹…Ñ•½Éä¡ÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡È¹UI0¹EÕ•Éä ¤¹•Ð ‰…Ñ•½Éäˆ¤¤¤°($%½±‘•ÈèÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡È¹UI0¹EÕ•Éä ¤¹•Ð ‰™½±‘•Èˆ¤¤°M•¹‘•ÈèÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡È¹UI0¹EÕ•Éä ¤¹•Ð ‰Í•¹‘•Èˆ¤¤°($%½Õ¹ÑM½Á”è…±±½Ý•°(%ô(%¥˜…½Õ¹Ð€èôÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡È¹UI0¹EÕ•Éä ¤¹•Ð ‰…½Õ¹Ðˆ¤¤ì…½Õ¹Ð€„ô€ˆˆì($%Ù…È…½Õ¹ÑAÕ‰±¥%ÍÑÉ¥¹œ($%•ÉÈ€èô…Á¤¹‘ˆ¹EÕ•ÉåI½Ý½¹Ñ•áÐ¡È¹½¹Ñ•áÐ ¤°€($$%M1PÁÕ‰±¥}¥I=4…½Õ¹ÑÌ($$%]!IÁÕ‰±¥}¥€ô€ü=H¥µÁ½ÉÑ•‘}•µ…¥°€ô€ü=11Q9=M=HÁÉ¥µ…Éå}•µ…¥°€ô€ü=11Q9=M($$%1%5%P€Ä($%€°…½Õ¹Ð°…½Õ¹Ð°…½Õ¹Ð¤¹M…¸ ™…½Õ¹ÑAÕ‰±¥%¤($%¥˜•ÉÉ½ÉÌ¹%Ì¡•ÉÈ°ÍÅ°¹ÉÉ9½I½ÝÌ¤ì($$%ÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ9½Ñ½Õ¹°€‰¹½Ñ}™½Õ¹ˆ°€‹¢ÖšêC’â7–¶c–r ˆ¤($$%É•ÑÕÉ¸($%ô($%¥˜•ÉÈ€„ô¹¥°ì($$%…Á¤¹¥¹Ñ•É¹…±ÉÉ½È¡Ü°•ÉÈ¤($$%É•ÑÕÉ¸($%ô($%Á•Éµ¥ÑÑ•°•ÉÈ€èôÉ…¹Ð¹±±½ÝÍ½Õ¹Ð¡È¹½¹Ñ•áÐ ¤°…Á¤¹‘ˆ°…½Õ¹ÑAÕ‰±¥%¤($%¥˜•ÉÈ€„ô¹¥°ì($$%…Á¤¹¥¹Ñ•É¹…±ÉÉ½È¡Ü°•ÉÈ¤($$%É•ÑÕÉ¸($%ô($%¥˜€…Á•Éµ¥ÑÑ•ì($$%ÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ9½Ñ½Õ¹°€‰¹½Ñ}™½Õ¹ˆ°€‹¢ÖšêC’â7–¶c–r ˆ¤($$%É•ÑÕÉ¸($%ô($%™¥±Ñ•È¹½Õ¹Ð€ô…½Õ¹ÑAÕ‰±¥%(%ô(%¥˜Ù…±Õ”€èôÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡È¹UI0¹EÕ•Éä ¤¹•Ð ‰Õ¹É•…ˆ¤¤ìÙ…±Õ”€„ô€ˆˆì($%Á…ÉÍ•°•ÉÈ€èôÍÑÉ½¹Ø¹A…ÉÍ•	½½°¡Ù…±Õ”¤($%¥˜•ÉÈ€„ô¹¥°ì($$%ÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ	…‘I•ÅÕ•ÍÐ°€‰¥¹Ù…±¥‘}Õ¹É•…ˆ°€‰Õ¹É•…ƒ–þ¦†ïšb¼ÑÉÕ”ƒš"X™…±Í”ˆ¤($$%É•ÑÕÉ¸($%ô($%™¥±Ñ•È¹U¹É•…€ô€™Á…ÉÍ•(%ô(%±¥µ¥Ð€èô€ÔÀ(%¥˜Ù…±Õ”€èôÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡È¹UI0¹EÕ•Éä ¤¹•Ð ‰±¥µ¥Ðˆ¤¤ìÙ…±Õ”€„ô€ˆˆì($%Á…ÉÍ•°•ÉÈ€èôÍÑÉ½¹Ø¹Ñ½¤¡Ù…±Õ”¤($%¥˜•ÉÈ€„ô¹¥°ñðÁ…ÉÍ•€ð€ÄñðÁ…ÉÍ•€ø€ÄÀÀì($$%ÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ	…‘I•ÅÕ•ÍÐ°€‰¥¹Ù…±¥‘}±¥µ¥Ðˆ°€‰±¥µ¥Ðƒ–þ¦†ï–r €Äƒ–"À€ÄÀÀƒ’æ/¦^Ðˆ¤($$%É•ÑÕÉ¸($%ô($%±¥µ¥Ð€ôÁ…ÉÍ•(%ô(%¥˜ÕÉÍ½È€èôÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡È¹UI0¹EÕ•Éä ¤¹•Ð ‰ÕÉÍ½Èˆ¤¤ìÕÉÍ½È€„ô€ˆˆì($%Ù…±Õ”°•ÉÈ€èô‘•½‘•5•ÍÍ…•ÕÉÍ½È¡ÕÉÍ½È¤($%¥˜•ÉÈ€„ô¹¥°ì($$%ÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ	…‘I•ÅÕ•ÍÐ°€‰¥¹Ù…±¥‘}ÕÉÍ½Èˆ°€‰ÕÉÍ½Èƒš^ƒšV ˆ¤($$%É•ÑÕÉ¸($%ô($%™¥±Ñ•È¹ÕÉÍ½ÉI••¥Ù•‘Ð€ô€™Ù…±Õ”¹I••¥Ù•‘Ð($%™¥±Ñ•È¹ÕÉÍ½ÉAÕ‰±¥%€ôÙ…±Õ”¹AÕ‰±¥%(%ô(%™¥±Ñ•È¹1¥µ¥Ð€ô±¥µ¥Ð€¬€Ä(%¥Ñ•µÌ°•ÉÈ€èô…Á¤¹µ…¥°¹M•…É¡5•ÍÍ…•Ì¡È¹½¹Ñ•áÐ ¤°™¥±Ñ•È¤(%¥˜•ÉÈ€„ô¹¥°ì($%…Á¤¹¥¹Ñ•É¹…±ÉÉ½È¡Ü°•ÉÈ¤($%É•ÑÕÉ¸(%ô(%¹•áÑÕÉÍ½È€èô€ˆˆ(%¥˜±•¸¡¥Ñ•µÌ¤€ø±¥µ¥Ðì($%¥Ñ•µÌ€ô¥Ñ•µÍlé±¥µ¥Ñt($%±…ÍÐ€èô¥Ñ•µÍm±•¸¡¥Ñ•µÌ¤´Åt($%¹•áÑÕÉÍ½È€ô•¹½‘•5•ÍÍ…•ÕÉÍ½È¡±…ÍÐ¹I••¥Ù•‘Ð°±…ÍÐ¹AÕ‰±¥%¤(%ô(%ÝÉ¥Ñ•áÑ•É¹…±)M=8¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ=,°µ…ÁmÍÑÉ¥¹u…¹åì‰µ•ÍÍ…•Ìˆè¥Ñ•µÌ°€‰¹•áÑ}ÕÉÍ½Èˆè¹•áÑÕÉÍ½Éô¤)ô()™Õ¹Œ€¡…Á¤€©•áÑ•É¹…±A$¤µ•ÍÍ…”¡Ü¡ÑÑÀ¹I•ÍÁ½¹Í•]É¥Ñ•È°È€©¡ÑÑÀ¹I•ÅÕ•ÍÐ¤ì(%É…¹Ð°½¬€èô…Á¤¹…ÕÑ¡½É¥é”¡Ü°È°€‰µ…¥°éÉ•…ˆ°€ØÀ¤(%¥˜€…½¬ì($%É•ÑÕÉ¸(%ô(%¥Ñ•´°•ÉÈ€èô…Á¤¹µ…¥°¹•Ñ5•ÍÍ…”¡È¹½¹Ñ•áÐ ¤°È¹A…Ñ¡Y…±Õ” ‰ÁÕ‰±¥}¥ˆ¤¤(%¥˜•ÉÈ€„ô¹¥°ì($%ÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ9½Ñ½Õ¹°€‰¹½Ñ}™½Õ¹ˆ°€‹¢ÖšêC’â7–¶c–r ˆ¤($%É•ÑÕÉ¸(%ô(%…±±½Ý•°•ÉÈ€èôÉ…¹Ð¹±±½ÝÍ½Õ¹Ð¡È¹½¹Ñ•áÐ ¤°…Á¤¹‘ˆ°¥Ñ•´¹½Õ¹ÑAÕ‰±¥%¤(%¥˜•ÉÈ€„ô¹¥°ì($%…Á¤¹¥¹Ñ•É¹…±ÉÉ½È¡Ü°•ÉÈ¤($%É•ÑÕÉ¸(%ô(%¥˜€……±±½Ý•ì($%ÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ9½Ñ½Õ¹°€‰¹½Ñ}™½Õ¹ˆ°€‹¢ÖšêC’â7–¶c–r ˆ¤($%É•ÑÕÉ¸(%ô(%ÝÉ¥Ñ•áÑ•É¹…±)M=8¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ=,°¥Ñ•´¤)ô()™Õ¹Œ€¡…Á¤€©•áÑ•É¹…±A$¤±…Ñ•ÍÑ=Q@¡Ü¡ÑÑÀ¹I•ÍÁ½¹Í•]É¥Ñ•È°È€©¡ÑÑÀ¹I•ÅÕ•ÍÐ¤ì(%É•ÅÕ•ÍÑMÑ…ÉÑ•‘Ð€èôÑ¥µ”¹9½Ü ¤¹UQ ¤(%É…¹Ð°½¬€èô…Á¤¹…ÕÑ¡½É¥é”¡Ü°È°€‰½ÑÀéÉ•…ˆ°€ÈÀ¤(%¥˜€…½¬ì($%É•ÑÕÉ¸(%ô(%Ý…¥ÑM•½¹‘Ì€èô€À(%Ù…È•ÉÈ•ÉÉ½È(%¥˜Ù…±Õ”€èôÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡È¹UI0¹EÕ•Éä ¤¹•Ð ‰Ý…¥Ñ}Í•½¹‘Ìˆ¤¤ìÙ…±Õ”€„ô€ˆˆì($%Ý…¥ÑM•½¹‘Ì°•ÉÈ€ôÍÑÉ½¹Ø¹Ñ½¤¡Ù…±Õ”¤($%¥˜•ÉÈ€„ô¹¥°ñðÝ…¥ÑM•½¹‘Ì€ð€ÀñðÝ…¥ÑM•½¹‘Ì€ø€ÌÀì($$%ÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ	…‘I•ÅÕ•ÍÐ°€‰¥¹Ù…±¥‘}Ý…¥Ðˆ°€‰Ý…¥Ñ}Í•½¹‘Ìƒ–þ¦†ï–r €Àƒ–"À€ÌÀƒ’æ/¦^Ðˆ¤($$%É•ÑÕÉ¸($%ô(%ô(%…½Õ¹Ñ1½½­ÕÀ€èôÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡È¹UI0¹EÕ•Éä ¤¹•Ð ‰…½Õ¹Ðˆ¤¤(%¥˜…½Õ¹Ñ1½½­ÕÀ€ôô€ˆˆì($%ÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ	…‘I•ÅÕ•ÍÐ°€‰…½Õ¹Ñ}É•ÅÕ¥É•ˆ°€‰…½Õ¹Ðƒ’âë–þ–†¯¦†äˆ¤($%É•ÑÕÉ¸(%ô(%Ù…È…½Õ¹ÑAÕ‰±¥%°…½Õ¹ÑMÑ…ÑÕÌÍÑÉ¥¹œ(%Ù…ÈÍå¹•ÍÅ°¹9Õ±±MÑÉ¥¹œ(%•ÉÈ€ô…Á¤¹‘ˆ¹EÕ•ÉåI½Ý½¹Ñ•áÐ¡È¹½¹Ñ•áÐ ¤°€($%M1PÁÕ‰±¥}¥°ÍÑ…ÑÕÌ°±…ÍÑ}Íå¹}ÍÕ•ÍÍ}…Ñ}ÕÑŒI=4…½Õ¹ÑÌ($%]!IÁÕ‰±¥}¥€ô€ü=H¥µÁ½ÉÑ•‘}•µ…¥°€ô€ü=11Q9=M=HÁÉ¥µ…Éå}•µ…¥°€ô€ü=11Q9=M($%1%5%P€Ä(%€°…½Õ¹Ñ1½½­ÕÀ°…½Õ¹Ñ1½½­ÕÀ°…½Õ¹Ñ1½½­ÕÀ¤¹M…¸ ™…½Õ¹ÑAÕ‰±¥%°€™…½Õ»Ÿ9¶‰žËkºwµçM½‘”°€™É••¥Ù•¤(%É•ÍÁ½¹Í”€èôµ…ÁmÍÑÉ¥¹u…¹åì($$‰½‘”ˆè¹¥°°€‰µ•ÍÍ…•}ÁÕ‰±¥}¥ˆè¹¥°°€‰É••¥Ù•‘}…Ðˆè¹¥°°€‰Íå¹•‘}…Ðˆè¹¥°°($$‰™É•Í ˆè™…±Í”°€‰…½Õ¹Ñ}ÍÑ…ÑÕÌˆè…½Õ¹ÑMÑ…ÑÕÌ°(%ô(%¥˜Íå¹•¹Y…±¥ì($%É•ÍÁ½¹Í•l‰Íå¹•‘}…Ð‰t€ôÍå¹•¹MÑÉ¥¹œ(%ô(%¥˜•ÉÈ€ôô¹¥°ì($%É•ÍÁ½¹Í•l‰½‘”‰t€ô½‘”($%É•ÍÁ½¹Í•l‰µ•ÍÍ…•}ÁÕ‰±¥}¥‰t€ôµ•ÍÍ…•AÕ‰±¥%($%É•ÍÁ½¹Í•l‰É••¥Ù•‘}…Ð‰t€ôÉ••¥Ù•($%É•ÍÁ½¹Í•l‰™É•Í ‰t€ôÍå¹MÕ••‘•(%ô•±Í”¥˜€…•ÉÉ½ÉÌ¹%Ì¡•ÉÈ°ÍÅ°¹ÉÉ9½I½ÝÌ¤ì($%…Á¤¹¥¹Ñ•É¹…±ÉÉ½È¡Ü°•ÉÈ¤($%É•ÑÕÉ¸(%ô(%¥˜Ý…¥ÑM•½¹‘Ì€ø€À€˜˜€…Íå¹MÕ••‘•ì($%É•ÍÁ½¹Í•l‰É•ÑÉå}…™Ñ•É}Í•½¹‘Ì‰t€ô€ÄÀ(%ô(%ÝÉ¥Ñ•áÑ•É¹…±)M=8¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ=,°É•ÍÁ½¹Í”¤)ô()™Õ¹Œ€¡…Á¤€©•áÑ•É¹…±A$¤¡•…±Ñ ¡Ü¡ÑÑÀ¹I•ÍÁ½¹Í•]É¥Ñ•È°È€©¡ÑÑÀ¹I•ÅÕ•ÍÐ¤ì(%|°½¬€èô…Á¤¹…ÕÑ¡½É¥é”¡Ü°È°€‰ÍåÍÑ•´éÉ•…ˆ°€ÌÀ¤(%¥˜€…½¬ì($%É•ÑÕÉ¸(%ô(%µ…¥¹Ñ•¹…¹•MÑ…ÑÕÌ°•ÉÈ€èô…Á¤¹µ…¥¹Ñ•¹…¹”¹MÑ…ÑÕÌ¡È¹½¹Ñ•áÐ ¤¤(%¥˜•ÉÈ€„ô¹¥°ì($%…Á¤¹¥¹Ñ•É¹…±ÉÉ½È¡Ü°•ÉÈ¤($%É•ÑÕÉ¸(%ô(%µ…¥±MÑ…ÑÕÌ°•ÉÈ€èô…Á¤¹µ…¥°¹MÑ…ÑÕÌ¡È¹½¹Ñ•áÐ ¤¤(%¥˜•ÉÈ€„ô¹¥°ì($%…Á¤¹¥¹Ñ•É¹…±ÉÉ½È¡Ü°•ÉÈ¤($%É•ÑÕÉ¸(%ô(%É½ÝÌ°•ÉÈ€èô…Á¤¹‘ˆ¹EÕ•Éå½¹Ñ•áÐ¡È¹½¹Ñ•áÐ ¤°M1PÍÑ…ÑÕÌ°=U9P ¨¤I=4…½Õ¹ÑÌI=U@	dÍÑ…ÑÕÍ€¤(%¥˜•ÉÈ€„ô¹¥°ì($%…Á¤¹¥¹Ñ•É¹…±ÉÉ½È¡Ü°•ÉÈ¤($%É•ÑÕÉ¸(%ô(%…½Õ¹ÑMÑ…Ñ•Ì€èôµ…ÁmÍÑÉ¥¹u¥¹Ñíô(%™½ÈÉ½ÝÌ¹9•áÐ ¤ì($%Ù…ÈÍÑ…ÑÕÌÍÑÉ¥¹œ($%Ù…È½Õ¹Ð¥¹Ð($%¥˜•ÉÈ€èôÉ½ÝÌ¹M…¸ ™ÍÑ…ÑÕÌ°€™½Õ¹Ð¤ì•ÉÈ€„ô¹¥°ì($$%É½ÝÌ¹±½Í” ¤($$%…Á¤¹¥¹Ñ•É¹…±ÉÉ½È¡Ü°•ÉÈ¤($$%É•ÑÕÉ¸($%ô($%…½Õ¹ÑMÑ…Ñ•ÍmÍÑ…ÑÕÍt€ô½Õ¹Ð(%ô(%É½ÝÌ¹±½Í” ¤(%ÝÉ¥Ñ•áÑ•É¹…±)M=8¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ=,°µ…ÁmÍÑÉ¥¹u…¹åì($$‰‘…Ñ…‰…Í•}½¬ˆèµ…¥¹Ñ•¹…¹•MÑ…ÑÕÌ¹…Ñ…‰…Í•=,°€‰Í¡•µ…}Ù•ÉÍ¥½¸ˆèµ…¥¹Ñ•¹…¹•MÑ…ÑÕÌ¹M¡•µ…Y•ÉÍ¥½¸°($$‰‰…­ÕÁ}½Õ¹Ðˆèµ…¥¹Ñ•¹…¹•MÑ…ÑÕÌ¹	…­ÕÁ½Õ¹Ð°€‰±…Ñ•ÍÑ}‰…­ÕÀˆèµ…¥¹Ñ•¹…¹•MÑ…ÑÕÌ¹1…Ñ•ÍÑ	…­ÕÀ°($$‰™…¥±•‘}¹½Ñ¥™¥…Ñ¥½¹Ìˆèµ…¥¹Ñ•¹…¹•MÑ…ÑÕÌ¹…¥±•‘9½Ñ¥™¥…Ñ¥½¹Ì°€‰±•…¹ÕÁ}™…¥±ÕÉ•Ìˆèµ…¥¹Ñ•¹…¹•MÑ…ÑÕÌ¹±•…¹ÕÁ…¥±ÕÉ•Ì°($$‰‘¥Í¬ˆèµ…¥±MÑ…ÑÕÌ¹¥Í¬°€‰ÅÕ•Õ•Ìˆèµ…ÁmÍÑÉ¥¹u¥¹Ñì‰¡¥¡}ÁÉ¥½É¥Ñäˆèµ…¥±MÑ…ÑÕÌ¹!¥¡AÉ¥½É¥Ñä°€‰‰…­É½Õ¹ˆèµ…¥±MÑ…ÑÕÌ¹	…­É½Õ¹‘ô°($$‰…½Õ¹ÑÌˆè…½Õ¹ÑMÑ…Ñ•Ì°€‰¡•­•‘}…Ðˆèµ…¥¹Ñ•¹…¹•MÑ…ÑÕÌ¹¡•­•‘Ð°(%ô¤)ô()™Õ¹Œ€¡…Á¤€©•áÑ•É¹…±A$¤…ÕÑ¡½É¥é”¡Ü¡ÑÑÀ¹I•ÍÁ½¹Í•]É¥Ñ•È°È€©¡ÑÑÀ¹I•ÅÕ•ÍÐ°Í½Á”ÍÑÉ¥¹œ°±¥µ¥Ð¥¹Ð¤€¡…Á¥Ñ½­•¸¹É…¹Ð°‰½½°¤ì(%¡•…‘•È€èôÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡È¹!•…‘•È¹•Ð ‰ÕÑ¡½É¥é…Ñ¥½¸ˆ¤¤(%Í•É•Ð€èô€ˆˆ(%¥˜¡•…‘•È€„ô€ˆˆì($%¥˜€…ÍÑÉ¥¹Ì¹!…ÍAÉ•™¥à¡¡•…‘•È°€‰	•…É•È€ˆ¤ì($$%ÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍU¹…ÕÑ¡½É¥é•°€‰Õ¹…ÕÑ¡½É¥é•ˆ°€‹¢ºÿ¦^»–·š6»š^ƒšV ˆ¤($$%É•ÑÕÉ¸…Á¥Ñ½­•¸¹É…¹Ñíô°™…±Í”($%ô($%Í•É•Ð€ôÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡ÍÑÉ¥¹Ì¹QÉ¥µAÉ•™¥à¡¡•…‘•È°€‰	•…É•È€ˆ¤¤(%ô•±Í”¥˜È¹5•Ñ¡½€ôô¡ÑÑÀ¹5•Ñ¡½‘•Ðì($%Í•É•Ð€ôÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡È¹UI0¹EÕ•Éä ¤¹•Ð ‰…•ÍÍ}Ñ½­•¸ˆ¤¤(%ô(%¥˜Í•É•Ð€ôô€ˆˆì($%ÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍU¹…ÕÑ¡½É¥é•°€‰Õ¹…ÕÑ¡½É¥é•ˆ°€‹¢ºÿ¦^»–·š6»š^ƒšV ˆ¤($%É•ÑÕÉ¸…Á¥Ñ½­•¸¹É…¹Ñíô°™…±Í”(%ô(%É…¹Ð°•ÉÈ€èô…Á¤¹Ñ½­•¹Ì¹Y•É¥™ä¡È¹½¹Ñ•áÐ ¤°Í•É•Ð°±¥•¹Ñ%@¡È¤°Í½Á”¤(%¥˜•ÉÈ€„ô¹¥°ì($%ÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍU¹…ÕÑ¡½É¥é•°€‰Õ¹…ÕÑ¡½É¥é•ˆ°€‹¢ºÿ¦^»–·š6»š^ƒšV ˆ¤($%É•ÑÕÉ¸…Á¥Ñ½­•¸¹É…¹Ñíô°™…±Í”(%ô(%¥˜€……Á¤¹±¥µ¥Ñ•È¹±±½Ü¡É…¹Ð¹Q½­•¹AÕ‰±¥%¬ˆèˆ­±¥•¹Ñ%@¡È¤°±¥µ¥Ð°Ñ¥µ”¹5¥¹ÕÑ”¤ì($%Ü¹!•…‘•È ¤¹M•Ð ‰I•ÑÉäµ™Ñ•Èˆ°€ˆØÀˆ¤($%ÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍQ½½5…¹åI•ÅÕ•ÍÑÌ°€‰É…Ñ•}±¥µ¥Ñ•ˆ°€‹¢¾ßšÆ¢þ’ê;¦ŠGžæˆ¤($%É•ÑÕÉ¸…Á¥Ñ½­•¸¹É…¹Ñíô°™…±Í”(%ô(%É•ÑÕÉ¸É…¹Ð°ÑÉÕ”)ô()™Õ¹Œ€¡…Á¤€©•áÑ•É¹…±A$¤…±±½Ý•‘½Õ¹ÑÌ¡Ñà½¹Ñ•áÐ¹½¹Ñ•áÐ°É…¹Ð…Á¥Ñ½­•¸¹É…¹Ð¤€¡muÍÑÉ¥¹œ°•ÉÉ½È¤ì(%É½ÝÌ°•ÉÈ€èô…Á¤¹‘ˆ¹EÕ•Éå½¹Ñ•áÐ¡Ñà°M1PÁÕ‰±¥}¥I=4…½Õ¹ÑÌ=IH	d¥‘€¤(%¥˜•ÉÈ€„ô¹¥°ì($%É•ÑÕÉ¸¹¥°°•ÉÈ(%ô(%‘•™•ÈÉ½ÝÌ¹±½Í” ¤(%¥Ñ•µÌ€èôµ…­”¡muÍÑÉ¥¹œ°€À¤(%™½ÈÉ½ÝÌ¹9•áÐ ¤ì($%Ù…ÈÁÕ‰±¥%ÍÑÉ¥¹œ($%¥˜•ÉÈ€èôÉ½ÝÌ¹M…¸ ™ÁÕ‰±¥%¤ì•ÉÈ€„ô¹¥°ì($$%É•ÑÕÉ¸¹¥°°•ÉÈ($%ô($%…±±½Ý•°•ÉÈ€èôÉ…¹Ð¹±±½ÝÍ½Õ¹Ð¡Ñà°…Á¤¹‘ˆ°ÁÕ‰±¥%¤($%¥˜•ÉÈ€„ô¹¥°ì($$%É•ÑÕÉ¸¹¥°°•ÉÈ($%ô($%¥˜…±±½Ý•ì($$%¥Ñ•µÌ€ô…ÁÁ•¹¡¥Ñ•µÌ°ÁÕ‰±¥%¤($%ô(%ô(%É•ÑÕÉ¸¥Ñ•µÌ°É½ÝÌ¹ÉÈ ¤)ô()™Õ¹Œ€¡…Á¤€©•áÑ•É¹…±A$¤…½Õ¹Ñ1…‰•±Ì¡Ñà½¹Ñ•áÐ¹½¹Ñ•áÐ°ÁÕ‰±¥%ÍÑÉ¥¹œ°É½ÕÁÌ‰½½°¤€¡muÍÑÉ¥¹œ°•ÉÉ½È¤ì(%Ñ…‰±”°µ•µ‰•ÉÌ°™½É•¥¸€èô€‰…½Õ¹Ñ}Ñ…Ìˆ°€‰…½Õ¹Ñ}Ñ…}µ•µ‰•ÉÌˆ°€‰Ñ…}¥ˆ(%¥˜É½ÕÁÌì($%Ñ…‰±”°µ•µ‰•ÉÌ°™½É•¥¸€ô€‰…½Õ¹Ñ}É½ÕÁÌˆ°€‰…½Õ¹Ñ}É½ÕÁ}µ•µ‰•ÉÌˆ°€‰É½ÕÁ}¥ˆ(%ô(%É½ÝÌ°•ÉÈ€èô…Á¤¹‘ˆ¹EÕ•Éå½¹Ñ•áÐ¡Ñà°M1P¸¹¹…µ”I=4€­Ñ…‰±”­€¸)=%8€­µ•µ‰•ÉÌ­€´=8´¹€­™½É•¥¸­€€ô¸¹¥($%)=%8…½Õ¹ÑÌ„=8„¹¥€ô´¹…½Õ¹Ñ}¥]!I„¹ÁÕ‰±¥}¥€ô€ü=IH	d¸¹¹…µ”=11Q9=M€°ÁÕ‰±¥%¤(%¥˜•ÉÈ€„ô¹¥°ì($%É•ÑÕÉ¸¹¥°°•ÉÈ(%ô(%‘•™•ÈÉ½ÝÌ¹±½Í” ¤(%Ù…±Õ•Ì€èôµ…­”¡muÍÑÉ¥¹œ°€À¤(%™½ÈÉ½ÝÌ¹9•áÐ ¤ì($%Ù…ÈÙ…±Õ”ÍÑÉ¥¹œ($%¥˜•ÉÈ€èôÉ½ÝÌ¹M…¸ ™Ù…±Õ”¤ì•ÉÈ€„ô¹¥°ì($$%É•ÑÕÉ¸¹¥°°•ÉÈ($%ô($%Ù…±Õ•Ì€ô…ÁÁ•¹¡Ù…±Õ•Ì°Ù…±Õ”¤(%ô(%É•ÑÕÉ¸Ù…±Õ•Ì°É½ÝÌ¹ÉÈ ¤)ô()™Õ¹Œ€¡…Á¤€©•áÑ•É¹…±A$¤¥¹Ñ•É¹…±ÉÉ½È¡Ü¡ÑÑÀ¹I•ÍÁ½¹Í•]É¥Ñ•È°•ÉÈ•ÉÉ½È¤ì(%…Á¤¹±½•È¹ÉÉ½È ‰•áÑ•É¹…°A$É•ÅÕ•ÍÐ™…¥±•ˆ°€‰•Ù•¹Ðˆ°€‰•áÑ•É¹…±}…Á¥}É•ÅÕ•ÍÑ}™…¥±•ˆ°€‰•ÉÉ½Èˆ°•ÉÈ¤(%ÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü°¡ÑÑÀ¹MÑ…ÑÕÍ%¹Ñ•É¹…±M•ÉÙ•ÉÉÉ½È°€‰¥¹Ñ•É¹…±}•ÉÉ½Èˆ°€‹šr7–*‡šjš^Ûš^ƒšÎW–º3š"C¢¾ßšÆˆ¤)ô()™Õ¹ŒÝÉ¥Ñ•áÑ•É¹…±)M=8¡Ü¡ÑÑÀ¹I•ÍÁ½¹Í•]É¥Ñ•È°ÍÑ…ÑÕÌ¥¹Ð°Ù…±Õ”…¹ä¤ì(%Ü¹!•…‘•È ¤¹M•Ð ‰…¡”µ½¹ÑÉ½°ˆ°€‰¹¼µÍÑ½É”ˆ¤(%Ü¹!•…‘•È ¤¹M•Ð ‰½¹Ñ•¹ÐµQåÁ”ˆ°€‰…ÁÁ±¥…Ñ¥½¸½©Í½¸ì¡…ÉÍ•ÐõÕÑ˜´àˆ¤(%Ü¹]É¥Ñ•!•…‘•È¡ÍÑ…ÑÕÌ¤(%|€ô©Í½¸¹9•Ý¹½‘•È¡Ü¤¹¹½‘”¡Ù…±Õ”¤)ô()™Õ¹ŒÝÉ¥Ñ•áÑ•É¹…±ÉÉ½È¡Ü¡ÑÑÀ¹I•ÍÁ½¹Í•]É¥Ñ•È°ÍÑ…ÑÕÌ¥¹Ð°½‘”°µ•ÍÍ…”ÍÑÉ¥¹œ¤ì(%ÝÉ¥Ñ•áÑ•É¹…±)M=8¡Ü°ÍÑ…ÑÕÌ°µ…ÁmÍÑÉ¥¹u…¹åì‰•ÉÉ½Èˆèµ…ÁmÍÑÉ¥¹uÍÑÉ¥¹ì‰½‘”ˆè½‘”°€‰µ•ÍÍ…”ˆèµ•ÍÍ…•õô¤)ô()™Õ¹Œ•¹½‘•5•ÍÍ…•ÕÉÍ½È¡É••¥Ù•‘ÐÑ¥µ”¹Q¥µ”°ÁÕ‰±¥%ÍÑÉ¥¹œ¤ÍÑÉ¥¹œì(%•¹½‘•°|€èô©Í½¸¹5…ÉÍ¡…°¡µ•ÍÍ…•ÕÉÍ½ÉíI••¥Ù•‘ÐèÉ••¥Ù•‘Ð¹UQ ¤¹½Éµ…Ð¡Ñ¥µ”¹IÌÌÌå9…¹¼¤°AÕ‰±¥%èÁÕ‰±¥%ô¤(%É•ÑÕÉ¸‰…Í”ØÐ¹I…ÝUI1¹½‘¥¹œ¹¹½‘•Q½MÑÉ¥¹œ¡•¹½‘•¤)ô()™Õ¹Œ‘•½‘•5•ÍÍ…•ÕÉÍ½È¡Ù…±Õ”ÍÑÉ¥¹œ¤€¡ÍÑÉÕÐì(%I••¥Ù•‘ÐÑ¥µ”¹Q¥µ”(%AÕ‰±¥%€€ÍÑÉ¥¹œ)ô°•ÉÉ½È¤ì(%Ù…ÈÉ•ÍÕ±ÐÍÑÉÕÐì($%I••¥Ù•‘ÐÑ¥µ”¹Q¥µ”($%AÕ‰±¥%€€ÍÑÉ¥¹œ(%ô(%‘•½‘•°•ÉÈ€èô‰…Í”ØÐ¹I…ÝUI1¹½‘¥¹œ¹•½‘•MÑÉ¥¹œ¡Ù…±Õ”¤(%¥˜•ÉÈ€„ô¹¥°ì($%É•ÑÕÉ¸É•ÍÕ±Ð°•ÉÈ(%ô(%Ù…ÈÕÉÍ½Èµ•ÍÍ…•ÕÉÍ½È(%¥˜•ÉÈ€èô©Í½¸¹U¹µ…ÉÍ¡…°¡‘•½‘•°€™ÕÉÍ½È¤ì•ÉÈ€„ô¹¥°ñðÕÉÍ½È¹AÕ‰±¥%€ôô€ˆˆì($%É•ÑÕÉ¸É•ÍÕ±Ð°•ÉÉ½ÉÌ¹9•Ü ‰¥¹Ù…±¥ÕÉÍ½Èˆ¤(%ô(%É•ÍÕ±Ð¹I••¥Ù•‘Ð°•ÉÈ€ôÑ¥µ”¹A…ÉÍ”¡Ñ¥µ”¹IÌÌÌå9…¹¼°ÕÉÍ½È¹I••¥Ù•‘Ð¤(%É•ÍÕ±Ð¹AÕ‰±¥%€ôÕÉÍ½È¹AÕ‰±¥%(%É•ÑÕÉ¸É•ÍÕ±Ð°•ÉÈ)ô()™Õ¹Œ±¥•¹Ñ%@¡È€©¡ÑÑÀ¹I•ÅÕ•ÍÐ¤ÍÑÉ¥¹œì(%¡½ÍÐ°|°•ÉÈ€èô¹•Ð¹MÁ±¥Ñ!½ÍÑA½ÉÐ¡È¹I•µ½Ñ•‘‘È¤(%¥˜•ÉÈ€„ô¹¥°ì($%¡½ÍÐ€ôÈ¹I•µ½Ñ•‘‘È(%ô(%¥À€èô¹•Ð¹A…ÉÍ•%@¡¡½ÍÐ¤(%¥˜¥À€„ô¹¥°€˜˜¥À¹%Í1½½Á‰…¬ ¤ì($%¥˜™½ÉÝ…É‘•€èôÍÑÉ¥¹Ì¹QÉ¥µMÁ…”¡ÍÑÉ¥¹Ì¹MÁ±¥Ð¡È¹!•…‘•È¹•Ð ‰`µ½ÉÝ…É‘•µ½Èˆ¤°€ˆ°ˆ¥lÁt¤ì¹•Ð¹A…ÉÍ•%@¡™½ÉÝ…É‘•¤€„ô¹¥°ì($$%É•ÑÕÉ¸™½ÉÝ…É‘•($%ô(%ô(%É•ÑÕÉ¸¡½ÍÐ)ô()™Õ¹ŒÁ…ÉÍ•=ÁÑ¥½¹…±Q¥µ”¡Ù…±Õ”ÍÅ°¹9Õ±±MÑÉ¥¹œ¤€ ©Ñ¥µ”¹Q¥µ”°•ÉÉ½È¤ì(%¥˜€…Ù…±Õ”¹Y…±¥ñðÙ…±Õ”¹MÑÉ¥¹œ€ôô€ˆˆì($%É•ÑÕÉ¸¹¥°°¹¥°(%ô(%Á…ÉÍ•°•ÉÈ€èôÑ¥µ”¹A…ÉÍ”¡Ñ¥µ”¹IÌÌÌå9…¹¼°Ù…±Õ”¹MÑÉ¥¹œ¤(%¥˜•ÉÈ€„ô¹¥°ì($%É•ÑÕÉ¸¹¥°°•ÉÈ(%ô(%É•ÑÕÉ¸€™Á…ÉÍ•°¹¥°)ô()™Õ¹Œ•Í…Á•áÑ•É¹…±1¥­”¡Ù…±Õ”ÍÑÉ¥¹œ¤ÍÑÉ¥¹œì(%Ù…±Õ”€ôÍÑÉ¥¹Ì¹I•Á±…•±°¡Ù…±Õ”°€‰qpˆ°€‰qqqpˆ¤(%Ù…±Õ”€ôÍÑÉ¥¹Ì¹I•Á±…•±°¡Ù…±Õ”°€ˆ”ˆ°€‰qp”ˆ¤(%É•ÑÕÉ¸ÍÑÉ¥¹Ì¹I•Á±…•±°¡Ù…±Õ”°€‰|ˆ°€‰qq|ˆ¤)ô()ÑåÁ”…Á¥I…Ñ•1¥µ¥Ñ•ÈÍÑÉÕÐì(%µÔ€€€€€Íå¹Œ¹5ÕÑ•à(%Ý¥¹‘½ÝÌµ…ÁmÍÑÉ¥¹uÉ…Ñ•]¥¹‘½Ü)ô()ÑåÁ”É…Ñ•]¥¹‘½ÜÍÑÉÕÐì(%ÍÑ…ÉÑ•Ñ¥µ”¹Q¥µ”(%½Õ¹Ð€€¥¹Ð)ô()™Õ¹Œ¹•ÝA%I…Ñ•1¥µ¥Ñ•È ¤€©…Á¥I…Ñ•1¥µ¥Ñ•ÈìÉ•ÑÕÉ¸€™…Á¥I…Ñ•1¥µ¥Ñ•ÉíÝ¥¹‘½ÝÌèµ…ÁmÍÑÉ¥¹uÉ…Ñ•]¥¹‘½Ýíõôô()™Õ¹Œ€¡°€©…Á¥I…Ñ•1¥µ¥Ñ•È¤±±½Ü¡­•äÍÑÉ¥¹œ°µ…á¥µÕ´¥¹Ð°‘ÕÉ…Ñ¥½¸Ñ¥µ”¹ÕÉ…Ñ¥½¸¤‰½½°ì(%°¹µÔ¹1½¬ ¤(%‘•™•È°¹µÔ¹U¹±½¬ ¤(%¹½Ü€èôÑ¥µ”¹9½Ü ¤(%Ý¥¹‘½Ü€èô°¹Ý¥¹‘½ÝÍm­•åt(%¥˜Ý¥¹‘½Ü¹ÍÑ…ÉÑ•¹%Íi•É¼ ¤ñð¹½Ü¹MÕˆ¡Ý¥¹‘½Ü¹ÍÑ…ÉÑ•¤€øô‘ÕÉ…Ñ¥½¸ì($%°¹Ý¥¹‘½ÝÍm­•åt€ôÉ…Ñ•]¥¹‘½ÝíÍÑ…ÉÑ•è¹½Ü°½Õ¹Ðè€Åô($%É•ÑÕÉ¸ÑÉÕ”(%ô(%¥˜Ý¥¹‘½Ü¹½Õ¹Ð€øôµ…á¥µÕ´ì($%É•ÑÕÉ¸™…±Í”(%ô(%Ý¥¹‘½Ü¹½Õ¹Ð¬¬(%°¹Ý¥¹‘½ÝÍm­•åt€ôÝ¥¹‘½Ü(%É•ÑÕÉ¸ÑÉÕ”)ô
+package httpserver
+
+import (
+	"context"
+	"database/sql"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"log/slog"
+	"net"
+	"net/http"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"outlook-mail-manager/internal/apitoken"
+	mailbox "outlook-mail-manager/internal/mail"
+)
+
+type externalAPI struct {
+	db          *sql.DB
+	tokens      apiTokenService
+	mail        mailService
+	maintenance maintenanceService
+	logger      *slog.Logger
+	limiter     *apiRateLimiter
+}
+
+type externalAccount struct {
+	PublicID     string     `json:"public_id"`
+	Name         string     `json:"name"`
+	Address      string     `json:"address"`
+	Status       string     `json:"status"`
+	Groups       []string   `json:"groups"`
+	Tags         []string   `json:"tags"`
+	LastSyncedAt *time.Time `json:"last_synced_at,omitempty"`
+	ReauthReason string     `json:"reauth_reason,omitempty"`
+}
+
+type messageCursor struct {
+	ReceivedAt string `json:"received_at"`
+	PublicID   string `json:"public_id"`
+}
+
+func newExternalAPI(db *sql.DB, tokens apiTokenService, mail mailService, maintenance maintenanceService, logger *slog.Logger) *externalAPI {
+	return &externalAPI{db: db, tokens: tokens, mail: mail, maintenance: maintenance, logger: logger, limiter: newAPIRateLimiter()}
+}
+
+func (api *externalAPI) register(mux *http.ServeMux) {
+	mux.HandleFunc("GET /api/v1/accounts", api.accounts)
+	mux.HandleFunc("GET /api/v1/messages", api.messages)
+	mux.HandleFunc("GET /api/v1/messages/{public_id}", api.message)
+	mux.HandleFunc("GET /api/v1/otp/latest", api.latestOTP)
+	mux.HandleFunc("GET /api/v1/health", api.health)
+}
+
+func (api *externalAPI) accounts(w http.ResponseWriter, r *http.Request) {
+	grant, ok := api.authorize(w, r, "accounts:read", 60)
+	if !ok {
+		return
+	}
+	allowed, err := api.allowedAccounts(r.Context(), grant)
+	if err != nil {
+		api.internalError(w, err)
+		return
+	}
+	items := make([]externalAccount, 0, len(allowed))
+	for _, publicID := range allowed {
+		var item externalAccount
+		var synced, reason sql.NullString
+		err := api.db.QueryRowContext(r.Context(), `
+			SELECT public_id,
+				COALESCE(NULLIF(display_name, ''), NULLIF(primary_email, ''), imported_email),
+				COALESCE(NULLIF(primary_email, ''), imported_email), status,
+				last_sync_success_at_utc, reauth_reason
+			FROM accounts WHERE public_id = ?
+		`, publicID).Scan(&item.PublicID, &item.Name, &item.Address, &item.Status, &synced, &reason)
+		if err != nil {
+			api.internalError(w, err)
+			return
+		}
+		item.Groups, _ = api.accountLabels(r.Context(), publicID, true)
+		item.Tags, _ = api.accountLabels(r.Context(), publicID, false)
+		item.LastSyncedAt, err = parseOptionalTime(synced)
+		if err != nil {
+			api.internalError(w, err)
+			return
+		}
+		item.ReauthReason = reason.String
+		items = append(items, item)
+	}
+	writeExternalJSON(w, http.StatusOK, map[string]any{"accounts": items})
+}
+
+func (api *externalAPI) messages(w http.ResponseWriter, r *http.Request) {
+	grant, ok := api.authorize(w, r, "mail:read", 60)
+	if !ok {
+		return
+	}
+	allowed, err := api.allowedAccounts(r.Context(), grant)
+	if err != nil {
+		api.internalError(w, err)
+		return
+	}
+	if len(allowed) == 0 {
+		writeExternalJSON(w, http.StatusOK, map[string]any{"messages": []mailbox.MessageSummary{}, "next_cursor": ""})
+		return
+	}
+	filter := mailbox.MessageFilter{
+		Query: strings.TrimSpace(r.URL.Query().Get("q")), Group: strings.TrimSpace(r.URL.Query().Get("group")),
+		Tag: strings.TrimSpace(r.URL.Query().Get("tag")), Category: mailbox.Category(strings.TrimSpace(r.URL.Query().Get("category"))),
+		Folder: strings.TrimSpace(r.URL.Query().Get("folder")), Sender: strings.TrimSpace(r.URL.Query().Get("sender")),
+		AccountScope: allowed,
+	}
+	if account := strings.TrimSpace(r.URL.Query().Get("account")); account != "" {
+		var accountPublicID string
+		err := api.db.QueryRowContext(r.Context(), `
+			SELECT public_id FROM accounts
+			WHERE public_id = ? OR imported_email = ? COLLATE NOCASE OR primary_email = ? COLLATE NOCASE
+			LIMIT 1
+		`, account, account, account).Scan(&accountPublicID)
+		if errors.Is(err, sql.ErrNoRows) {
+			writeExternalError(w, http.StatusNotFound, "not_found", "èµ„æºä¸å­˜åœ¨")
+			return
+		}
+		if err != nil {
+			api.internalError(w, err)
+			return
+		}
+		permitted, err := grant.AllowsAccount(r.Context(), api.db, accountPublicID)
+		if err != nil {
+			api.internalError(w, err)
+			return
+		}
+		if !permitted {
+			writeExternalError(w, http.StatusNotFound, "not_found", "èµ„æºä¸å­˜åœ¨")
+			return
+		}
+		filter.Account = accountPublicID
+	}
+	if value := strings.TrimSpace(r.URL.Query().Get("unread")); value != "" {
+		parsed, err := strconv.ParseBool(value)
+		if err != nil {
+			writeExternalError(w, http.StatusBadRequest, "invalid_unread", "unread å¿…é¡»æ˜¯ true æˆ– false")
+			return
+		}
+		filter.Unread = &parsed
+	}
+	limit := 50
+	if value := strings.TrimSpace(r.URL.Query().Get("limit")); value != "" {
+		parsed, err := strconv.Atoi(value)
+		if err != nil || parsed < 1 || parsed > 100 {
+			writeExternalError(w, http.StatusBadRequest, "invalid_limit", "limit å¿…é¡»åœ¨ 1 åˆ° 100 ä¹‹é—´")
+			return
+		}
+		limit = parsed
+	}
+	if cursor := strings.TrimSpace(r.URL.Query().Get("cursor")); cursor != "" {
+		value, err := decodeMessageCursor(cursor)
+		if err != nil {
+			writeExternalError(w, http.StatusBadRequest, "invalid_cursor", "cursor æ— æ•ˆ")
+			return
+		}
+		filter.CursorReceivedAt = &value.ReceivedAt
+		filter.CursorPublicID = value.PublicID
+	}
+	filter.Limit = limit + 1
+	items, err := api.mail.SearchMessages(r.Context(), filter)
+	if err != nil {
+		api.internalError(w, err)
+		return
+	}
+	nextCursor := ""
+	if len(items) > limit {
+		items = items[:limit]
+		last := items[len(items)-1]
+		nextCursor = encodeMessageCursor(last.ReceivedAt, last.PublicID)
+	}
+	writeExternalJSON(w, http.StatusOK, map[string]any{"messages": items, "next_cursor": nextCursor})
+}
+
+func (api *externalAPI) message(w http.ResponseWriter, r *http.Request) {
+	grant, ok := api.authorize(w, r, "mail:read", 60)
+	if !ok {
+		return
+	}
+	item, err := api.mail.GetMessage(r.Context(), r.PathValue("public_id"))
+	if err != nil {
+		writeExternalError(w, http.StatusNotFound, "not_found", "èµ„æºä¸å­˜åœ¨")
+		return
+	}
+	allowed, err := grant.AllowsAccount(r.Context(), api.db, item.AccountPublicID)
+	if err != nil {
+		api.internalError(w, err)
+		return
+	}
+	if !allowed {
+		writeExternalError(w, http.StatusNotFound, "not_found", "èµ„æºä¸å­˜åœ¨")
+		return
+	}
+	writeExternalJSON(w, http.StatusOK, item)
+}
+
+func (api *externalAPI) latestOTP(w http.ResponseWriter, r *http.Request) {
+	requestStartedAt := time.Now().UTC()
+	grant, ok := api.authorize(w, r, "otp:read", 20)
+	if !ok {
+		return
+	}
+	waitSeconds := 0
+	var err error
+	if value := strings.TrimSpace(r.URL.Query().Get("wait_seconds")); value != "" {
+		waitSeconds, err = strconv.Atoi(value)
+		if err != nil || waitSeconds < 0 || waitSeconds > 30 {
+			writeExternalError(w, http.StatusBadRequest, "invalid_wait", "wait_seconds å¿…é¡»åœ¨ 0 åˆ° 30 ä¹‹é—´")
+			return
+		}
+	}
+	accountLookup := strings.TrimSpace(r.URL.Query().Get("account"))
+	if accountLookup == "" {
+		writeExternalError(w, http.StatusBadRequest, "account_required", "account ä¸ºå¿…å¡«é¡¹")
+		return
+	}
+	var accountPublicID, accountStatus string
+	var synced sql.NullString
+	err = api.db.QueryRowContext(r.Context(), `
+		SELECT public_id, status, last_sync_success_at_utc FROM accounts
+		WHERE public_id = ? OR imported_email = ? COLLATE NOCASE OR primary_email = ? COLLATE NOCASE
+		LIMIT 1
+	`, accountLookup, accountLookup, accountLookup).Scan(&accountPublicID, &accountStatus, &synced)
+	if err != nil {
+		writeExternalError(w, http.StatusNotFound, "not_found", "èµ„æºä¸å­˜åœ¨")
+		return
+	}
+	allowed, err := grant.AllowsAccount(r.Context(), api.db, accountPublicID)
+	if err != nil {
+		api.internalError(w, err)
+		return
+	}
+	if !allowed {
+		writeExternalError(w, http.StatusNotFound, "not_found", "èµ„æºä¸å­˜åœ¨")
+		return
+	}
+	syncSucceeded := false
+	if waitSeconds > 0 {
+		ctx, cancel := context.WithTimeout(r.Context(), time.Duration(waitSeconds)*time.Second)
+		err = api.mail.SyncAccount(ctx, accountPublicID)
+		cancel()
+		syncSucceeded = err == nil
+		_ = api.db.QueryRowContext(r.Context(), `SELECT last_sync_success_at_utc, status FROM accounts WHERE public_id = ?`,
+			accountPublicID).Scan(&synced, &accountStatus)
+	}
+	query := `
+		SELECT m.public_id, m.verification_code, m.received_at_utc
+		FROM messages m JOIN accounts a ON a.id = m.account_id
+		WHERE a.public_id = ? AND m.verification_code IS NOT NULL AND m.received_at_utc > ? AND m.received_at_utc <= ?
+			AND m.remote_deleted = 0 AND m.hidden_from_inbox = 0
+	`
+	args := []any{accountPublicID, requestStartedAt.Add(-15 * time.Minute).Format(time.RFC3339Nano), requestStartedAt.Format(time.RFC3339Nano)}
+	if sender := strings.TrimSpace(r.URL.Query().Get("sender")); sender != "" {
+		query += " AND m.sender_address = ? COLLATE NOCASE"
+		args = append(args, sender)
+	}
+	if subject := strings.TrimSpace(r.URL.Query().Get("subject")); subject != "" {
+		query += " AND m.subject LIKE ? ESCAPE '\\'"
+		args = append(args, "%"+escapeExternalLike(subject)+"%")
+	}
+	query += " ORDER BY m.received_at_utc DESC, m.public_id DESC LIMIT 1"
+	var messagePublicID, code, received string
+	err = api.db.QueryRowContext(r.Context(), query, args...).Scan(&messagePublicID, &code, &received)
+	response := map[string]any{
+		"code": nil, "message_public_id": nil, "received_at": nil, "synced_at": nil,
+		"fresh": false, "account_status": accountStatus,
+	}
+	if synced.Valid {
+		response["synced_at"] = synced.String
+	}
+	if err == nil {
+		response["code"] = code
+		response["message_public_id"] = messagePublicID
+		response["received_at"] = received
+		response["fresh"] = syncSucceeded
+	} else if !errors.Is(err, sql.ErrNoRows) {
+		api.internalError(w, err)
+		return
+	}
+	if waitSeconds > 0 && !syncSucceeded {
+		response["retry_after_seconds"] = 10
+	}
+	writeExternalJSON(w, http.StatusOK, response)
+}
+
+func (api *externalAPI) health(w http.ResponseWriter, r *http.Request) {
+	_, ok := api.authorize(w, r, "system:read", 30)
+	if !ok {
+		return
+	}
+	maintenanceStatus, err := api.maintenance.Status(r.Context())
+	if err != nil {
+		api.internalError(w, err)
+		return
+	}
+	mailStatus, err := api.mail.Status(r.Context())
+	if err != nil {
+		api.internalError(w, err)
+		return
+	}
+	rows, err := api.db.QueryContext(r.Context(), `SELECT status, COUNT(*) FROM accounts GROUP BY status`)
+	if err != nil {
+		api.internalError(w, err)
+		return
+	}
+	accountStates := map[string]int{}
+	for rows.Next() {
+		var status string
+		var count int
+		if err := rows.Scan(&status, &count); err != nil {
+			rows.Close()
+			api.internalError(w, err)
+			return
+		}
+		accountStates[status] = count
+	}
+	rows.Close()
+	writeExternalJSON(w, http.StatusOK, map[string]any{
+		"database_ok": maintenanceStatus.DatabaseOK, "schema_version": maintenanceStatus.SchemaVersion,
+		"backup_count": maintenanceStatus.BackupCount, "latest_backup": maintenanceStatus.LatestBackup,
+		"failed_notifications": maintenanceStatus.FailedNotifications, "cleanup_failures": maintenanceStatus.CleanupFailures,
+		"disk": mailStatus.Disk, "queues": map[string]int{"high_priority": mailStatus.HighPriority, "background": mailStatus.Background},
+		"accounts": accountStates, "checked_at": maintenanceStatus.CheckedAt,
+	})
+}
+
+func (api *externalAPI) authorize(w http.ResponseWriter, r *http.Request, scope string, limit int) (apitoken.Grant, bool) {
+	header := strings.TrimSpace(r.Header.Get("Authorization"))
+	secret := ""
+	if header != "" {
+		if !strings.HasPrefix(header, "Bearer ") {
+			writeExternalError(w, http.StatusUnauthorized, "unauthorized", "è®¿é—®å‡­æ®æ— æ•ˆ")
+			return apitoken.Grant{}, false
+		}
+		secret = strings.TrimSpace(strings.TrimPrefix(header, "Bearer "))
+	} else if r.Method == http.MethodGet {
+		secret = strings.TrimSpace(r.URL.Query().Get("access_token"))
+	}
+	if secret == "" {
+		writeExternalError(w, http.StatusUnauthorized, "unauthorized", "è®¿é—®å‡­æ®æ— æ•ˆ")
+		return apitoken.Grant{}, false
+	}
+	grant, err := api.tokens.Verify(r.Context(), secret, clientIP(r), scope)
+	if err != nil {
+		writeExternalError(w, http.StatusUnauthorized, "unauthorized", "è®¿é—®å‡­æ®æ— æ•ˆ")
+		return apitoken.Grant{}, false
+	}
+	if !api.limiter.Allow(grant.TokenPublicID+":"+clientIP(r), limit, time.Minute) {
+		w.Header().Set("Retry-After", "60")
+		writeExternalError(w, http.StatusTooManyRequests, "rate_limited", "è¯·æ±‚è¿‡äºŽé¢‘ç¹")
+		return apitoken.Grant{}, false
+	}
+	return grant, true
+}
+
+func (api *externalAPI) allowedAccounts(ctx context.Context, grant apitoken.Grant) ([]string, error) {
+	rows, err := api.db.QueryContext(ctx, `SELECT public_id FROM accounts ORDER BY id`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := make([]string, 0)
+	for rows.Next() {
+		var publicID string
+		if err := rows.Scan(&publicID); err != nil {
+			return nil, err
+		}
+		allowed, err := grant.AllowsAccount(ctx, api.db, publicID)
+		if err != nil {
+			return nil, err
+		}
+		if allowed {
+			items = append(items, publicID)
+		}
+	}
+	return items, rows.Err()
+}
+
+func (api *externalAPI) accountLabels(ctx context.Context, publicID string, groups bool) ([]string, error) {
+	table, members, foreign := "account_tags", "account_tag_members", "tag_id"
+	if groups {
+		table, members, foreign = "account_groups", "account_group_members", "group_id"
+	}
+	rows, err := api.db.QueryContext(ctx, `SELECT n.name FROM `+table+` n JOIN `+members+` m ON m.`+foreign+` = n.id
+		JOIN accounts a ON a.id = m.account_id WHERE a.public_id = ? ORDER BY n.name COLLATE NOCASE`, publicID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	values := make([]string, 0)
+	for rows.Next() {
+		var value string
+		if err := rows.Scan(&value); err != nil {
+			return nil, err
+		}
+		values = append(values, value)
+	}
+	return values, rows.Err()
+}
+
+func (api *externalAPI) internalError(w http.ResponseWriter, err error) {
+	api.logger.Error("external API request failed", "event", "external_api_request_failed", "error", err)
+	writeExternalError(w, http.StatusInternalServerError, "internal_error", "æœåŠ¡æš‚æ—¶æ— æ³•å®Œæˆè¯·æ±‚")
+}
+
+func writeExternalJSON(w http.ResponseWriter, status int, value any) {
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(value)
+}
+
+func writeExternalError(w http.ResponseWriter, status int, code, message string) {
+	writeExternalJSON(w, status, map[string]any{"error": map[string]string{"code": code, "message": message}})
+}
+
+func encodeMessageCursor(receivedAt time.Time, publicID string) string {
+	encoded, _ := json.Marshal(messageCursor{ReceivedAt: receivedAt.UTC().Format(time.RFC3339Nano), PublicID: publicID})
+	return base64.RawURLEncoding.EncodeToString(encoded)
+}
+
+func decodeMessageCursor(value string) (struct {
+	ReceivedAt time.Time
+	PublicID   string
+}, error) {
+	var result struct {
+		ReceivedAt time.Time
+		PublicID   string
+	}
+	decoded, err := base64.RawURLEncoding.DecodeString(value)
+	if err != nil {
+		return result, err
+	}
+	var cursor messageCursor
+	if err := json.Unmarshal(decoded, &cursor); err != nil || cursor.PublicID == "" {
+		return result, errors.New("invalid cursor")
+	}
+	result.ReceivedAt, err = time.Parse(time.RFC3339Nano, cursor.ReceivedAt)
+	result.PublicID = cursor.PublicID
+	return result, err
+}
+
+func clientIP(r *http.Request) string {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		host = r.RemoteAddr
+	}
+	ip := net.ParseIP(host)
+	if ip != nil && ip.IsLoopback() {
+		if forwarded := strings.TrimSpace(strings.Split(r.Header.Get("X-Forwarded-For"), ",")[0]); net.ParseIP(forwarded) != nil {
+			return forwarded
+		}
+	}
+	return host
+}
+
+func parseOptionalTime(value sql.NullString) (*time.Time, error) {
+	if !value.Valid || value.String == "" {
+		return nil, nil
+	}
+	parsed, err := time.Parse(time.RFC3339Nano, value.String)
+	if err != nil {
+		return nil, err
+	}
+	return &parsed, nil
+}
+
+func escapeExternalLike(value string) string {
+	value = strings.ReplaceAll(value, "\\", "\\\\")
+	value = strings.ReplaceAll(value, "%", "\\%")
+	return strings.ReplaceAll(value, "_", "\\_")
+}
+
+type apiRateLimiter struct {
+	mu      sync.Mutex
+	windows map[string]rateWindow
+}
+
+type rateWindow struct {
+	started time.Time
+	count   int
+}
+
+func newAPIRateLimiter() *apiRateLimiter { return &apiRateLimiter{windows: map[string]rateWindow{}} }
+
+func (l *apiRateLimiter) Allow(key string, maximum int, duration time.Duration) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	now := time.Now()
+	window := l.windows[key]
+	if window.started.IsZero() || now.Sub(window.started) >= duration {
+		l.windows[key] = rateWindow{started: now, count: 1}
+		return true
+	}
+	if window.count >= maximum {
+		return false
+	}
+	window.count++
+	l.windows[key] = window
+	return true
+}
+

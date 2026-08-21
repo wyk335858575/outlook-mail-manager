@@ -145,3 +145,4 @@ func TestTokenDeleteRequiresInactiveTokenAndRemovesIt(t *testing.T) {
 		t.Fatalf("deleted audit count = %d, want 2", auditCount)
 	}
 }
+

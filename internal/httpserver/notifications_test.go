@@ -151,3 +151,4 @@ func notificationJSONResponse(body string) *http.Response {
 		Body:       io.NopCloser(strings.NewReader(body)),
 	}
 }
+

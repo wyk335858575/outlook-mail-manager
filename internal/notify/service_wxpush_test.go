@@ -298,3 +298,4 @@ func testWXPushSecret() channelSecret {
 		WXPushAppID: "app-id", WXPushAppSecret: "app-secret", WXPushUserID: "open-id", WXPushTemplateID: "template-id",
 	}
 }
+

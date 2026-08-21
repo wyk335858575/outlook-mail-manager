@@ -115,3 +115,4 @@ CREATE INDEX notification_rules_personal_enabled_idx
 
 CREATE INDEX notification_deliveries_due_idx
     ON notification_deliveries(status, next_retry_at_utc, created_at_utc, id);
+

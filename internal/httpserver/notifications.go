@@ -247,3 +247,4 @@ func (api *notificationsAPI) writeError(w http.ResponseWriter, err error) {
 		writeAPIError(w, http.StatusInternalServerError, "notification_request_failed", "通知服务暂时无法完成请求")
 	}
 }
+

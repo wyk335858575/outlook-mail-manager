@@ -101,3 +101,4 @@ func (api *apiTokensAPI) writeError(w http.ResponseWriter, err error) {
 		writeAPIError(w, http.StatusInternalServerError, "api_token_request_failed", "API token 服务暂时无法完成请求")
 	}
 }
+

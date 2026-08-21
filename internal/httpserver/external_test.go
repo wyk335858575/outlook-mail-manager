@@ -236,3 +236,4 @@ func TestExternalLatestOTPUsesRecentWindowAndLatestMessage(t *testing.T) {
 		t.Fatalf("expired OTP response = %#v", body)
 	}
 }
+

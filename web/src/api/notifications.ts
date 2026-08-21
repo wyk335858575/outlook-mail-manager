@@ -122,3 +122,4 @@ export function retryNotificationDelivery(publicID: string, csrfToken: string) {
     method: 'POST', headers: { 'X-CSRF-Token': csrfToken },
   })
 }
+

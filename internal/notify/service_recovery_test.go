@@ -79,3 +79,4 @@ func TestStartRecoversInterruptedDeliveries(t *testing.T) {
 	}
 	t.Fatalf("interrupted delivery was not recovered; WXPush requests = %d", requests.Load())
 }
+

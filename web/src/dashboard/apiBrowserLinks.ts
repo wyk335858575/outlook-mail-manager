@@ -63,3 +63,4 @@ export function openBrowserAPILink(value: string, openWindow: (url: string, targ
   openWindow(value, '_blank', 'noopener,noreferrer')
   return true
 }
+

@@ -74,3 +74,4 @@ describe('browser API links', () => {
     expect(openBrowserAPILink('', openWindow)).toBe(false)
   })
 })
+

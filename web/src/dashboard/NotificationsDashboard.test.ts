@@ -87,3 +87,4 @@ describe('WXPush pre-save testing', () => {
     expect(canCreateNotificationChannel({ ...input, name: '' }, fingerprint)).toBe(false)
   })
 })
+
