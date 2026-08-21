@@ -61,7 +61,11 @@ func (s *Service) UpdateStatus(ctx context.Context) (UpdateStatus, error) {
 	status.Configured = true
 	release, err := s.latestRelease(ctx)
 	if err != nil {
-		return UpdateStatus{}, err
+		// A release check must not turn the whole health page into a 500. The
+		// application can still report its current version and an actionable
+		// reason when GitHub is temporarily unreachable or rate-limited.
+		status.Reason = "无法检查 GitHub Releases：" + err.Error()
+		return status, nil
 	}
 	status.LatestVersion = strings.TrimPrefix(strings.TrimSpace(release.TagName), "v")
 	status.ReleaseNotes = release.Body
@@ -100,6 +104,24 @@ func (s *Service) GetUpdateJob(ctx context.Context, id string) (UpdateJob, error
 }
 
 func (s *Service) latestRelease(ctx context.Context) (githubRelease, error) {
+	release, err := s.latestReleaseAPI(ctx)
+	if err == nil {
+		return release, nil
+	}
+	// The API is rate-limited more aggressively than the public latest-release
+	// redirect. Use the redirect as a read-only fallback for the default GitHub
+	// endpoint; custom endpoints remain deterministic for tests and operators.
+	if s.githubAPIBaseURL != "" && s.githubAPIBaseURL != "https://api.github.com" {
+		return githubRelease{}, err
+	}
+	fallback, fallbackErr := s.latestReleaseRedirect(ctx)
+	if fallbackErr == nil {
+		return fallback, nil
+	}
+	return githubRelease{}, fmt.Errorf("%w; latest-release fallback failed: %v", err, fallbackErr)
+}
+
+func (s *Service) latestReleaseAPI(ctx context.Context) (githubRelease, error) {
 	base := s.githubAPIBaseURL
 	if base == "" {
 		base = "https://api.github.com"
@@ -131,6 +153,43 @@ func (s *Service) latestRelease(ctx context.Context) (githubRelease, error) {
 		return githubRelease{}, errors.New("latest GitHub release is not a stable 1.0.N version")
 	}
 	return release, nil
+}
+
+func (s *Service) latestReleaseRedirect(ctx context.Context) (githubRelease, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://github.com/"+s.updateRepository+"/releases/latest", nil)
+	if err != nil {
+		return githubRelease{}, err
+	}
+	client := s.httpClient
+	if client == nil {
+		client = &http.Client{Timeout: 10 * time.Second}
+	}
+	redirectClient := *client
+	redirectClient.CheckRedirect = func(_ *http.Request, _ []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+	response, err := redirectClient.Do(request)
+	if err != nil {
+		return githubRelease{}, fmt.Errorf("request latest-release redirect: %w", err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode < http.StatusMultipleChoices || response.StatusCode >= http.StatusBadRequest {
+		return githubRelease{}, fmt.Errorf("latest-release redirect returned status %d", response.StatusCode)
+	}
+	location := strings.TrimSpace(response.Header.Get("Location"))
+	parsed, err := url.Parse(location)
+	if err != nil || parsed.Scheme != "https" || parsed.Host != "github.com" || parsed.RawQuery != "" || parsed.Fragment != "" {
+		return githubRelease{}, errors.New("latest-release redirect location is invalid")
+	}
+	prefix := "/" + s.updateRepository + "/releases/tag/"
+	if !strings.HasPrefix(parsed.Path, prefix) {
+		return githubRelease{}, errors.New("latest-release redirect repository does not match")
+	}
+	tag, err := url.PathUnescape(strings.TrimPrefix(parsed.Path, prefix))
+	if err != nil || !stableUpdateTagPattern.MatchString(tag) {
+		return githubRelease{}, errors.New("latest-release redirect is not a stable 1.0.N version")
+	}
+	return githubRelease{TagName: tag, HTMLURL: parsed.String()}, nil
 }
 
 func (s *Service) updaterAvailable(ctx context.Context) bool {
@@ -186,3 +245,4 @@ func displayVersion(value string) string {
 func versionGreater(latest, current string) bool {
 	return appversion.Greater(latest, current)
 }
+
