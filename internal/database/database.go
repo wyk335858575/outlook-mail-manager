@@ -45,6 +45,7 @@ func Open(ctx context.Context, dataDir string) (*Store, error) {
 	query.Add("_pragma", "busy_timeout(5000)")
 	query.Add("_pragma", "foreign_keys(1)")
 	query.Add("_pragma", "journal_mode(WAL)")
+	query.Add("_txlock", "immediate")
 	dsnURL.RawQuery = query.Encode()
 
 	db, err := sql.Open("sqlite", dsnURL.String())

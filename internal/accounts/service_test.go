@@ -330,6 +330,7 @@ func waitOAuthImport(t *testing.T, service *Service, jobID string) OAuthImportJo
 
 func TestOAuthImportsShareFourValidationSlotsAcrossJobs(t *testing.T) {
 	var active, maximum atomic.Int32
+	reachedFour := make(chan struct{})
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/token":
@@ -341,7 +342,13 @@ func TestOAuthImportsShareFourValidationSlotsAcrossJobs(t *testing.T) {
 					break
 				}
 			}
-			time.Sleep(40 * time.Millisecond)
+			if current == oauthImportConcurrency {
+				close(reachedFour)
+			}
+			select {
+			case <-reachedFour:
+			case <-time.After(time.Second):
+			}
 			active.Add(-1)
 			index := strings.TrimPrefix(r.Form.Get("refresh_token"), "refresh-")
 			_ = json.NewEncoder(w).Encode(map[string]any{"access_token": "access-" + index, "refresh_token": "new-" + index, "token_type": "Bearer", "expires_in": 3600, "scope": strings.Join(requestedScopes, " ")})
@@ -379,7 +386,7 @@ func TestOAuthImportsShareFourValidationSlotsAcrossJobs(t *testing.T) {
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
-	if first.Processed != 4 || second.Processed != 4 || maximum.Load() != oauthImportConcurrency {
+	if first.Processed != 4 || second.Processed != 4 || first.Failed != 0 || second.Failed != 0 || maximum.Load() != oauthImportConcurrency {
 		t.Fatalf("jobs = %+v %+v, maximum concurrency = %d", first, second, maximum.Load())
 	}
 }
