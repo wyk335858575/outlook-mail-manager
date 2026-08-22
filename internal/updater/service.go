@@ -76,7 +76,7 @@ var (
 	imagePattern      = regexp.MustCompile(`^ghcr\.io/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
 	digestPattern     = regexp.MustCompile(`^sha256:[a-f0-9]{64}$`)
 	jobIDPattern      = regexp.MustCompile(`^[A-Za-z0-9_-]{8,128}$`)
-	stableTagPattern  = regexp.MustCompile(`^v1\.0\.(0|[1-9][0-9]*)$`)
+	stableTagPattern  = regexp.MustCompile(`^v1\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$`)
 	errUpdateLocked   = errors.New("an update is already running")
 )
 

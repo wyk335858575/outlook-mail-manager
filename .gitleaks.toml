@@ -10,3 +10,12 @@ condition = "AND"
 regexTarget = "line"
 paths = ['''internal[\\/]auth[\\/]password\.go$''']
 regexes = ['''passwordAlgorithm\s*=\s*"argon2id-v19"''']
+
+[[allowlists]]
+description = "Local runtime data and generated dependencies are excluded from source releases"
+condition = "OR"
+paths = [
+  '''^data[\\/]''',
+  '''^web[\\/]dist[\\/]''',
+  '''^web[\\/]node_modules[\\/]''',
+]

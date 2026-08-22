@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   canCreateNotificationChannel,
+  barkConfigFingerprint,
   notificationChannelGuide,
   notificationCategoryLabel,
   notificationCategoryOptions,
@@ -85,5 +86,29 @@ describe('WXPush pre-save testing', () => {
     expect(canCreateNotificationChannel(input, fingerprint)).toBe(true)
     expect(canCreateNotificationChannel({ ...input, wxpush_user_id: 'changed' }, fingerprint)).toBe(false)
     expect(canCreateNotificationChannel({ ...input, name: '' }, fingerprint)).toBe(false)
+  })
+})
+
+describe('Bark pre-save testing', () => {
+  const input = {
+    name: 'Bark', kind: 'bark' as const, enabled: true, system_enabled: true,
+    bark_server_url: 'https://bark.example.com', bark_device_key: 'device-key', bark_group: 'Outlook', bark_sound: 'minuet',
+  }
+
+  it('requires testing the current Bark configuration before saving', () => {
+    const fingerprint = barkConfigFingerprint(input)
+    expect(canCreateNotificationChannel(input, '')).toBe(false)
+    expect(canCreateNotificationChannel(input, fingerprint)).toBe(true)
+    expect(canCreateNotificationChannel({ ...input, bark_device_key: 'changed' }, fingerprint)).toBe(false)
+    expect(canCreateNotificationChannel({ ...input, bark_server_url: '' }, fingerprint)).toBe(false)
+  })
+
+  it('provides self-hosted server setup guidance', () => {
+    const guide = notificationChannelGuide('bark')
+    const content = [guide.intro, ...guide.steps].join('\n')
+    expect(guide.title).toBe('Bark 配置教程')
+    expect(content).toContain('bark-server')
+    expect(content).toContain('Device Key')
+    expect(content).toContain('/push')
   })
 })

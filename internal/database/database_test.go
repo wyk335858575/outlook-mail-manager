@@ -35,8 +35,8 @@ func TestOpenAppliesMigrationsIdempotently(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CurrentVersion() error = %v", err)
 	}
-	if version != 20 {
-		t.Fatalf("CurrentVersion() = %d, want 20", version)
+	if version != 21 {
+		t.Fatalf("CurrentVersion() = %d, want 21", version)
 	}
 
 	var count int
@@ -252,7 +252,7 @@ func TestOpenMigratesPersonalRulesAndSyncSecondsFromVersion11(t *testing.T) {
 	}
 	defer store.Close()
 	version, err := store.CurrentVersion(context.Background())
-	if err != nil || version != 20 {
+	if err != nil || version != 21 {
 		t.Fatalf("schema version = %d, %v", version, err)
 	}
 	var copied, remainingNotificationRules, seconds int
@@ -278,11 +278,18 @@ func TestOpenMigratesPersonalRulesAndSyncSecondsFromVersion11(t *testing.T) {
 	if _, err := store.DB.Exec(`
 		INSERT INTO notification_channels (
 			public_id, name, kind, config_ciphertext, created_at_utc, updated_at_utc
+		) VALUES ('channel_bark', 'Bark', 'bark', 'sealed', ?, ?)
+	`, now, now); err != nil {
+		t.Fatalf("insert Bark channel after migration: %v", err)
+	}
+	if _, err := store.DB.Exec(`
+		INSERT INTO notification_channels (
+			public_id, name, kind, config_ciphertext, created_at_utc, updated_at_utc
 		) VALUES ('channel_webhook_rejected', 'Webhook', 'webhook', 'sealed', ?, ?)
 	`, now, now); err == nil {
 		t.Fatal("webhook channel was accepted after migration")
 	}
-	backups, err := filepath.Glob(filepath.Join(dataDir, "backups", "outlook-manager.before-v11-to-v20-*.db"))
+	backups, err := filepath.Glob(filepath.Join(dataDir, "backups", "outlook-manager.before-v11-to-v21-*.db"))
 	if err != nil || len(backups) != 1 {
 		t.Fatalf("migration backups = %v, %v", backups, err)
 	}

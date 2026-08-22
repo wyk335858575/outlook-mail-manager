@@ -17,7 +17,7 @@ func TestUpdateStatusReadsLatestStableReleaseWithoutEnablingMissingHelper(t *tes
 			t.Fatalf("unexpected path %q", r.URL.Path)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"tag_name":"v1.0.0","body":"Security fixes","html_url":"https://github.com/owner/outlook-mail-manager/releases/tag/v1.0.0"}`))
+		_, _ = w.Write([]byte(`{"tag_name":"v1.1.0","body":"Security fixes","html_url":"https://github.com/owner/outlook-mail-manager/releases/tag/v1.1.0"}`))
 	}))
 	defer server.Close()
 	store, err := database.Open(context.Background(), t.TempDir())
@@ -37,7 +37,7 @@ func TestUpdateStatusReadsLatestStableReleaseWithoutEnablingMissingHelper(t *tes
 	if err != nil {
 		t.Fatalf("UpdateStatus() error = %v", err)
 	}
-	if status.CurrentVersion != "0.11.0" || status.LatestVersion != "1.0.0" || !status.UpdateAvailable {
+	if status.CurrentVersion != "0.11.0" || status.LatestVersion != "1.1.0" || !status.UpdateAvailable {
 		t.Fatalf("status = %+v", status)
 	}
 	if status.UpdaterAvailable || status.CanUpdate {
@@ -107,8 +107,7 @@ func TestUpdateStatusReturnsActionableReasonWhenGitHubIsUnavailable(t *testing.T
 }
 
 func TestVersionGreaterUsesSemanticComponents(t *testing.T) {
-	if !versionGreater("0.11.0", "0.10.9") || versionGreater("0.10.9", "0.11.0") || versionGreater("bad", "0.11.0") {
+	if !versionGreater("0.11.0", "0.10.9") || !versionGreater("1.1.0", "1.0.9") || versionGreater("0.10.9", "0.11.0") || versionGreater("bad", "0.11.0") {
 		t.Fatal("version comparison returned an unexpected result")
 	}
 }
-

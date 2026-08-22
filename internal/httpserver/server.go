@@ -81,6 +81,8 @@ func spaHandler(assets fs.FS) http.Handler {
 			if info, err := fs.Stat(assets, requested); err == nil && !info.IsDir() {
 				if requested == "index.html" {
 					w.Header().Set("Cache-Control", "no-store")
+				} else if strings.HasPrefix(requested, "assets/") {
+					w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 				}
 				files.ServeHTTP(w, r)
 				return

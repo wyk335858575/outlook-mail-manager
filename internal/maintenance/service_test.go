@@ -100,26 +100,6 @@ func TestDeleteBackupRejectsSymlink(t *testing.T) {
 	}
 }
 
-func countAuditDetailsContaining(t *testing.T, db *sql.DB, value string) int {
-	t.Helper()
-	rows, err := db.Query(`SELECT details_json FROM audit_events`)
-	if err != nil {
-		t.Fatalf("query audit details: %v", err)
-	}
-	defer rows.Close()
-	count := 0
-	for rows.Next() {
-		var details string
-		if err := rows.Scan(&details); err != nil {
-			t.Fatalf("scan audit details: %v", err)
-		}
-		if strings.Contains(details, value) {
-			count++
-		}
-	}
-	return count
-}
-
 func TestRestoreReplacesStaleTemporaryFile(t *testing.T) {
 	sourceDir := filepath.Join(t.TempDir(), "source")
 	source, err := database.Open(context.Background(), sourceDir)

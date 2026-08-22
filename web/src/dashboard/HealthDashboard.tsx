@@ -67,4 +67,3 @@ function diskLabel(value: string) { return ({ normal: '正常', warning: '预警
 function formatBytes(value: number) { if (value < 1024) return `${value} B`; if (value < 1024 ** 2) return `${(value / 1024).toFixed(1)} KiB`; return `${(value / 1024 ** 2).toFixed(1)} MiB` }
 function formatDate(value: string) { return new Intl.DateTimeFormat('zh-CN', { dateStyle: 'short', timeStyle: 'short', hour12: false }).format(new Date(value)) }
 function messageFor(error: unknown, fallback: string) { return error instanceof APIError ? error.message : fallback }
-

@@ -104,6 +104,23 @@ func TestSPAIndexDisablesCaching(t *testing.T) {
 	}
 }
 
+func TestSPAHashedAssetsUseImmutableCaching(t *testing.T) {
+	store, err := database.Open(context.Background(), t.TempDir())
+	if err != nil {
+		t.Fatalf("database.Open() error = %v", err)
+	}
+	defer store.Close()
+
+	response := httptest.NewRecorder()
+	testHandler(t, store).ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/assets/app-a1b2c3.js", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", response.Code)
+	}
+	if value := response.Header().Get("Cache-Control"); value != "public, max-age=31536000, immutable" {
+		t.Fatalf("Cache-Control = %q", value)
+	}
+}
+
 func TestSPADoesNotMaskMissingAssets(t *testing.T) {
 	store, err := database.Open(context.Background(), t.TempDir())
 	if err != nil {
@@ -141,7 +158,8 @@ func TestRequestLoggerDoesNotLogQueryCredentials(t *testing.T) {
 
 func testAssets() fs.FS {
 	return fstest.MapFS{
-		"index.html": &fstest.MapFile{Data: []byte(`<div id="app-root"></div>`)},
+		"index.html":           &fstest.MapFile{Data: []byte(`<div id="app-root"></div>`)},
+		"assets/app-a1b2c3.js": &fstest.MapFile{Data: []byte(`console.log("test")`)},
 	}
 }
 

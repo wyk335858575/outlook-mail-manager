@@ -1,6 +1,6 @@
 import { apiRequest } from './auth'
 
-export type NotificationKind = 'telegram' | 'pushplus' | 'wxpush'
+export type NotificationKind = 'telegram' | 'pushplus' | 'wxpush' | 'bark'
 
 export type NotificationChannel = {
   public_id: string
@@ -28,6 +28,10 @@ export type NotificationChannelInput = {
   wxpush_app_secret?: string
   wxpush_user_id?: string
   wxpush_template_id?: string
+  bark_server_url?: string
+  bark_device_key?: string
+  bark_group?: string
+  bark_sound?: string
 }
 
 export type NotificationRule = {

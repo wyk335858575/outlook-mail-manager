@@ -214,10 +214,6 @@ func (s *Service) Close() {
 	s.healthChecksWG.Wait()
 }
 
-func (s *Service) ValidateStartup(ctx context.Context) error {
-	return nil
-}
-
 func (s *Service) TokenManager() *TokenManager {
 	return s.manager
 }

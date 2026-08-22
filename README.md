@@ -31,7 +31,7 @@
 | 🔎 邮件检索 | 使用 SQLite FTS5 搜索邮件，数据保存在自己的服务器中 |
 | 🔐 验证码 | 自动识别验证码邮件，并提供独立查看入口和只读 API |
 | ⭐ 个性化收件箱 | 用本地规则筛选付款、返利或指定公司的重要邮件 |
-| 🔔 消息通知 | 支持 Telegram、PushPlus 和 WXPush |
+| 🔔 消息通知 | 支持 Telegram、PushPlus、WXPush 和 Bark |
 | 🧹 安全清理 | 先审核、再进入待清理区，保留 14 天恢复期，最终只移入 Outlook“已删除邮件” |
 | 👥 千账号管理 | 搜索、分页、跨页全选，批量启用、停用或删除本地账号数据 |
 | 🧩 只读 API | 查询账号、邮件、验证码和健康状态，可限制账号范围、IP 与到期时间 |
@@ -94,7 +94,7 @@ MS_CLIENT_ID=
 然后启动固定版本镜像：
 
 ```bash
-docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.9
+docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.1.0
 docker compose up -d --no-build app
 docker compose ps
 curl --fail http://127.0.0.1:8080/healthz
@@ -180,7 +180,7 @@ email,group,tags,notes
 
 ### 通知通道
 
-支持 Telegram、PushPlus 和 WXPush。WXPush 由 Go 服务端直接发送，可附带最多 500 字符的纯文本正文预览，不包含完整正文。
+支持 Telegram、PushPlus、WXPush 和 Bark。WXPush 与 Bark 均由 Go 服务端直接发送，可附带最多 500 字符的纯文本正文预览，不包含完整正文。
 
 #### WXPush
 
@@ -200,6 +200,12 @@ WXPush 已集成在应用中，不需要另行部署 WXPush 服务。新建通�
 ```
 
 程序也会发送兼容旧模板的 `content` 字段。创建前请先点击“测试配置”，确认微信收到动态测试消息。AppSecret、OpenID 和 access token 不会出现在通道响应、审计或投递错误中。参考实现：<https://github.com/frankiejun/wxpush>。
+
+#### Bark
+
+Bark 通道由应用服务端调用 Bark API V2 `/push`，支持官方 `https://api.day.app` 和自建 `bark-server`。填写服务端地址、iPhone Device Key，以及可选分组和声音后，先测试再创建。
+
+自建 Docker、宝塔 HTTPS、设备注册、反向代理和故障排查见 [Bark 通知配置教程](docs/bark-notifications.md)。
 
 ## 🧩 只读外部 API
 
@@ -267,7 +273,7 @@ curl -fsSL https://github.com/wyk335858575/outlook-mail-manager/releases/latest/
 
 ## 🧱 版本与升级规则
 
-根目录 [`VERSION`](VERSION) 是唯一版本来源。正式版本从 `1.0.0` 开始，每次只递增补丁号：`1.0.1`、`1.0.2`，`1.0.9` 之后是 `1.0.10`。
+根目录 [`VERSION`](VERSION) 是唯一版本来源。补丁更新递增最后一段，例如 `1.1.0` 之后是 `1.1.1`；开启新次版本时递增中间一段并把补丁归零，例如 `1.0.9` 之后可以发布 `1.1.0`。发布流程仍会拒绝跳号、重复和降级。
 
 ```powershell
 node scripts/version.mjs check
@@ -276,7 +282,7 @@ node scripts/version.mjs bump
 
 补充 CHANGELOG 后，在 GitHub Actions 中运行 `prepare release`。工作流会重新执行测试、创建严格连续的 `v${VERSION}` 标签，并触发多架构镜像构建、签名和 GitHub Release。
 
-数据库当前 schema 版本为 20。程序发现旧 schema 时，会先通过 `VACUUM INTO` 创建一致性备份，再在事务中执行迁移。内部开发版本 `0.11.0` 可以直接升级到正式版 `1.0.0`，无需重新创建管理员。
+数据库当前 schema 版本为 21。程序发现旧 schema 时，会先通过 `VACUUM INTO` 创建一致性备份，再在事务中执行迁移。内部开发版本 `0.11.0` 可以直接升级到正式版 `1.0.0`，无需重新创建管理员。
 
 Fork 用户必须把 `.env` 中的仓库和镜像地址改为自己的地址，否则签名身份校验会拒绝更新。首次发布 GHCR 镜像后，也需要在 GitHub Packages 中确认镜像包为 Public。
 
@@ -315,6 +321,7 @@ npm --prefix web run build
 - [Microsoft Client ID 配置](docs/microsoft-client-id.md)
 - [O2 令牌导入与账号编辑](docs/oauth-credential-import.md)
 - [只读 API 使用教程](docs/api-usage.md)
+- [Bark 通知配置与自建服务](docs/bark-notifications.md)
 - [宝塔 Docker 部署与运维](docs/baota-deployment.md)
 - [单次升级与回滚](docs/online-update.md)
 - [安全策略与漏洞报告](SECURITY.md)

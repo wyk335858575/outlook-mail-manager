@@ -6,14 +6,12 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"time"
 )
 
 type Config struct {
 	ListenAddr        string
 	DataDir           string
 	BaseURL           *url.URL
-	Timezone          *time.Location
 	LogLevel          string
 	MicrosoftClientID string
 	UpdateRepository  string
@@ -29,7 +27,6 @@ func load(lookup func(string) (string, bool)) (Config, error) {
 	listenAddr := envOrDefault(lookup, "APP_LISTEN_ADDR", ":8080")
 	dataDir := envOrDefault(lookup, "APP_DATA_DIR", "./data/runtime")
 	baseURLValue := envOrDefault(lookup, "APP_BASE_URL", "http://localhost:8080")
-	timezoneValue := envOrDefault(lookup, "APP_TIMEZONE", "Asia/Shanghai")
 	logLevel := strings.ToLower(envOrDefault(lookup, "APP_LOG_LEVEL", "info"))
 
 	baseURL, err := url.Parse(baseURLValue)
@@ -43,11 +40,6 @@ func load(lookup func(string) (string, bool)) (Config, error) {
 		return Config{}, fmt.Errorf("APP_BASE_URL must use HTTPS outside local development")
 	}
 
-	timezone, err := time.LoadLocation(timezoneValue)
-	if err != nil {
-		return Config{}, fmt.Errorf("APP_TIMEZONE is invalid: %w", err)
-	}
-
 	if logLevel != "debug" && logLevel != "info" && logLevel != "warn" && logLevel != "error" {
 		return Config{}, fmt.Errorf("APP_LOG_LEVEL must be debug, info, warn, or error")
 	}
@@ -55,7 +47,6 @@ func load(lookup func(string) (string, bool)) (Config, error) {
 		ListenAddr:        listenAddr,
 		DataDir:           dataDir,
 		BaseURL:           baseURL,
-		Timezone:          timezone,
 		LogLevel:          logLevel,
 		MicrosoftClientID: envOrDefault(lookup, "MS_CLIENT_ID", ""),
 		UpdateRepository:  envOrDefault(lookup, "APP_UPDATE_REPOSITORY", ""),

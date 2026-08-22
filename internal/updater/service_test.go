@@ -100,7 +100,7 @@ func TestManifestMismatchStopsBeforeCommands(t *testing.T) {
 }
 
 func TestManifestAndImageIdentityAreBoundToReleaseTag(t *testing.T) {
-	server := signedReleaseServer(t, "v1.0.7", "owner/repo", "ghcr.io/owner/repo")
+	server := signedReleaseServer(t, "v1.1.0", "owner/repo", "ghcr.io/owner/repo")
 	defer server.Close()
 	var commands []string
 	service, err := New(Config{

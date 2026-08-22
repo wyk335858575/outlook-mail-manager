@@ -35,6 +35,11 @@ jobs:
         run: |
           node scripts/version.mjs prepare-check
           sh -n deploy/update.sh
+      - name: Audit dependencies and source secrets
+        run: |
+          go run golang.org/x/vuln/cmd/govulncheck@v1.7.0 ./...
+          go run github.com/zricethezav/gitleaks/v8@v8.30.1 detect --no-git --source . --redact --exit-code 1 --no-banner
+          npm --prefix web audit --audit-level=high
       - name: Test and build frontend
         working-directory: web
         run: |

@@ -5,7 +5,7 @@
 当前正式镜像：
 
 ```text
-ghcr.io/wyk335858575/outlook-mail-manager:1.0.7
+ghcr.io/wyk335858575/outlook-mail-manager:1.1.0
 ```
 
 公开镜像无需 GitHub 账号或 token。服务器建议至少 2 核 CPU、2 GiB 内存和 10 GiB 可用磁盘。
@@ -41,11 +41,12 @@ chmod 600 .env
 APP_BASE_URL=https://mail.example.com
 APP_LISTEN_ADDR=:8080
 APP_DATA_DIR=/data
-APP_TIMEZONE=Asia/Shanghai
 APP_LOG_LEVEL=info
-APP_VERSION=1.0.7
+GOMEMLIMIT=512MiB
+GOGC=75
+APP_VERSION=1.1.0
 APP_UPDATE_REPOSITORY=wyk335858575/outlook-mail-manager
-APP_IMAGE=ghcr.io/wyk335858575/outlook-mail-manager:1.0.7
+APP_IMAGE=ghcr.io/wyk335858575/outlook-mail-manager:1.1.0
 # 可选：首次启动默认值，也可登录后在“设置”中保存
 MS_CLIENT_ID=
 ```
@@ -59,18 +60,18 @@ MS_CLIENT_ID=
 直接拉取固定版本，不使用 `latest`：
 
 ```bash
-docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.7
+docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.1.0
 ```
 
 核对镜像来源和 digest：
 
 ```bash
 docker image inspect \
-  ghcr.io/wyk335858575/outlook-mail-manager:1.0.7 \
+  ghcr.io/wyk335858575/outlook-mail-manager:1.1.0 \
   --format '{{index .RepoDigests 0}}'
 ```
 
-输出应包含 `ghcr.io/wyk335858575/outlook-mail-manager@sha256:...`。将完整值与 [v1.0.7 Release](https://github.com/wyk335858575/outlook-mail-manager/releases/tag/v1.0.7) 中签名的 `release-manifest.json` 比对。
+输出应包含 `ghcr.io/wyk335858575/outlook-mail-manager@sha256:...`。将完整值与 [v1.1.0 Release](https://github.com/wyk335858575/outlook-mail-manager/releases/tag/v1.1.0) 中签名的 `release-manifest.json` 比对。
 
 检查 Compose 最终配置并使用已拉取镜像启动：
 
@@ -90,9 +91,9 @@ docker compose logs --tail=100 app
 
 1. 打开“Docker” > “镜像”。
 2. 点击“拉取镜像”或“线上镜像”。
-3. 镜像地址填写 `ghcr.io/wyk335858575/outlook-mail-manager:1.0.7`，不要添加 `https://`。
+3. 镜像地址填写 `ghcr.io/wyk335858575/outlook-mail-manager:1.1.0`，不要添加 `https://`。
 4. 仓库用户名和密码留空；当前 GHCR 包是公开镜像。
-5. 等待下载完成，在本地镜像列表确认名称和 `1.0.7` 标签。
+5. 等待下载完成，在本地镜像列表确认名称和 `1.1.0` 标签。
 6. 打开“Docker” > “容器编排”，添加编排项目。
 7. 项目目录选择 `/www/wwwroot/outlook-mail-manager`，使用其中的 `docker-compose.yml`。
 8. 确认同目录已存在 `.env`，然后创建或启动编排。
@@ -143,7 +144,7 @@ add_header Referrer-Policy "no-referrer" always;
 
 ```bash
 docker logout ghcr.io
-docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.7
+docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.1.0
 ```
 
 ### `i/o timeout`、`TLS handshake timeout` 或 `context deadline exceeded`
@@ -197,19 +198,19 @@ docker compose up -d --no-build app
 
 ## 9. 后续手动更新
 
-更新前先创建一致性备份。以 `1.0.7` 为例：
+更新前先创建一致性备份。以 `1.1.0` 为例：
 
 ```bash
 cd /www/wwwroot/outlook-mail-manager
 docker compose run --rm app backup
-docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.0.7
+docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.1.0
 ```
 
 然后把 `.env` 中的 `APP_VERSION` 和 `APP_IMAGE` 改为：
 
 ```dotenv
-APP_VERSION=1.0.7
-APP_IMAGE=ghcr.io/wyk335858575/outlook-mail-manager:1.0.7
+APP_VERSION=1.1.0
+APP_IMAGE=ghcr.io/wyk335858575/outlook-mail-manager:1.1.0
 ```
 
 启动并检查：

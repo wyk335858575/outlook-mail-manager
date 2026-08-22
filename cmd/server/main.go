@@ -96,9 +96,6 @@ func run(args []string) error {
 		return fmt.Errorf("initialize Microsoft accounts: %w", err)
 	}
 	defer accountService.Close()
-	if err := accountService.ValidateStartup(startupCtx); err != nil {
-		return err
-	}
 	notificationService, err := notify.New(store.DB, keyring, notify.Options{})
 	if err != nil {
 		return fmt.Errorf("initialize notifications: %w", err)
@@ -131,6 +128,7 @@ func run(args []string) error {
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       60 * time.Second,
+		MaxHeaderBytes:    32 << 10,
 	}
 
 	shutdownCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

@@ -242,6 +242,10 @@ func (api *notificationsAPI) writeError(w http.ResponseWriter, err error) {
 		writeAPIError(w, http.StatusBadGateway, "wxpush_api_failed", "微信接口返回未知错误，请检查公众号配置后重试")
 	case errors.Is(err, notify.ErrWXPushReconfiguration):
 		writeAPIError(w, http.StatusConflict, "wxpush_reconfiguration_required", "旧版 WXPush 配置已停用，请删除后重建")
+	case errors.Is(err, notify.ErrBarkNetwork):
+		writeAPIError(w, http.StatusBadGateway, "bark_network_failed", "暂时无法连接 Bark 服务，请检查服务地址和网络")
+	case errors.Is(err, notify.ErrBarkAPI):
+		writeAPIError(w, http.StatusBadGateway, "bark_api_failed", "Bark 服务拒绝了推送，请检查设备密钥和服务端配置")
 	default:
 		api.logger.Error("notification request failed", "event", "notification_request_failed", "error", err)
 		writeAPIError(w, http.StatusInternalServerError, "notification_request_failed", "通知服务暂时无法完成请求")

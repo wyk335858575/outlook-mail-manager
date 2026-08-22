@@ -72,6 +72,10 @@ type ChannelInput struct {
 	WXPushAppSecret  string `json:"wxpush_app_secret,omitempty"`
 	WXPushUserID     string `json:"wxpush_user_id,omitempty"`
 	WXPushTemplateID string `json:"wxpush_template_id,omitempty"`
+	BarkServerURL    string `json:"bark_server_url,omitempty"`
+	BarkDeviceKey    string `json:"bark_device_key,omitempty"`
+	BarkGroup        string `json:"bark_group,omitempty"`
+	BarkSound        string `json:"bark_sound,omitempty"`
 }
 
 type Channel struct {
@@ -130,6 +134,10 @@ type channelSecret struct {
 	WXPushAppSecret  string `json:"wxpush_app_secret,omitempty"`
 	WXPushUserID     string `json:"wxpush_user_id,omitempty"`
 	WXPushTemplateID string `json:"wxpush_template_id,omitempty"`
+	BarkServerURL    string `json:"bark_server_url,omitempty"`
+	BarkDeviceKey    string `json:"bark_device_key,omitempty"`
+	BarkGroup        string `json:"bark_group,omitempty"`
+	BarkSound        string `json:"bark_sound,omitempty"`
 	// Retained only to identify encrypted gateway configurations created before schema 18.
 	WXPushURL   string `json:"wxpush_url,omitempty"`
 	WXPushToken string `json:"wxpush_token,omitempty"`
@@ -570,21 +578,21 @@ func (s *Service) TestChannel(ctx context.Context, publicID string) (Delivery, e
 }
 
 func (s *Service) TestConfig(ctx context.Context, input ChannelInput) error {
-	if input.Kind != "wxpush" {
+	if input.Kind != "wxpush" && input.Kind != "bark" {
 		return ErrInvalidChannel
 	}
 	secret := secretFromInput(input)
+	payload := deliveryPayload{EventType: "test", Title: "邮箱管理台测试通知", Text: "发件人：sender@example.com\n主题：通知测试邮件\n正文：这是一条动态正文测试。", Sender: "sender@example.com", Subject: "通知测试邮件", Body: "这是一条动态正文测试。"}
+	if input.Kind == "bark" {
+		if err := validateBarkSecret(secret); err != nil {
+			return err
+		}
+		return s.sendBark(ctx, payload, secret)
+	}
 	if err := validateWXPushSecret(secret); err != nil {
 		return err
 	}
-	return s.sendWXPush(ctx, deliveryPayload{
-		EventType: "test",
-		Title:     "邮箱管理台测试通知",
-		Text:      "发件人：sender@example.com\n主题：WXPush 测试邮件\n正文：这是一条动态正文测试。",
-		Sender:    "sender@example.com",
-		Subject:   "WXPush 测试邮件",
-		Body:      "这是一条动态正文测试。",
-	}, secret)
+	return s.sendWXPush(ctx, payload, secret)
 }
 
 func (s *Service) RetryDelivery(ctx context.Context, publicID string) error {
@@ -699,6 +707,8 @@ func (s *Service) send(ctx context.Context, delivery queuedDelivery, secret chan
 		return s.sendPushPlus(ctx, delivery.payload, secret)
 	case "wxpush":
 		return s.sendWXPush(ctx, delivery.payload, secret)
+	case "bark":
+		return s.sendBark(ctx, delivery.payload, secret)
 	default:
 		return ErrInvalidChannel
 	}
@@ -740,6 +750,12 @@ func (s *Service) doJSON(ctx context.Context, target string, requestBody any, de
 	return s.doJSONBytes(ctx, target, body, destination, headers)
 }
 
+type notificationHTTPError struct {
+	status int
+}
+
+func (e notificationHTTPError) Error() string { return "notification_http_failed" }
+
 func (s *Service) doJSONBytes(ctx context.Context, target string, body []byte, destination any, headers map[string]string) error {
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, target, bytes.NewReader(body))
 	if err != nil {
@@ -756,7 +772,7 @@ func (s *Service) doJSONBytes(ctx context.Context, target string, body []byte, d
 	}
 	defer response.Body.Close()
 	if response.StatusCode < 200 || response.StatusCode > 299 {
-		return errors.New("notification_http_failed")
+		return notificationHTTPError{status: response.StatusCode}
 	}
 	if destination == nil {
 		_, _ = io.Copy(io.Discard, io.LimitReader(response.Body, 1<<20))
@@ -989,6 +1005,8 @@ func secretFromInput(input ChannelInput) channelSecret {
 		PushPlusToken: strings.TrimSpace(input.PushPlusToken), PushPlusTopic: strings.TrimSpace(input.PushPlusTopic),
 		WXPushAppID: strings.TrimSpace(input.WXPushAppID), WXPushAppSecret: strings.TrimSpace(input.WXPushAppSecret),
 		WXPushUserID: strings.TrimSpace(input.WXPushUserID), WXPushTemplateID: strings.TrimSpace(input.WXPushTemplateID),
+		BarkServerURL: strings.TrimSpace(input.BarkServerURL), BarkDeviceKey: strings.TrimSpace(input.BarkDeviceKey),
+		BarkGroup: strings.TrimSpace(input.BarkGroup), BarkSound: strings.TrimSpace(input.BarkSound),
 	}
 }
 
@@ -1002,9 +1020,7 @@ func overlaySecret(current *channelSecret, replacement channelSecret) {
 	if replacement.PushPlusToken != "" {
 		current.PushPlusToken = replacement.PushPlusToken
 	}
-	if replacement.PushPlusTopic != "" {
-		current.PushPlusTopic = replacement.PushPlusTopic
-	}
+	current.PushPlusTopic = replacement.PushPlusTopic
 	if replacement.WXPushAppID != "" {
 		current.WXPushAppID = replacement.WXPushAppID
 	}
@@ -1017,6 +1033,14 @@ func overlaySecret(current *channelSecret, replacement channelSecret) {
 	if replacement.WXPushTemplateID != "" {
 		current.WXPushTemplateID = replacement.WXPushTemplateID
 	}
+	if replacement.BarkServerURL != "" {
+		current.BarkServerURL = replacement.BarkServerURL
+	}
+	if replacement.BarkDeviceKey != "" {
+		current.BarkDeviceKey = replacement.BarkDeviceKey
+	}
+	current.BarkGroup = replacement.BarkGroup
+	current.BarkSound = replacement.BarkSound
 }
 
 func validateChannel(input ChannelInput, secret channelSecret) error {
@@ -1034,6 +1058,8 @@ func validateChannel(input ChannelInput, secret channelSecret) error {
 		}
 	case "wxpush":
 		return validateWXPushSecret(secret)
+	case "bark":
+		return validateBarkSecret(secret)
 	default:
 		return ErrInvalidChannel
 	}
@@ -1055,6 +1081,10 @@ func channelDestination(kind string, secret channelSecret) string {
 		}
 		if secret.WXPushUserID != "" {
 			return "OpenID " + maskValue(secret.WXPushUserID)
+		}
+	case "bark":
+		if secret.BarkDeviceKey != "" {
+			return "设备 " + maskValue(secret.BarkDeviceKey)
 		}
 	}
 	return "已配置"

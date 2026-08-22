@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertCircle, LoaderCircle, RefreshCw } from 'lucide-react'
 
@@ -6,14 +6,15 @@ import { BootstrapFlow } from './auth/BootstrapFlow'
 import { LoginScreen } from './auth/LoginScreen'
 import { fetchAuthStatus, logout } from './api/auth'
 import { BrandLockup } from './components/BrandLockup'
-import { AccountDashboard } from './dashboard/AccountDashboard'
-import { APIDashboard } from './dashboard/APIDashboard'
-import { CleanupDashboard } from './dashboard/CleanupDashboard'
-import { HealthDashboard } from './dashboard/HealthDashboard'
-import { InboxDashboard } from './dashboard/InboxDashboard'
-import { NotificationsDashboard } from './dashboard/NotificationsDashboard'
-import { SecurityDashboard } from './dashboard/SecurityDashboard'
-import { SettingsDashboard } from './dashboard/SettingsDashboard'
+
+const AccountDashboard = lazy(() => import('./dashboard/AccountDashboard').then((module) => ({ default: module.AccountDashboard })))
+const APIDashboard = lazy(() => import('./dashboard/APIDashboard').then((module) => ({ default: module.APIDashboard })))
+const CleanupDashboard = lazy(() => import('./dashboard/CleanupDashboard').then((module) => ({ default: module.CleanupDashboard })))
+const HealthDashboard = lazy(() => import('./dashboard/HealthDashboard').then((module) => ({ default: module.HealthDashboard })))
+const InboxDashboard = lazy(() => import('./dashboard/InboxDashboard').then((module) => ({ default: module.InboxDashboard })))
+const NotificationsDashboard = lazy(() => import('./dashboard/NotificationsDashboard').then((module) => ({ default: module.NotificationsDashboard })))
+const SecurityDashboard = lazy(() => import('./dashboard/SecurityDashboard').then((module) => ({ default: module.SecurityDashboard })))
+const SettingsDashboard = lazy(() => import('./dashboard/SettingsDashboard').then((module) => ({ default: module.SettingsDashboard })))
 
 type Section = 'inbox' | 'personal' | 'verification' | 'accounts' | 'cleanup' | 'notifications' | 'api' | 'health' | 'security' | 'settings'
 
@@ -105,14 +106,19 @@ export function App() {
     loggingOut,
     logoutError,
   }
-  if (section === 'security') return <SecurityDashboard {...dashboardProps} />
-  if (section === 'settings') return <SettingsDashboard {...dashboardProps} />
-  if (section === 'accounts') return <AccountDashboard {...dashboardProps} />
-  if (section === 'cleanup') return <CleanupDashboard {...dashboardProps} />
-  if (section === 'notifications') return <NotificationsDashboard {...dashboardProps} />
-  if (section === 'api') return <APIDashboard {...dashboardProps} />
-  if (section === 'health') return <HealthDashboard {...dashboardProps} />
-  if (section === 'personal') return <InboxDashboard key="personal" {...dashboardProps} view="personal" />
-  if (section === 'verification') return <InboxDashboard key="verification" {...dashboardProps} view="verification" />
-  return <InboxDashboard key="inbox" {...dashboardProps} />
+  let dashboard = <InboxDashboard key="inbox" {...dashboardProps} />
+  if (section === 'security') dashboard = <SecurityDashboard {...dashboardProps} />
+  else if (section === 'settings') dashboard = <SettingsDashboard {...dashboardProps} />
+  else if (section === 'accounts') dashboard = <AccountDashboard {...dashboardProps} />
+  else if (section === 'cleanup') dashboard = <CleanupDashboard {...dashboardProps} />
+  else if (section === 'notifications') dashboard = <NotificationsDashboard {...dashboardProps} />
+  else if (section === 'api') dashboard = <APIDashboard {...dashboardProps} />
+  else if (section === 'health') dashboard = <HealthDashboard {...dashboardProps} />
+  else if (section === 'personal') dashboard = <InboxDashboard key="personal" {...dashboardProps} view="personal" />
+  else if (section === 'verification') dashboard = <InboxDashboard key="verification" {...dashboardProps} view="verification" />
+  return (
+    <Suspense fallback={<div className="centered-state" aria-live="polite"><LoaderCircle className="is-spinning" size={24} /><span>正在加载页面</span></div>}>
+      {dashboard}
+    </Suspense>
+  )
 }

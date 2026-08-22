@@ -2,6 +2,7 @@ package mail
 
 import (
 	"context"
+	"fmt"
 	"testing"
 )
 
@@ -123,5 +124,37 @@ func TestReclassifyVerificationDismissesExistingCleanupCandidate(t *testing.T) {
 	}
 	if category != "verification" || source != "builtin" || state != "dismissed" {
 		t.Fatalf("category = %q, source = %q, cleanup state = %q", category, source, state)
+	}
+}
+
+func TestReclassifyAllProcessesMultipleBatches(t *testing.T) {
+	service, store, accountID, folders := newSyncTestService(t)
+	defer store.Close()
+	now := formatTime(service.now())
+	for index := 0; index < 101; index++ {
+		if _, err := store.DB.Exec(`
+			INSERT INTO messages (
+				public_id, account_id, folder_id, immutable_id, subject, received_at_utc,
+				category, classification_reason, classification_source, created_at_utc, updated_at_utc
+			) VALUES (?, ?, ?, ?, 'Your verification code is 482913', ?,
+				'normal', '待重新分类', 'builtin', ?, ?)
+		`, fmt.Sprintf("msg_reclassify_%03d", index), accountID, folders[0].id,
+			fmt.Sprintf("immutable-reclassify-%03d", index), now, now, now); err != nil {
+			t.Fatalf("insert message %d: %v", index, err)
+		}
+	}
+
+	if err := service.ReclassifyAll(context.Background()); err != nil {
+		t.Fatalf("ReclassifyAll() error = %v", err)
+	}
+	var count int
+	if err := store.DB.QueryRow(`
+		SELECT COUNT(*) FROM messages
+		WHERE public_id LIKE 'msg_reclassify_%' AND category = 'verification' AND verification_code = '482913'
+	`).Scan(&count); err != nil {
+		t.Fatalf("count reclassified messages: %v", err)
+	}
+	if count != 101 {
+		t.Fatalf("reclassified messages = %d, want 101", count)
 	}
 }

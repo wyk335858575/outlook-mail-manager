@@ -22,9 +22,6 @@ func TestLoadUsesSecureDefaultsForLocalDevelopment(t *testing.T) {
 	if cfg.BaseURL.String() != "http://localhost:8080" {
 		t.Fatalf("BaseURL = %q", cfg.BaseURL)
 	}
-	if cfg.Timezone.String() != "Asia/Shanghai" {
-		t.Fatalf("Timezone = %q", cfg.Timezone)
-	}
 	if cfg.MicrosoftClientID != "personal-client-id" {
 		t.Fatalf("MicrosoftClientID = %q", cfg.MicrosoftClientID)
 	}

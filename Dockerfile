@@ -3,7 +3,9 @@ FROM node:24-alpine3.23 AS web-build
 WORKDIR /src/web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci
-COPY web/ ./
+COPY web/index.html web/tsconfig.json web/vite.config.ts ./
+COPY web/public/ ./public/
+COPY web/src/ ./src/
 RUN npm run build
 
 FROM golang:1.26.6-alpine3.23 AS go-build
@@ -12,7 +14,9 @@ ARG APP_VERSION=dev
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
-COPY . .
+COPY cmd/server/ ./cmd/server/
+COPY internal/ ./internal/
+COPY web/embed.go ./web/embed.go
 COPY --from=web-build /src/web/dist/ ./web/dist/
 RUN CGO_ENABLED=0 go build -trimpath \
     -ldflags="-s -w -X main.version=${APP_VERSION}" \
@@ -20,7 +24,7 @@ RUN CGO_ENABLED=0 go build -trimpath \
 
 FROM alpine:3.23
 
-RUN apk add --no-cache ca-certificates tzdata \
+RUN apk add --no-cache ca-certificates \
     && addgroup -S -g 10001 app \
     && adduser -S -D -H -u 10001 -G app app \
     && mkdir -p /data \

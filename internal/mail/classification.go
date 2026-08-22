@@ -278,41 +278,62 @@ func (s *Service) ReclassifyAll(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	rows, err := s.db.QueryContext(ctx, `
-		SELECT m.id, m.subject, m.sender_address, COALESCE(m.body_text, ''), f.well_known_name,
-			m.is_flagged, a.cleanup_protected
-		FROM messages m
-		JOIN folders f ON f.id = m.folder_id
-		JOIN accounts a ON a.id = m.account_id
-		WHERE m.remote_deleted = 0 AND m.classification_source != 'manual'
-		ORDER BY m.id
-	`)
-	if err != nil {
-		return fmt.Errorf("list messages for reclassification: %w", err)
-	}
 	type row struct {
 		id    int64
 		input ClassificationInput
 	}
-	items := make([]row, 0)
-	for rows.Next() {
-		var item row
-		if err := rows.Scan(&item.id, &item.input.Subject, &item.input.SenderAddress, &item.input.Body,
-			&item.input.Folder, &item.input.Flagged, &item.input.AccountLocked); err != nil {
-			rows.Close()
-			return fmt.Errorf("scan message for reclassification: %w", err)
+	const batchSize = 25
+	var lastID int64
+	for {
+		rows, err := s.db.QueryContext(ctx, `
+			SELECT m.id, m.subject, m.sender_address, COALESCE(m.body_text, ''), f.well_known_name,
+				m.is_flagged, a.cleanup_protected
+			FROM messages m
+			JOIN folders f ON f.id = m.folder_id
+			JOIN accounts a ON a.id = m.account_id
+			WHERE m.remote_deleted = 0 AND m.classification_source != 'manual' AND m.id > ?
+			ORDER BY m.id LIMIT ?
+		`, lastID, batchSize)
+		if err != nil {
+			return fmt.Errorf("list messages for reclassification: %w", err)
 		}
-		items = append(items, item)
-	}
-	if err := rows.Close(); err != nil {
-		return err
-	}
-	for _, item := range items {
-		if err := s.applyClassification(ctx, item.id, item.input, rules); err != nil {
+		items := make([]row, 0, batchSize)
+		for rows.Next() {
+			var item row
+			if err := rows.Scan(&item.id, &item.input.Subject, &item.input.SenderAddress, &item.input.Body,
+				&item.input.Folder, &item.input.Flagged, &item.input.AccountLocked); err != nil {
+				rows.Close()
+				return fmt.Errorf("scan message for reclassification: %w", err)
+			}
+			items = append(items, item)
+		}
+		if err := rows.Err(); err != nil {
+			rows.Close()
+			return fmt.Errorf("iterate messages for reclassification: %w", err)
+		}
+		if err := rows.Close(); err != nil {
 			return err
 		}
+		if len(items) > 0 {
+			tx, err := s.db.BeginTx(ctx, nil)
+			if err != nil {
+				return fmt.Errorf("begin reclassification batch: %w", err)
+			}
+			for _, item := range items {
+				if err := s.applyClassificationTx(ctx, tx, item.id, item.input, rules); err != nil {
+					tx.Rollback()
+					return err
+				}
+			}
+			if err := tx.Commit(); err != nil {
+				return fmt.Errorf("commit reclassification batch: %w", err)
+			}
+			lastID = items[len(items)-1].id
+		}
+		if len(items) < batchSize {
+			return nil
+		}
 	}
-	return nil
 }
 
 type classificationExecer interface {
@@ -396,18 +417,6 @@ func nullableCategory(category *Category) any {
 		return nil
 	}
 	return string(*category)
-}
-
-func (s *Service) applyClassification(ctx context.Context, messageID int64, input ClassificationInput, rules []ClassificationRule) error {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-	if err := s.applyClassificationTx(ctx, tx, messageID, input, rules); err != nil {
-		return err
-	}
-	return tx.Commit()
 }
 
 func (s *Service) applyClassificationTx(ctx context.Context, tx *sql.Tx, messageID int64, input ClassificationInput, rules []ClassificationRule) error {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { BellRing, BookOpen, Check, ExternalLink, LoaderCircle, LogOut, Plus, RefreshCw, Send, Trash2, X } from 'lucide-react'
 
@@ -62,6 +62,7 @@ export function notificationRuleSummary(rule: Pick<NotificationRule, 'categories
 }
 
 const wxPushCredentialKeys = ['wxpush_app_id', 'wxpush_app_secret', 'wxpush_user_id', 'wxpush_template_id'] as const
+const barkCredentialKeys = ['bark_server_url', 'bark_device_key', 'bark_group', 'bark_sound'] as const
 
 export function wxPushConfigFingerprint(input: NotificationChannelInput) {
   const value = wxPushCredentialKeys.map((key) => input[key]?.trim() ?? '').join('\u0000')
@@ -75,9 +76,25 @@ export function wxPushConfigFingerprint(input: NotificationChannelInput) {
 
 export function canCreateNotificationChannel(input: NotificationChannelInput, testedFingerprint: string) {
   if (!input.name.trim()) return false
-  if (input.kind !== 'wxpush') return true
-  if (wxPushCredentialKeys.some((key) => !input[key]?.trim())) return false
-  return testedFingerprint !== '' && testedFingerprint === wxPushConfigFingerprint(input)
+  if (input.kind === 'wxpush') {
+    if (wxPushCredentialKeys.some((key) => !input[key]?.trim())) return false
+    return testedFingerprint !== '' && testedFingerprint === wxPushConfigFingerprint(input)
+  }
+  if (input.kind === 'bark') {
+    if (!input.bark_server_url?.trim() || !input.bark_device_key?.trim()) return false
+    return testedFingerprint !== '' && testedFingerprint === barkConfigFingerprint(input)
+  }
+  return true
+}
+
+export function barkConfigFingerprint(input: NotificationChannelInput) {
+  const value = barkCredentialKeys.map((key) => input[key]?.trim() ?? '').join('\u0000')
+  let hash = 2166136261
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0')
 }
 
 export function NotificationsDashboard({ status, onLogout, loggingOut, logoutError }: {
@@ -217,9 +234,9 @@ function ChannelDialog({ csrfToken, onClose, onCreated }: { csrfToken: string; o
   const [testing, setTesting] = useState(false)
   const [saving, setSaving] = useState(false); const [error, setError] = useState('')
   function set<K extends keyof NotificationChannelInput>(key: K, value: NotificationChannelInput[K]) {
-    if (key === 'kind' || wxPushCredentialKeys.includes(key as typeof wxPushCredentialKeys[number])) setTestedFingerprint('')
+    if (key === 'kind' || wxPushCredentialKeys.includes(key as typeof wxPushCredentialKeys[number]) || barkCredentialKeys.includes(key as typeof barkCredentialKeys[number])) setTestedFingerprint('')
     setError('')
-    setInput((current) => ({ ...current, [key]: value }))
+    setInput((current) => key === 'kind' && value === 'bark' ? { ...current, kind: value, bark_server_url: current.bark_server_url || 'https://api.day.app' } : { ...current, [key]: value })
   }
   async function testWXPush() {
     const fingerprint = wxPushConfigFingerprint(input)
@@ -229,15 +246,24 @@ function ChannelDialog({ csrfToken, onClose, onCreated }: { csrfToken: string; o
       setTestedFingerprint(fingerprint)
     } catch (reason) { setError(messageFor(reason, 'WXPush 配置测试失败')) } finally { setTesting(false) }
   }
+  async function testBark() {
+    const fingerprint = barkConfigFingerprint(input)
+    setTesting(true); setTestedFingerprint(''); setError('')
+    try {
+      await testNotificationConfig(input, csrfToken)
+      setTestedFingerprint(fingerprint)
+    } catch (reason) { setError(messageFor(reason, 'Bark 配置测试失败')) } finally { setTesting(false) }
+  }
   async function save() { setSaving(true); setError(''); try { const channel = await createNotificationChannel(input, csrfToken); await onCreated(channel) } catch (reason) { setError(messageFor(reason, '无法创建通知通道')); setSaving(false) } }
   return <div className="dialog-backdrop"><section className="dialog-panel operation-dialog" role="dialog" aria-modal="true" aria-labelledby="channel-title"><div className="dialog-heading"><div><p className="eyebrow">Notification channel</p><h2 id="channel-title">新建通知通道</h2></div><button className="field-icon-button" type="button" title="关闭" aria-label="关闭" onClick={onClose}><X size={18} /></button></div>
-    <div className="form-grid two-columns"><label><span>名称</span><input value={input.name} onChange={(event) => set('name', event.target.value)} /></label><label><span>类型</span><select value={input.kind} disabled={testing || saving} onChange={(event) => set('kind', event.target.value as NotificationKind)}><option value="telegram">Telegram</option><option value="pushplus">PushPlus</option><option value="wxpush">WXPush</option></select></label>
+    <div className="form-grid two-columns"><label><span>名称</span><input value={input.name} onChange={(event) => set('name', event.target.value)} /></label><label><span>类型</span><select value={input.kind} disabled={testing || saving} onChange={(event) => set('kind', event.target.value as NotificationKind)}><option value="telegram">Telegram</option><option value="pushplus">PushPlus</option><option value="wxpush">WXPush</option><option value="bark">Bark</option></select></label>
       {input.kind === 'telegram' && <><label className="wide-field"><span>Bot token</span><input type="password" autoComplete="off" value={input.telegram_bot_token ?? ''} onChange={(event) => set('telegram_bot_token', event.target.value)} /></label><label className="wide-field"><span>Chat ID</span><input value={input.telegram_chat_id ?? ''} onChange={(event) => set('telegram_chat_id', event.target.value)} /></label></>}
       {input.kind === 'pushplus' && <><label className="wide-field"><span>PushPlus token</span><input type="password" autoComplete="off" value={input.pushplus_token ?? ''} onChange={(event) => set('pushplus_token', event.target.value)} /></label><label className="wide-field"><span>群组编码（可选）</span><input value={input.pushplus_topic ?? ''} onChange={(event) => set('pushplus_topic', event.target.value)} /></label></>}
       {input.kind === 'wxpush' && <><label><span>WX_APPID</span><input autoComplete="off" disabled={testing} value={input.wxpush_app_id ?? ''} onChange={(event) => set('wxpush_app_id', event.target.value)} /></label><label><span>WX_SECRET</span><input type="password" autoComplete="off" disabled={testing} value={input.wxpush_app_secret ?? ''} onChange={(event) => set('wxpush_app_secret', event.target.value)} /></label><label className="wxpush-credential-field"><span>WX_USERID（单个 OpenID）</span><input autoComplete="off" disabled={testing} value={input.wxpush_user_id ?? ''} onChange={(event) => set('wxpush_user_id', event.target.value)} /></label><label className="wxpush-credential-field"><span>WX_TEMPLATE_ID</span><input autoComplete="off" disabled={testing} value={input.wxpush_template_id ?? ''} onChange={(event) => set('wxpush_template_id', event.target.value)} /></label></>}
+      {input.kind === 'bark' && <><label className="wide-field"><span>Bark 服务端地址</span><input autoComplete="url" disabled={testing} value={input.bark_server_url ?? ''} onChange={(event) => set('bark_server_url', event.target.value)} placeholder="https://api.day.app 或你的自建地址" /></label><label className="wide-field"><span>设备密钥（Device Key）</span><input type="password" autoComplete="off" disabled={testing} value={input.bark_device_key ?? ''} onChange={(event) => set('bark_device_key', event.target.value)} /></label><label><span>分组（可选）</span><input disabled={testing} value={input.bark_group ?? ''} onChange={(event) => set('bark_group', event.target.value)} placeholder="Outlook 邮件" /></label><label><span>声音（可选）</span><input disabled={testing} value={input.bark_sound ?? ''} onChange={(event) => set('bark_sound', event.target.value)} placeholder="minuet" /></label></>}
       <ChannelGuide kind={input.kind} />
       <label className="switch-field"><input type="checkbox" checked={input.enabled} onChange={(event) => set('enabled', event.target.checked)} /><span>启用邮件通知</span></label><label className="switch-field"><input type="checkbox" checked={input.system_enabled} onChange={(event) => set('system_enabled', event.target.checked)} /><span>接收系统告警</span></label></div>
-    {error && <p className="form-error" role="alert">{error}</p>}{input.kind === 'wxpush' && testedFingerprint === wxPushConfigFingerprint(input) && <p className="form-success" role="status"><Check size={15} /> 测试成功，可以创建通道</p>}<div className="form-actions dialog-actions"><button className="secondary-button" type="button" onClick={onClose}>取消</button>{input.kind === 'wxpush' && <button className="secondary-button" type="button" disabled={testing || saving || wxPushCredentialKeys.some((key) => !input[key]?.trim())} onClick={() => void testWXPush()}>{testing ? <LoaderCircle className="is-spinning" size={16} /> : <Send size={16} />} 测试配置</button>}<button className="primary-button" type="button" disabled={saving || testing || !canCreateNotificationChannel(input, testedFingerprint)} onClick={() => void save()}>{saving ? <LoaderCircle className="is-spinning" size={16} /> : <Check size={16} />} 创建通道</button></div>
+    {error && <p className="form-error" role="alert">{error}</p>}{(input.kind === 'wxpush' && testedFingerprint === wxPushConfigFingerprint(input) || input.kind === 'bark' && testedFingerprint === barkConfigFingerprint(input)) && <p className="form-success" role="status"><Check size={15} /> 测试成功，可以创建通道</p>}<div className="form-actions dialog-actions"><button className="secondary-button" type="button" onClick={onClose}>取消</button>{input.kind === 'wxpush' && <button className="secondary-button" type="button" disabled={testing || saving || wxPushCredentialKeys.some((key) => !input[key]?.trim())} onClick={() => void testWXPush()}>{testing ? <LoaderCircle className="is-spinning" size={16} /> : <Send size={16} />} 测试配置</button>}{input.kind === 'bark' && <button className="secondary-button" type="button" disabled={testing || saving || !input.bark_server_url?.trim() || !input.bark_device_key?.trim()} onClick={() => void testBark()}>{testing ? <LoaderCircle className="is-spinning" size={16} /> : <Send size={16} />} 测试配置</button>}<button className="primary-button" type="button" disabled={saving || testing || !canCreateNotificationChannel(input, testedFingerprint)} onClick={() => void save()}>{saving ? <LoaderCircle className="is-spinning" size={16} /> : <Check size={16} />} 创建通道</button></div>
   </section></div>
 }
 
@@ -267,6 +293,20 @@ export function notificationChannelGuide(kind: NotificationKind) {
     links: [
       { href: 'https://www.pushplus.plus/', label: '打开 PushPlus' },
       { href: 'https://www.pushplus.plus/doc/guide/api.html', label: '查看消息接口文档' },
+    ],
+  } : kind === 'bark' ? {
+    title: 'Bark 配置教程',
+    intro: '本项目在 Go 服务端调用 Bark 的 /push 接口发送邮件通知，支持官方 Bark 服务和自建 bark-server。',
+    steps: [
+      '在 iPhone 安装 Bark，打开设备详情并复制 Device Key；更换 Bark 服务端后必须重新注册设备并使用新密钥。',
+      '官方服务填写 https://api.day.app；自建服务填写你的 HTTPS 地址，例如 https://bark.example.com，不要填写 /push。',
+      '可选填写分组和声音；分组用于在 Bark 中归类，声音使用 Bark 支持的声音名称，留空则使用系统默认。',
+      '点击“测试配置”，确认 iPhone 收到测试通知后，再创建通道；设备密钥会加密保存，列表只显示脱敏目标。',
+    ],
+    links: [
+      { href: 'https://github.com/Finb/Bark', label: 'Bark 官方项目' },
+      { href: 'https://github.com/Finb/bark-server', label: '自建 bark-server' },
+      { href: 'https://github.com/Finb/bark-server/blob/master/docs/API_V2.md', label: 'Bark API 文档' },
     ],
   } : {
     title: 'WXPush 接入教程',
@@ -303,6 +343,6 @@ function RuleDialog({ channels, csrfToken, onClose, onCreated }: { channels: Arr
 }
 
 function Empty({ text, loading = false }: { text: string; loading?: boolean }) { return <div className="operations-empty">{loading && <LoaderCircle className="is-spinning" size={18} />}{text}</div> }
-function kindLabel(kind: NotificationKind) { return kind === 'telegram' ? 'Telegram' : kind === 'pushplus' ? 'PushPlus' : 'WXPush' }
+function kindLabel(kind: NotificationKind) { return kind === 'telegram' ? 'Telegram' : kind === 'pushplus' ? 'PushPlus' : kind === 'wxpush' ? 'WXPush' : 'Bark' }
 function formatDate(value: string) { return new Intl.DateTimeFormat('zh-CN', { dateStyle: 'short', timeStyle: 'short', hour12: false }).format(new Date(value)) }
 function messageFor(error: unknown, fallback: string) { return error instanceof APIError ? error.message : fallback }

@@ -4223,7 +4223,7 @@ button:disabled {
   align-self: start;
 }
 
-.form-grid input:not([type="checkbox"]),
+.form-grid input:not([type="checkbox"]):not([type="radio"]),
 .form-grid select,
 .form-grid textarea {
   width: 100%;

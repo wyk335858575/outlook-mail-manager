@@ -5,11 +5,49 @@ import { fileURLToPath } from 'node:url'
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
 const versionPath = join(root, 'VERSION')
-const versionPattern = /^1\.0\.(0|[1-9]\d*)$/
+const versionPattern = /^1\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/
+
+function parseVersion(value) {
+  const match = value.match(versionPattern)
+  if (!match) return null
+  return { value, major: 1, minor: Number(match[1]), patch: Number(match[2]) }
+}
+
+function compareVersions(left, right) {
+  return left.major - right.major || left.minor - right.minor || left.patch - right.patch
+}
+
+function releaseTags() {
+  return execFileSync('git', ['tag', '--list', 'v1.*.*'], { cwd: root, encoding: 'utf8' })
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((tag) => ({ tag, version: parseVersion(tag.slice(1)) }))
+    .filter((item) => item.version !== null)
+}
+
+function assertSequentialRelease(version, tags) {
+  const candidate = parseVersion(version)
+  const previous = tags
+    .filter((item) => item.version.value !== version)
+    .map((item) => item.version)
+    .sort(compareVersions)
+    .at(-1)
+
+  if (!previous) {
+    if (version !== '1.0.0') throw new Error('首个正式版本必须为 v1.0.0')
+    return
+  }
+
+  const nextPatch = candidate.minor === previous.minor && candidate.patch === previous.patch + 1
+  const nextMinor = candidate.minor === previous.minor + 1 && candidate.patch === 0
+  if (!nextPatch && !nextMinor) {
+    throw new Error(`v${version} 必须紧接 v${previous.value} 发布；补丁版本递增 1，或新次版本从 .0 开始`)
+  }
+}
 
 function readVersion() {
   const value = readFileSync(versionPath, 'utf8').trim()
-  if (!versionPattern.test(value)) throw new Error(`VERSION 必须使用 1.0.N 格式，当前为 ${value || '<empty>'}`)
+  if (!versionPattern.test(value)) throw new Error(`VERSION 必须使用 1.MINOR.PATCH 格式，当前为 ${value || '<empty>'}`)
   return value
 }
 
@@ -34,8 +72,8 @@ function check(version) {
   if (!env.includes(`APP_VERSION=${version}`) || !env.includes(`outlook-mail-manager:${version}`)) failures.push('.env.example')
   if (!compose.includes(`APP_VERSION:-${version}`) || !compose.includes(`outlook-mail-manager:${version}`)) failures.push('docker-compose.yml')
   if (/^\s+build:/m.test(compose)) failures.push('docker-compose.yml（生产编排禁止本地构建）')
-  const changelogVersion = changelog.match(/^##\s+([^\s]+)/m)?.[1]
-  if (changelogVersion !== version) failures.push('CHANGELOG.md')
+  const escapedVersion = version.replaceAll('.', '\\.')
+  if (!new RegExp(`^##\\s+${escapedVersion}(?:\\s+-\\s+\\d{4}-\\d{2}-\\d{2})?\\s*$`, 'm').test(changelog)) failures.push('CHANGELOG.md')
 
   if (failures.length > 0) throw new Error(`以下文件未与 VERSION=${version} 同步：${failures.join(', ')}`)
 }
@@ -66,40 +104,14 @@ function releaseCheck(version) {
   check(version)
   const tag = process.env.GITHUB_REF_NAME?.trim()
   if (tag !== `v${version}`) throw new Error(`发布标签必须为 v${version}，当前为 ${tag || '<empty>'}`)
-
-  const patch = Number(version.split('.')[2])
-  const tags = execFileSync('git', ['tag', '--list', 'v1.0.*'], { cwd: root, encoding: 'utf8' })
-    .split(/\r?\n/)
-    .filter(Boolean)
-    .map((value) => value.match(/^v1\.0\.(0|[1-9]\d*)$/))
-    .filter(Boolean)
-    .map((match) => Number(match[1]))
-    .filter((value) => value !== patch)
-
-  if (patch === 0 && tags.length > 0) throw new Error('v1.0.0 只能作为首个正式版本发布')
-  if (patch > 0 && (tags.length === 0 || Math.max(...tags) !== patch - 1)) {
-    throw new Error(`v${version} 必须紧接 v1.0.${patch - 1} 发布`)
-  }
-  if (tags.some((value) => value > patch)) throw new Error('禁止发布低于现有正式版本的标签')
+  assertSequentialRelease(version, releaseTags())
 }
 
 function prepareCheck(version) {
   check(version)
-  const patch = Number(version.split('.')[2])
-  const tags = execFileSync('git', ['tag', '--list', 'v1.0.*'], { cwd: root, encoding: 'utf8' })
-    .split(/\r?\n/)
-    .filter(Boolean)
-    .map((value) => value.match(/^v1\.0\.(0|[1-9]\d*)$/))
-    .filter(Boolean)
-    .map((match) => Number(match[1]))
-
-  const previousTags = tags.filter((value) => value !== patch)
-  if (patch === 0 && previousTags.length > 0) throw new Error('v1.0.0 只能作为首个正式版本发布')
-  if (patch > 0 && (previousTags.length === 0 || Math.max(...previousTags) !== patch - 1)) {
-    throw new Error(`v${version} 必须紧接 v1.0.${patch - 1} 发布`)
-  }
-  if (previousTags.some((value) => value > patch)) throw new Error('禁止发布低于现有正式版本的标签')
-  if (tags.includes(patch)) {
+  const tags = releaseTags()
+  assertSequentialRelease(version, tags)
+  if (tags.some((item) => item.version.value === version)) {
     const tagCommit = execFileSync('git', ['rev-list', '-n', '1', `v${version}`], { cwd: root, encoding: 'utf8' }).trim()
     const headCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim()
     if (tagCommit !== headCommit) throw new Error(`v${version} 已存在但不指向当前 main 提交`)

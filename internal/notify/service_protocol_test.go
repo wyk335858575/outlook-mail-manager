@@ -23,9 +23,16 @@ func TestNotificationProtocols(t *testing.T) {
 			}
 			_, _ = w.Write([]byte(`{"ok":true}`))
 		case r.URL.Path == "/push":
-			var body map[string]string
+			var body map[string]any
 			_ = json.NewDecoder(r.Body).Decode(&body)
-			if body["token"] != "push-secret" || body["template"] != "txt" {
+			if body["token"] == "push-secret" {
+				if body["template"] != "txt" {
+					t.Fatalf("PushPlus body = %#v", body)
+				}
+				_, _ = w.Write([]byte(`{"code":200}`))
+				return
+			}
+			if body["device_key"] != "bark-device-key" || body["title"] != "Mail" || body["body"] != "Test content" || body["group"] != "Outlook" || body["sound"] != "minuet" {
 				t.Fatalf("PushPlus body = %#v", body)
 			}
 			_, _ = w.Write([]byte(`{"code":200}`))
@@ -83,6 +90,9 @@ func TestNotificationProtocols(t *testing.T) {
 		WXPushAppID: "wx-app-id", WXPushAppSecret: "wx-app-secret", WXPushUserID: "wx-open-id", WXPushTemplateID: "wx-template-id",
 	}); err != nil {
 		t.Fatalf("sendWXPush() error = %v", err)
+	}
+	if err := service.sendBark(context.Background(), payload, channelSecret{BarkServerURL: server.URL, BarkDeviceKey: "bark-device-key", BarkGroup: "Outlook", BarkSound: "minuet"}); err != nil {
+		t.Fatalf("sendBark() error = %v", err)
 	}
 }
 
