@@ -1,16 +1,17 @@
 import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
 const versionPath = join(root, 'VERSION')
-const versionPattern = /^1\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/
+const versionPattern = /^[1-9]\d*\.[0-9]\.[0-9]$/
 
 function parseVersion(value) {
   const match = value.match(versionPattern)
   if (!match) return null
-  return { value, major: 1, minor: Number(match[1]), patch: Number(match[2]) }
+  const [major, minor, patch] = value.split('.').map(Number)
+  return { value, major, minor, patch }
 }
 
 function compareVersions(left, right) {
@@ -18,7 +19,7 @@ function compareVersions(left, right) {
 }
 
 function releaseTags() {
-  return execFileSync('git', ['tag', '--list', 'v1.*.*'], { cwd: root, encoding: 'utf8' })
+  return execFileSync('git', ['tag', '--list', 'v*.*.*'], { cwd: root, encoding: 'utf8' })
     .split(/\r?\n/)
     .filter(Boolean)
     .map((tag) => ({ tag, version: parseVersion(tag.slice(1)) }))
@@ -27,6 +28,7 @@ function releaseTags() {
 
 function assertSequentialRelease(version, tags) {
   const candidate = parseVersion(version)
+  if (!candidate) throw new Error(`版本 ${version} 不符合 M.N.P 格式；次版本和补丁版本必须为 0 到 9`)
   const previous = tags
     .filter((item) => item.version.value !== version)
     .map((item) => item.version)
@@ -38,16 +40,15 @@ function assertSequentialRelease(version, tags) {
     return
   }
 
-  const nextPatch = candidate.minor === previous.minor && candidate.patch === previous.patch + 1
-  const nextMinor = candidate.minor === previous.minor + 1 && candidate.patch === 0
-  if (!nextPatch && !nextMinor) {
-    throw new Error(`v${version} 必须紧接 v${previous.value} 发布；补丁版本递增 1，或新次版本从 .0 开始`)
+  const expected = nextVersion(previous).value
+  if (version !== expected) {
+    throw new Error(`v${version} 必须紧接 v${previous.value} 发布；下一版本应为 v${expected}`)
   }
 }
 
 function readVersion() {
   const value = readFileSync(versionPath, 'utf8').trim()
-  if (!versionPattern.test(value)) throw new Error(`VERSION 必须使用 1.MINOR.PATCH 格式，当前为 ${value || '<empty>'}`)
+  if (!versionPattern.test(value)) throw new Error(`VERSION 必须使用 MAJOR.MINOR.PATCH 格式，次版本和补丁版本必须为 0 到 9，当前为 ${value || '<empty>'}`)
   return value
 }
 
@@ -78,9 +79,17 @@ function check(version) {
   if (failures.length > 0) throw new Error(`以下文件未与 VERSION=${version} 同步：${failures.join(', ')}`)
 }
 
+function nextVersion(version) {
+  const next = version.patch < 9
+    ? `${version.major}.${version.minor}.${version.patch + 1}`
+    : version.minor < 9
+      ? `${version.major}.${version.minor + 1}.0`
+      : `${version.major + 1}.0.0`
+  return parseVersion(next)
+}
+
 function bump(version) {
-  const [major, minor, patch] = version.split('.').map(Number)
-  const next = `${major}.${minor}.${patch + 1}`
+  const next = nextVersion(parseVersion(version)).value
   writeFileSync(versionPath, `${next}\n`)
 
   const packageJSON = readJSON('web/package.json')
@@ -119,12 +128,18 @@ function prepareCheck(version) {
 }
 
 const command = process.argv[2] ?? 'check'
-const version = readVersion()
-if (command === 'check') check(version)
-else if (command === 'bump') {
-  check(version)
-  bump(version)
+function run(command) {
+  const version = readVersion()
+  if (command === 'check') check(version)
+  else if (command === 'bump') {
+    check(version)
+    bump(version)
+  }
+  else if (command === 'prepare-check') prepareCheck(version)
+  else if (command === 'release-check') releaseCheck(version)
+  else throw new Error(`未知命令：${command}`)
 }
-else if (command === 'prepare-check') prepareCheck(version)
-else if (command === 'release-check') releaseCheck(version)
-else throw new Error(`未知命令：${command}`)
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) run(command)
+
+export { assertSequentialRelease, nextVersion, parseVersion }

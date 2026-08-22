@@ -17,7 +17,6 @@ import (
 )
 
 var updateRepositoryPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
-var stableUpdateTagPattern = regexp.MustCompile(`^v1\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$`)
 
 type UpdateStatus struct {
 	CurrentVersion   string    `json:"current_version"`
@@ -149,8 +148,11 @@ func (s *Service) latestReleaseAPI(ctx context.Context) (githubRelease, error) {
 	if err := json.NewDecoder(io.LimitReader(response.Body, 1<<20)).Decode(&release); err != nil {
 		return githubRelease{}, fmt.Errorf("decode latest GitHub release: %w", err)
 	}
-	if release.Draft || release.Prerelease || !stableUpdateTagPattern.MatchString(strings.TrimSpace(release.TagName)) {
-		return githubRelease{}, errors.New("latest GitHub release is not a stable 1.x version")
+	if release.Draft || release.Prerelease {
+		return githubRelease{}, errors.New("latest GitHub release is not a supported stable version")
+	}
+	if _, err := appversion.ParseReleaseTag(release.TagName); err != nil {
+		return githubRelease{}, errors.New("latest GitHub release is not a supported stable version")
 	}
 	return release, nil
 }
@@ -186,8 +188,11 @@ func (s *Service) latestReleaseRedirect(ctx context.Context) (githubRelease, err
 		return githubRelease{}, errors.New("latest-release redirect repository does not match")
 	}
 	tag, err := url.PathUnescape(strings.TrimPrefix(parsed.Path, prefix))
-	if err != nil || !stableUpdateTagPattern.MatchString(tag) {
-		return githubRelease{}, errors.New("latest-release redirect is not a stable 1.x version")
+	if err != nil {
+		return githubRelease{}, errors.New("latest-release redirect is not a supported stable version")
+	}
+	if _, err := appversion.ParseReleaseTag(tag); err != nil {
+		return githubRelease{}, errors.New("latest-release redirect is not a supported stable version")
 	}
 	return githubRelease{TagName: tag, HTMLURL: parsed.String()}, nil
 }

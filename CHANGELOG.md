@@ -2,6 +2,9 @@
 
 ## 未发布
 
+- 重构版本进位和正式 Release 校验：`1.0.9 → 1.1.0`、`1.9.9 → 2.0.0`，拒绝跳号和 `1.10.0`。
+- 修复在线更新检查仍按旧 `1.0.N` 规则拒绝 `v1.1.0` 的问题。
+
 ## 1.1.0 - 2026-08-22
 
 - 新增 Bark 通知通道：服务端直连 Bark API V2，支持官方服务和自建 bark-server。
@@ -87,7 +90,7 @@
 - 新增备份删除、路径与符号链接保护、最后备份警告和审计。
 - 新增 GitHub Releases 版本检查、受限 Unix Socket 更新 API和宿主机 updater。
 - updater 支持固定 digest、Cosign/GitHub OIDC 验证、升级前备份、健康检查和自动回滚。
-- Release manifest 在解析前验证 Cosign bundle，并与当前 `v1.0.N` 标签身份精确绑定；updater 二进制和校验和同时签名。
+- Release manifest 在解析前验证 Cosign bundle，并与当前 `vMAJOR.MINOR.PATCH` 标签身份精确绑定；updater 二进制和校验和同时签名。
 - updater 增加跨进程更新锁、重启中断任务恢复和带磁盘同步的原子配置写入。
 - 新增 GitHub Actions 一键准备发布流程，工作流采用最小权限并将第三方 Actions 固定到提交 SHA。
 - 删除侧栏构建阶段标记，首个正式版本定为 1.0.0，数据库 schema 提升到 14。

@@ -65,7 +65,7 @@ log "检查 GitHub 最新稳定版"
 LATEST_URL="$(curl -fsSL --retry 3 -o /dev/null -w '%{url_effective}' "https://github.com/$REPOSITORY/releases/latest")"
 TAG="${LATEST_URL##*/}"
 TAG="${TAG%%\?*}"
-printf '%s' "$TAG" | grep -Eq '^v1\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' || fail "最新 Release 不是受支持的 v1.MINOR.PATCH 正式版本"
+printf '%s' "$TAG" | grep -Eq '^v[1-9][0-9]*\.[0-9]\.[0-9]$' || fail "最新 Release 不是受支持的 MAJOR.MINOR.PATCH 正式版本"
 VERSION="${TAG#v}"
 if test "$CURRENT_VERSION" = "$VERSION"; then
 	printf '当前已是最新稳定版 %s，无需更新。\n' "$VERSION"

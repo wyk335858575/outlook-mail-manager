@@ -25,3 +25,19 @@ func TestGreaterUsesNumericComponents(t *testing.T) {
 		}
 	}
 }
+
+func TestParseReleaseTagAcceptsSupportedStableVersions(t *testing.T) {
+	for _, value := range []string{"v1.0.0", "v1.1.0", "v2.0.0", "v10.9.9"} {
+		if _, err := ParseReleaseTag(value); err != nil {
+			t.Fatalf("ParseReleaseTag(%q) error = %v", value, err)
+		}
+	}
+}
+
+func TestParseReleaseTagRejectsUnsupportedVersions(t *testing.T) {
+	for _, value := range []string{"1.1.0", "v0.11.0", "v1.10.0", "v1.0.10", "v1.01.0", "v1.0.01", "v1.1.0-beta"} {
+		if _, err := ParseReleaseTag(value); err == nil {
+			t.Fatalf("ParseReleaseTag(%q) unexpectedly succeeded", value)
+		}
+	}
+}

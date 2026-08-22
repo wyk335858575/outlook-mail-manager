@@ -28,10 +28,10 @@ curl -fsSL https://github.com/wyk335858575/outlook-mail-manager/releases/latest/
 
 ## 安全流程
 
-1. 从 GitHub 最新正式 Release 读取严格的 `v1.MINOR.PATCH` 标签。
+1. 从 GitHub 最新正式 Release 读取受支持的 `vMAJOR.MINOR.PATCH` 标签；次版本和补丁版本必须为单个 `0` 到 `9` 的数字。
 2. 根据 amd64 或 arm64 架构下载临时 Cosign，并按脚本内固定 SHA-256 校验。
 3. 下载 `SHA256SUMS`、release manifest、对应架构 updater 及其 Cosign bundle。
-4. 将所有签名严格绑定到当前仓库的 `release.yml@refs/tags/v1.MINOR.PATCH` GitHub Actions OIDC 身份。
+4. 将所有签名严格绑定到当前仓库的 `release.yml@refs/tags/vMAJOR.MINOR.PATCH` GitHub Actions OIDC 身份。
 5. 校验 manifest 中的仓库、镜像、版本、标签和固定镜像 digest。
 6. 验证并拉取 `image@sha256:...`，原子更新 `.env` 后停止旧应用。
 7. 由已验证的新镜像离线执行 WAL checkpoint、SQLite 完整性检查、业务单例检查和逐表行数核对，再保留一致性备份。

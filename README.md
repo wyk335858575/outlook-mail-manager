@@ -273,7 +273,7 @@ curl -fsSL https://github.com/wyk335858575/outlook-mail-manager/releases/latest/
 
 ## 🧱 版本与升级规则
 
-根目录 [`VERSION`](VERSION) 是唯一版本来源。补丁更新递增最后一段，例如 `1.1.0` 之后是 `1.1.1`；开启新次版本时递增中间一段并把补丁归零，例如 `1.0.9` 之后可以发布 `1.1.0`。发布流程仍会拒绝跳号、重复和降级。
+根目录 [`VERSION`](VERSION) 是唯一版本来源。版本按三段十进制进位：`1.0.0` 之后是 `1.0.1`，`1.0.9` 之后是 `1.1.0`，`1.1.9` 之后是 `1.2.0`，`1.9.9` 之后是 `2.0.0`。次版本和补丁版本均为 `0` 到 `9`，不会生成 `1.10.0`；发布流程会拒绝跳号、重复、降级和不符合规则的标签。
 
 ```powershell
 node scripts/version.mjs check
@@ -282,7 +282,7 @@ node scripts/version.mjs bump
 
 补充 CHANGELOG 后，在 GitHub Actions 中运行 `prepare release`。工作流会重新执行测试、创建严格连续的 `v${VERSION}` 标签，并触发多架构镜像构建、签名和 GitHub Release。
 
-数据库当前 schema 版本为 21。程序发现旧 schema 时，会先通过 `VACUUM INTO` 创建一致性备份，再在事务中执行迁移。内部开发版本 `0.11.0` 可以直接升级到正式版 `1.0.0`，无需重新创建管理员。
+数据库当前 schema 版本为 21。程序发现旧 schema 时，会先通过 `VACUUM INTO` 创建一致性备份，再在事务中执行迁移。内部开发版本 `0.11.0` 可以直接升级到正式版 `1.1.0`，无需重新创建管理员。
 
 Fork 用户必须把 `.env` 中的仓库和镜像地址改为自己的地址，否则签名身份校验会拒绝更新。首次发布 GHCR 镜像后，也需要在 GitHub Packages 中确认镜像包为 Public。
 

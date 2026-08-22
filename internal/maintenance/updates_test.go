@@ -48,10 +48,38 @@ func TestUpdateStatusReadsLatestStableReleaseWithoutEnablingMissingHelper(t *tes
 	}
 }
 
+func TestUpdateStatusAcceptsNextMajorStableRelease(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"tag_name":"v2.0.0","body":"Major release","html_url":"https://github.com/owner/repo/releases/tag/v2.0.0"}`))
+	}))
+	defer server.Close()
+	store, err := database.Open(context.Background(), t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	service, err := New(store.DB, t.TempDir(), Options{
+		Version: "1.9.9", UpdateRepository: "owner/repo", UpdateImage: "ghcr.io/owner/repo",
+		GitHubAPIBaseURL: server.URL, HTTPClient: server.Client(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	status, err := service.UpdateStatus(context.Background())
+	if err != nil {
+		t.Fatalf("UpdateStatus() error = %v", err)
+	}
+	if status.LatestVersion != "2.0.0" || !status.UpdateAvailable {
+		t.Fatalf("status = %+v", status)
+	}
+}
+
 func TestUpdateStatusRejectsPrereleaseAndUnexpectedVersionLine(t *testing.T) {
 	for _, body := range []string{
 		`{"tag_name":"v1.0.1","prerelease":true}`,
-		`{"tag_name":"v2.0.0"}`,
+		`{"tag_name":"v1.10.0"}`,
+		`{"tag_name":"v0.11.0"}`,
 		`{"tag_name":"v1.0.01"}`,
 	} {
 		t.Run(body, func(t *testing.T) {

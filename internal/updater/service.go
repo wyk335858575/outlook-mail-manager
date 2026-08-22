@@ -76,7 +76,6 @@ var (
 	imagePattern      = regexp.MustCompile(`^ghcr\.io/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
 	digestPattern     = regexp.MustCompile(`^sha256:[a-f0-9]{64}$`)
 	jobIDPattern      = regexp.MustCompile(`^[A-Za-z0-9_-]{8,128}$`)
-	stableTagPattern  = regexp.MustCompile(`^v1\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$`)
 	errUpdateLocked   = errors.New("an update is already running")
 )
 
@@ -367,8 +366,11 @@ func (s *Service) fetchRelease(ctx context.Context) (release, Manifest, error) {
 	if err := s.getJSON(ctx, s.config.GitHubAPIBaseURL+"/repos/"+s.config.Repository+"/releases/latest", &item); err != nil {
 		return item, Manifest{}, err
 	}
-	if item.Draft || item.Prerelease || !stableTagPattern.MatchString(item.TagName) {
-		return item, Manifest{}, errors.New("latest release is not a signed stable version")
+	if item.Draft || item.Prerelease {
+		return item, Manifest{}, errors.New("latest release is not a supported stable version")
+	}
+	if _, err := appversion.ParseReleaseTag(item.TagName); err != nil {
+		return item, Manifest{}, errors.New("latest release is not a supported stable version")
 	}
 	manifestURL, bundleURL := "", ""
 	for _, asset := range item.Assets {

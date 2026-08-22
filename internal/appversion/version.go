@@ -34,6 +34,20 @@ func Parse(value string) (Version, error) {
 	return Version{Major: values[0], Minor: values[1], Patch: values[2]}, nil
 }
 
+// ParseReleaseTag validates the restricted version format used by published
+// releases. Internal versions such as 0.11.0 remain valid through Parse.
+func ParseReleaseTag(value string) (Version, error) {
+	value = strings.TrimSpace(value)
+	if !strings.HasPrefix(value, "v") {
+		return Version{}, ErrInvalid
+	}
+	version, err := Parse(value)
+	if err != nil || version.Major < 1 || version.Minor > 9 || version.Patch > 9 {
+		return Version{}, ErrInvalid
+	}
+	return version, nil
+}
+
 func Greater(latest, current string) bool {
 	l, err := Parse(latest)
 	if err != nil {

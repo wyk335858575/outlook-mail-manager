@@ -124,6 +124,27 @@ func TestManifestAndImageIdentityAreBoundToReleaseTag(t *testing.T) {
 	}
 }
 
+func TestFetchReleaseAcceptsNextMajorStableTag(t *testing.T) {
+	server := signedReleaseServer(t, "v2.0.0", "owner/repo", "ghcr.io/owner/repo")
+	defer server.Close()
+	service, err := New(Config{
+		Repository: "owner/repo", Image: "ghcr.io/owner/repo", DeployDir: t.TempDir(), StateDir: t.TempDir(),
+		GitHubAPIBaseURL: server.URL, HTTPClient: server.Client(), RunCommand: func(context.Context, string, ...string) ([]byte, error) {
+			return nil, nil
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, manifest, err := service.fetchRelease(context.Background())
+	if err != nil {
+		t.Fatalf("fetchRelease() error = %v", err)
+	}
+	if manifest.Version != "2.0.0" {
+		t.Fatalf("manifest version = %q", manifest.Version)
+	}
+}
+
 func TestRunOnceCompletesUsingTemporaryCosignBinary(t *testing.T) {
 	releaseServer := signedReleaseServer(t, "v1.0.1", "owner/repo", "ghcr.io/owner/repo")
 	defer releaseServer.Close()
@@ -202,7 +223,8 @@ func TestManifestVerificationFailureStopsBeforeParsing(t *testing.T) {
 func TestFetchReleaseRejectsUnsupportedTagsBeforeVerification(t *testing.T) {
 	for _, releaseJSON := range []string{
 		`{"tag_name":"v1.0.1","prerelease":true}`,
-		`{"tag_name":"v2.0.0"}`,
+		`{"tag_name":"v1.10.0"}`,
+		`{"tag_name":"v0.11.0"}`,
 		`{"tag_name":"v1.0.01"}`,
 	} {
 		t.Run(releaseJSON, func(t *testing.T) {
