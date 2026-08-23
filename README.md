@@ -2,6 +2,8 @@
 
 > 一个面向个人 Microsoft 邮箱的自托管多账号收件中枢。
 
+[![GitHub Release](https://img.shields.io/github/v/release/wyk335858575/outlook-mail-manager?display_name=tag&sort=semver)](https://github.com/wyk335858575/outlook-mail-manager/releases/latest)
+[![Container](https://img.shields.io/badge/GHCR-amd64%20%7C%20arm64-2496ED?logo=docker&logoColor=white)](https://github.com/wyk335858575/outlook-mail-manager/pkgs/container/outlook-mail-manager)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 
 把分散在不同 Outlook / Hotmail 账号里的邮件集中到一个管理台：统一收件、搜索、提取验证码、筛选重要邮件、发送通知，并用可恢复的方式清理邮件。
@@ -15,6 +17,7 @@
 ## 🧭 快速导航
 
 - [它能做什么](#-它能做什么)
+- [界面预览](#-界面预览)
 - [开始部署](#-开始部署)
 - [配置 Microsoft OAuth](#-配置-microsoft-oauth)
 - [导入与管理账号](#-导入与管理账号)
@@ -48,6 +51,41 @@
 - 不是完整邮件客户端，不支持写信、回信、转发或草稿。
 - 不支持 Gmail、IMAP、POP3、SMTP，也不面向工作或学校 Microsoft 账号。
 - 不会永久删除邮件；恢复操作仍在 Outlook“已删除邮件”中完成。
+
+## 🖼️ 界面预览
+
+以下图片来自项目实际运行界面。账号身份、管理员信息和会话时间已经脱敏，截图中不包含 OAuth token、API token、验证码或邮件正文。
+
+### 聚合收件
+
+![统一收件箱：邮箱筛选、目录切换、未读和分类过滤](docs/images/readme/unified-inbox.webp)
+
+*统一收件箱把账号、目录、未读和邮件分类放在同一条筛选栏中；选择邮件后可在右侧阅读纯文本或清洗后的 HTML。*
+
+### 千账号管理
+
+![账号管理：搜索、状态统计、分页和授权操作](docs/images/readme/account-management.webp)
+
+*网页授权账号与 O2 令牌账号分区展示，支持搜索、状态统计、分页、跨页选择和批量管理。截图中的账号身份已经脱敏。*
+
+### 通知、API 与安全
+
+<table>
+  <tr>
+    <td width="58%">
+      <img src="docs/images/readme/wxpush-channel.webp" alt="WXPush 通知通道配置与内置教程">
+      <br><sub>WXPush 配置、动态模板字段和测试流程直接内置在管理台中。</sub>
+    </td>
+    <td width="42%">
+      <img src="docs/images/readme/api-token-scopes.webp" alt="只读 API token 权限与账号范围配置">
+      <br><sub>API token 使用显式只读 scope，并可限制账号范围、有效期和来源 IP。</sub>
+    </td>
+  </tr>
+</table>
+
+![安全状态：双因素验证、会话保护与节点密钥自动解锁](docs/images/readme/security-status.webp)
+
+*安全页集中展示 Argon2id、TOTP 防重放、Cookie 保护和节点密钥自动解锁状态。敏感身份与会话时间已经脱敏。*
 
 ## 🛡️ 管理员与数据安全
 
@@ -95,7 +133,7 @@ MS_CLIENT_ID=
 然后启动固定版本镜像：
 
 ```bash
-docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.1.0
+docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.1.2
 docker compose up -d --no-build app
 docker compose ps
 curl --fail http://127.0.0.1:8080/healthz
@@ -283,7 +321,7 @@ node scripts/version.mjs bump
 
 补充 CHANGELOG 后，在 GitHub Actions 中运行 `prepare release`。工作流会重新执行测试、创建严格连续的 `v${VERSION}` 标签，并触发多架构镜像构建、签名和 GitHub Release。
 
-数据库当前 schema 版本为 21。程序发现旧 schema 时，会先通过 `VACUUM INTO` 创建一致性备份，再在事务中执行迁移。内部开发版本 `0.11.0` 可以直接升级到正式版 `1.1.0`，无需重新创建管理员。
+数据库当前 schema 版本为 22。程序发现旧 schema 时，会先通过 `VACUUM INTO` 创建一致性备份，再在事务中执行迁移。内部开发版本 `0.11.0` 可以直接升级到当前稳定版 `1.1.2`，无需重新创建管理员或清空现有数据。
 
 Fork 用户必须把 `.env` 中的仓库和镜像地址改为自己的地址，否则签名身份校验会拒绝更新。首次发布 GHCR 镜像后，也需要在 GitHub Packages 中确认镜像包为 Public。
 
