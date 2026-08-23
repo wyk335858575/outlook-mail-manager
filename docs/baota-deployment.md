@@ -184,7 +184,9 @@ docker inspect outlook-mail-manager-app-1 --format '{{json .State.Health}}'
 docker compose run --rm app backup
 ```
 
-备份保存在 Docker 数据卷的 `/data/backups`。数据库包含加密后的 OAuth token、TOTP secret 和通知凭据，复制到异机或对象存储时必须限制访问权限。
+备份保存在 Docker 数据卷的 `/data/backups`。数据库包含加密后的 OAuth token、TOTP secret 和通知凭据，复制到异机或对象存储时必须限制访问权限。数据卷还包含权限为 `0600` 的 `/data/auto-unlock.key`，用于容器重启后自动恢复收信和通知；完整数据卷泄露时加密凭据也可能被解密，因此必须限制 Docker 数据卷和服务器 root 权限。
+
+应用内创建的 `.db` 备份不会包含 `auto-unlock.key`。在新服务器或新数据卷恢复数据库后，管理员登录一次即可生成新的节点密钥并恢复后续自动解锁。
 
 离线恢复：
 

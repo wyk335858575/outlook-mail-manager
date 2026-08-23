@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, startTransition, Suspense, useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertCircle, LoaderCircle, RefreshCw } from 'lucide-react'
 
@@ -18,24 +18,28 @@ const SettingsDashboard = lazy(() => import('./dashboard/SettingsDashboard').the
 
 type Section = 'inbox' | 'personal' | 'verification' | 'accounts' | 'cleanup' | 'notifications' | 'api' | 'health' | 'security' | 'settings'
 
-function sectionFromHash(): Section {
-  if (window.location.hash === '#personal') return 'personal'
-  if (window.location.hash === '#verification') return 'verification'
-  if (window.location.hash === '#accounts') return 'accounts'
-  if (window.location.hash === '#cleanup') return 'cleanup'
-  if (window.location.hash === '#notifications' || window.location.hash === '#notifications-rules') return 'notifications'
-  if (window.location.hash === '#api') return 'api'
-  if (window.location.hash === '#health') return 'health'
-  if (window.location.hash === '#security') return 'security'
-  if (window.location.hash === '#settings') return 'settings'
+export function sectionFromHash(hash: string): Section {
+  if (hash === '#personal') return 'personal'
+  if (hash === '#verification') return 'verification'
+  if (hash === '#accounts') return 'accounts'
+  if (hash === '#cleanup') return 'cleanup'
+  if (hash === '#notifications' || hash === '#notifications-rules') return 'notifications'
+  if (hash === '#api') return 'api'
+  if (hash === '#health') return 'health'
+  if (hash === '#security') return 'security'
+  if (hash === '#settings') return 'settings'
   return 'inbox'
+}
+
+export function transitionToSection(hash: string, commit: (section: Section) => void, transition = startTransition) {
+  transition(() => commit(sectionFromHash(hash)))
 }
 
 export function App() {
   const queryClient = useQueryClient()
   const [loggingOut, setLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState('')
-  const [section, setSection] = useState<Section>(sectionFromHash)
+  const [section, setSection] = useState<Section>(() => sectionFromHash(window.location.hash))
   const status = useQuery({
     queryKey: ['auth-status'],
     queryFn: ({ signal }) => fetchAuthStatus(signal),
@@ -62,7 +66,7 @@ export function App() {
 
   useEffect(() => {
     function readSection() {
-      setSection(sectionFromHash())
+      transitionToSection(window.location.hash, setSection)
     }
     window.addEventListener('hashchange', readSection)
     return () => window.removeEventListener('hashchange', readSection)

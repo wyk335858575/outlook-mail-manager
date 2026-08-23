@@ -80,6 +80,7 @@ func run(args []string) error {
 	keyring := datakey.New(nil)
 	authService, err := auth.New(store.DB, auth.Options{
 		Keyring:       keyring,
+		DataDir:       cfg.DataDir,
 		SecureCookies: cfg.BaseURL.Scheme == "https",
 	})
 	if err != nil {
@@ -119,6 +120,13 @@ func run(args []string) error {
 	}
 	keyring.OnUnlock(notificationService.Start)
 	keyring.OnUnlock(mailService.Start)
+	autoUnlocked, autoUnlockErr := authService.AutoUnlock(startupCtx)
+	if autoUnlockErr != nil {
+		logger.Warn("automatic credential unlock failed; administrator login is required",
+			"event", "automatic_unlock_failed", "error", autoUnlockErr)
+	} else if autoUnlocked {
+		logger.Info("credentials unlocked automatically", "event", "automatic_unlock_succeeded")
+	}
 	defer mailService.Close()
 
 	server := &http.Server{

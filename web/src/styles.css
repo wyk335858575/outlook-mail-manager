@@ -1018,6 +1018,34 @@ button:disabled {
   border-left-color: #4ca6ed;
 }
 
+.github-repository-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 42px;
+  margin-top: auto;
+  color: #4ca6ed;
+  background: #202c36;
+  border: 1px solid #455a6b;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.github-repository-link:hover {
+  color: #7bc0f4;
+  background: #253641;
+  border-color: #4ca6ed;
+}
+
+.github-repository-link svg {
+  width: 21px;
+  height: 21px;
+  flex: 0 0 auto;
+}
+
 .main-workspace {
   width: min(1180px, 100%);
   margin: 0 auto;
@@ -5104,6 +5132,10 @@ button:disabled {
     max-width: 100%;
     padding-bottom: 2px;
     overflow: hidden;
+  }
+
+  .github-repository-link {
+    display: none;
   }
 
   .nav-item {

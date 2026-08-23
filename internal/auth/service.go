@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -52,20 +53,22 @@ var (
 
 type Options struct {
 	Keyring       *datakey.Store
+	DataDir       string
 	SecureCookies bool
 	Now           func() time.Time
 	Random        io.Reader
 }
 
 type Service struct {
-	db            *sql.DB
-	keyring       *datakey.Store
-	secureCookies bool
-	now           func() time.Time
-	random        io.Reader
-	passwordGate  chan struct{}
-	challengeMu   sync.Mutex
-	challenge     *setupChallenge
+	db             *sql.DB
+	keyring        *datakey.Store
+	autoUnlockPath string
+	secureCookies  bool
+	now            func() time.Time
+	random         io.Reader
+	passwordGate   chan struct{}
+	challengeMu    sync.Mutex
+	challenge      *setupChallenge
 }
 
 type setupChallenge struct {
@@ -116,8 +119,16 @@ func New(db *sql.DB, options Options) (*Service, error) {
 	}
 	return &Service{
 		db: db, keyring: options.Keyring, secureCookies: options.SecureCookies,
-		now: options.Now, random: options.Random, passwordGate: make(chan struct{}, 2),
+		autoUnlockPath: autoUnlockPath(options.DataDir), now: options.Now,
+		random: options.Random, passwordGate: make(chan struct{}, 2),
 	}, nil
+}
+
+func autoUnlockPath(dataDir string) string {
+	if dataDir == "" {
+		return ""
+	}
+	return filepath.Join(dataDir, autoUnlockKeyFile)
 }
 
 func (s *Service) ValidateStartup(ctx context.Context) error {
@@ -247,6 +258,10 @@ func (s *Service) CompleteSetup(ctx context.Context, challengeID, passcode strin
 	s.challenge = nil
 	s.challengeMu.Unlock()
 	defer wipe(challenge.dataKey)
+	autoUnlockCiphertext, err := s.sealAutoUnlock(challenge.dataKey)
+	if err != nil {
+		return SessionGrant{}, fmt.Errorf("prepare automatic unlock: %w", err)
+	}
 	grant, tokenHash, err := s.newSessionGrant()
 	if err != nil {
 		return SessionGrant{}, err
@@ -260,11 +275,12 @@ func (s *Service) CompleteSetup(ctx context.Context, challengeID, passcode strin
 	if _, err := tx.ExecContext(ctx, `
 		INSERT INTO admins (
 			id, username, password_hash, password_algorithm, totp_secret_ciphertext,
-			key_salt, wrapped_data_key, last_totp_step, created_at_utc, password_updated_at_utc
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			key_salt, wrapped_data_key, auto_unlock_ciphertext, last_totp_step,
+			created_at_utc, password_updated_at_utc
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`, adminID, challenge.username, challenge.passwordHash, passwordAlgorithm,
 		challenge.encryptedTOTPSecret, challenge.keySalt, challenge.wrappedDataKey,
-		step, formatTime(now), formatTime(now)); err != nil {
+		autoUnlockCiphertext, step, formatTime(now), formatTime(now)); err != nil {
 		if initialized, checkErr := s.Initialized(ctx); checkErr == nil && initialized {
 			return SessionGrant{}, ErrAlreadyInitialized
 		}
@@ -337,6 +353,10 @@ func (s *Service) Login(ctx context.Context, username, password, passcode string
 	if !valid {
 		return SessionGrant{}, s.loginFailure(ctx)
 	}
+	autoUnlockCiphertext, err := s.sealAutoUnlock(dataKey)
+	if err != nil {
+		return SessionGrant{}, fmt.Errorf("prepare automatic unlock: %w", err)
+	}
 	grant, tokenHash, err := s.newSessionGrant()
 	if err != nil {
 		return SessionGrant{}, err
@@ -346,9 +366,13 @@ func (s *Service) Login(ctx context.Context, username, password, passcode string
 		return SessionGrant{}, fmt.Errorf("begin login: %w", err)
 	}
 	defer tx.Rollback()
-	result, err := tx.ExecContext(ctx,
-		"UPDATE admins SET last_totp_step = ? WHERE id = ? AND last_totp_step < ?",
-		step, adminID, step)
+	query := "UPDATE admins SET last_totp_step = ? WHERE id = ? AND last_totp_step < ?"
+	args := []any{step, adminID, step}
+	if s.autoUnlockPath != "" {
+		query = "UPDATE admins SET last_totp_step = ?, auto_unlock_ciphertext = ? WHERE id = ? AND last_totp_step < ?"
+		args = []any{step, autoUnlockCiphertext, adminID, step}
+	}
+	result, err := tx.ExecContext(ctx, query, args...)
 	if err != nil {
 		return SessionGrant{}, fmt.Errorf("record TOTP step: %w", err)
 	}

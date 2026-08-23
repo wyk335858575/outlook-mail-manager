@@ -35,8 +35,8 @@ func TestOpenAppliesMigrationsIdempotently(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CurrentVersion() error = %v", err)
 	}
-	if version != 21 {
-		t.Fatalf("CurrentVersion() = %d, want 21", version)
+	if version != 22 {
+		t.Fatalf("CurrentVersion() = %d, want 22", version)
 	}
 
 	var count int
@@ -252,7 +252,7 @@ func TestOpenMigratesPersonalRulesAndSyncSecondsFromVersion11(t *testing.T) {
 	}
 	defer store.Close()
 	version, err := store.CurrentVersion(context.Background())
-	if err != nil || version != 21 {
+	if err != nil || version != 22 {
 		t.Fatalf("schema version = %d, %v", version, err)
 	}
 	var copied, remainingNotificationRules, seconds int
@@ -289,7 +289,7 @@ func TestOpenMigratesPersonalRulesAndSyncSecondsFromVersion11(t *testing.T) {
 	`, now, now); err == nil {
 		t.Fatal("webhook channel was accepted after migration")
 	}
-	backups, err := filepath.Glob(filepath.Join(dataDir, "backups", "outlook-manager.before-v11-to-v21-*.db"))
+	backups, err := filepath.Glob(filepath.Join(dataDir, "backups", "outlook-manager.before-v11-to-v22-*.db"))
 	if err != nil || len(backups) != 1 {
 		t.Fatalf("migration backups = %v, %v", backups, err)
 	}

@@ -68,7 +68,7 @@ export function SecurityDashboard({
           <div>
             <p>管理员保护</p>
             <h2>{status.username || '管理员'} 已启用双因素验证</h2>
-            <span>密码用于验证管理员并解锁数据库中的敏感凭据。</span>
+            <span>密码用于验证管理员；后台凭据由服务器节点密钥自动解锁。</span>
           </div>
           <span className="state-label state-ready"><Check size={14} /> 已保护</span>
         </section>
@@ -105,8 +105,8 @@ export function SecurityDashboard({
             <div className="section-heading compact"><h2 id="encryption-heading">数据加密</h2></div>
             <dl className="data-list">
               <div><dt>解锁状态</dt><dd className="value-ready"><LockKeyhole size={15} /> 已解锁</dd></div>
-              <div><dt>磁盘密钥文件</dt><dd>不使用</dd></div>
-              <div><dt>重启后</dt><dd>管理员首次登录时解锁</dd></div>
+              <div><dt>节点密钥</dt><dd>/data/auto-unlock.key</dd></div>
+              <div><dt>重启后</dt><dd>自动解锁并恢复后台任务</dd></div>
             </dl>
           </section>
         </div>

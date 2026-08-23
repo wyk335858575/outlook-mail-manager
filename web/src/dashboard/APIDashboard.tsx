@@ -59,7 +59,7 @@ export function APIDashboard({ status, onLogout, loggingOut, logoutError }: {
     </main>
     {open && <TokenDialog accounts={accountsQuery.data?.accounts ?? []} csrfToken={status.csrf_token ?? ''} onClose={() => setOpen(false)} onCreated={async (token) => { setOpen(false); setCreated(token); await queryClient.invalidateQueries({ queryKey: ['api-tokens'] }) }} />}
     {created && <SecretDialog token={created} onClose={() => setCreated(null)} onGenerate={() => { setBrowserLinkToken(created.secret); setCreated(null) }} />}
-    {browserLinkToken !== null && <BrowserLinkDialog accounts={accountsQuery.data?.accounts ?? []} initialToken={browserLinkToken} onClose={() => setBrowserLinkToken(null)} />}
+    {browserLinkToken !== null && <BrowserLinkDialog initialToken={browserLinkToken} onClose={() => setBrowserLinkToken(null)} />}
   </AppFrame>
 }
 
@@ -151,8 +151,16 @@ const browserEndpointOptions: Array<{ value: BrowserAPIEndpoint; label: string; 
   { value: 'health', label: '系统健康', scope: 'system:read' },
 ]
 
-function BrowserLinkDialog({ accounts, initialToken, onClose }: {
-  accounts: Awaited<ReturnType<typeof fetchAccounts>>['accounts']; initialToken: string; onClose: () => void
+export function BrowserAccountInput({ value, placeholder, onChange }: {
+  value: string
+  placeholder: string
+  onChange: (value: string) => void
+}) {
+  return <input type="text" autoComplete="off" spellCheck={false} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+}
+
+function BrowserLinkDialog({ initialToken, onClose }: {
+  initialToken: string; onClose: () => void
 }) {
   const [endpoint, setEndpoint] = useState<BrowserAPIEndpoint>('accounts')
   const [token, setToken] = useState(initialToken)
@@ -183,7 +191,7 @@ function BrowserLinkDialog({ accounts, initialToken, onClose }: {
       <label className="wide-field"><span>API token</span><input type="password" autoComplete="off" spellCheck={false} value={token} onChange={(event) => { setToken(event.target.value); setCopied(false) }} placeholder="omm_..." /></label>
       {endpoint === 'messages' && <>
         <label><span>关键词 <code>q</code></span><input value={params.q ?? ''} onChange={(event) => setParam('q', event.target.value)} /></label>
-        <label><span>账号 <code>account</code></span><input list="browser-api-accounts" value={params.account ?? ''} onChange={(event) => setParam('account', event.target.value)} /></label>
+        <label><span>账号 <code>account</code></span><BrowserAccountInput value={params.account ?? ''} placeholder="留空表示全部账号" onChange={(value) => setParam('account', value)} /></label>
         <label><span>分组 <code>group</code></span><input value={params.group ?? ''} onChange={(event) => setParam('group', event.target.value)} /></label>
         <label><span>标签 <code>tag</code></span><input value={params.tag ?? ''} onChange={(event) => setParam('tag', event.target.value)} /></label>
         <label><span>分类 <code>category</code></span><select value={params.category ?? ''} onChange={(event) => setParam('category', event.target.value)}><option value="">全部</option><option value="important">重要</option><option value="verification">验证码</option><option value="marketing">营销</option><option value="spam">垃圾</option><option value="normal">普通</option><option value="uncertain">待确认</option></select></label>
@@ -195,13 +203,12 @@ function BrowserLinkDialog({ accounts, initialToken, onClose }: {
       </>}
       {endpoint === 'message' && <label className="wide-field"><span>邮件公开 ID <code>public_id</code></span><input value={params.public_id ?? ''} onChange={(event) => setParam('public_id', event.target.value)} placeholder="msg_..." spellCheck={false} /></label>}
       {endpoint === 'otp' && <>
-        <label><span>账号 <code>account</code></span><input list="browser-api-accounts" value={params.account ?? ''} onChange={(event) => setParam('account', event.target.value)} /></label>
+        <label><span>账号 <code>account</code></span><BrowserAccountInput value={params.account ?? ''} placeholder="请输入邮箱或账号 ID" onChange={(value) => setParam('account', value)} /></label>
         <label><span>等待秒数 <code>wait_seconds</code></span><input type="number" min="0" max="30" value={params.wait_seconds ?? ''} onChange={(event) => setParam('wait_seconds', event.target.value)} /></label>
         <label><span>发件人 <code>sender</code></span><input value={params.sender ?? ''} onChange={(event) => setParam('sender', event.target.value)} /></label>
         <label className="wide-field"><span>主题包含 <code>subject</code></span><input value={params.subject ?? ''} onChange={(event) => setParam('subject', event.target.value)} /></label>
       </>}
     </div>
-    <datalist id="browser-api-accounts">{accounts.map((account) => <option key={account.public_id} value={account.primary_email || account.imported_email || account.public_id} />)}</datalist>
     <div className="browser-link-preview"><span>链接预览</span><code>{link ? maskBrowserAPILink(link) : '请填写 token 和当前接口的必填参数'}</code></div>
     <div className="form-actions dialog-actions"><button className="secondary-button" type="button" onClick={() => void copyLink()} disabled={!link}>{copied ? <Check size={16} /> : <Clipboard size={16} />}{copied ? '已复制' : '复制链接'}</button><button className="primary-button" type="button" onClick={openLink} disabled={!link}><ExternalLink size={16} /> 新标签页打开</button></div>
   </section></div>
@@ -214,7 +221,7 @@ function TokenDialog({ accounts, csrfToken, onClose, onCreated }: { accounts: Aw
   const hasAccountScope = accountScope === 'all' || selectedAccounts.length + selectedGroups.length > 0
   async function save() { setSaving(true); setError(''); try { const token = await createAPIToken({ name, scopes: selectedScopes, all_accounts: accountScope === 'all', account_public_ids: accountScope === 'all' ? [] : selectedAccounts, group_names: accountScope === 'all' ? [] : selectedGroups, ip_cidrs: cidrs.split(/[\n,]/).map((item) => item.trim()).filter(Boolean), expires_at: expires ? new Date(expires).toISOString() : undefined }, csrfToken); await onCreated(token) } catch (reason) { setError(messageFor(reason, '无法创建 API token')); setSaving(false) } }
   return <div className="dialog-backdrop"><section className="dialog-panel operation-dialog token-dialog" role="dialog" aria-modal="true" aria-labelledby="token-title"><div className="dialog-heading"><div><p className="eyebrow">Scoped access</p><h2 id="token-title">创建 API token</h2></div><button className="field-icon-button" type="button" title="关闭" aria-label="关闭" onClick={onClose}><X size={18} /></button></div>
-    <div className="form-grid two-columns"><label className="wide-field"><span>名称</span><input value={name} onChange={(event) => setName(event.target.value)} /></label><fieldset className="wide-field checkbox-group"><legend>只读权限</legend>{scopes.map((scope) => <label key={scope.id}><input type="checkbox" checked={selectedScopes.includes(scope.id)} onChange={(event) => setSelectedScopes((current) => event.target.checked ? [...current, scope.id] : current.filter((item) => item !== scope.id))} /><span>{scope.label}</span><code>{scope.id}</code></label>)}</fieldset><fieldset className="wide-field checkbox-group account-scope-group"><legend>账号范围</legend><label><input type="radio" name="api-account-scope" checked={accountScope === 'all'} onChange={() => { setAccountScope('all'); setSelectedAccounts([]); setGroups('') }} /><span>全部账号</span><small className="cell-note">包含以后新增的账号</small></label><label><input type="radio" name="api-account-scope" checked={accountScope === 'selected'} onChange={() => setAccountScope('selected')} /><span>指定账号或分组</span></label>{accountScope === 'selected' && <>{accounts.length === 0 ? <span className="muted-value">尚无账号</span> : accounts.map((account) => <label key={account.public_id}><input type="checkbox" checked={selectedAccounts.includes(account.public_id)} onChange={(event) => setSelectedAccounts((current) => event.target.checked ? [...current, account.public_id] : current.filter((item) => item !== account.public_id))} /><span>{account.display_name || account.primary_email || account.imported_email}</span></label>)}<label className="api-group-field"><span>分组范围（逗号分隔）</span><input list="api-groups" value={groups} onChange={(event) => setGroups(event.target.value)} /><datalist id="api-groups">{availableGroups.map((group) => <option key={group} value={group} />)}</datalist></label></>}</fieldset><label><span>到期时间（可选）</span><input type="datetime-local" value={expires} onChange={(event) => setExpires(event.target.value)} /></label><label className="wide-field"><span>允许的 IP/CIDR（每行一个，可选）</span><textarea rows={3} value={cidrs} onChange={(event) => setCIDRs(event.target.value)} placeholder="203.0.113.10/32" /></label></div>
+    <div className="form-grid two-columns"><label className="wide-field"><span>名称</span><input value={name} onChange={(event) => setName(event.target.value)} /></label><fieldset className="wide-field checkbox-group"><legend>只读权限</legend>{scopes.map((scope) => <label key={scope.id}><input type="checkbox" checked={selectedScopes.includes(scope.id)} onChange={(event) => setSelectedScopes((current) => event.target.checked ? [...current, scope.id] : current.filter((item) => item !== scope.id))} /><span>{scope.label}</span><code>{scope.id}</code></label>)}</fieldset><fieldset className="wide-field checkbox-group account-scope-group"><legend>账号范围</legend><label><input type="radio" name="api-account-scope" checked={accountScope === 'all'} onChange={() => { setAccountScope('all'); setSelectedAccounts([]); setGroups('') }} /><span>全部账号</span><small className="cell-note">包含以后新增的账号</small></label><label><input type="radio" name="api-account-scope" checked={accountScope === 'selected'} onChange={() => setAccountScope('selected')} /><span>指定账号或分组</span></label>{accountScope === 'selected' && <>{accounts.length === 0 ? <span className="muted-value">尚无账号</span> : accounts.map((account) => <label key={account.public_id}><input type="checkbox" checked={selectedAccounts.includes(account.public_id)} onChange={(event) => setSelectedAccounts((current) => event.target.checked ? [...current, account.public_id] : current.filter((item) => item !== account.public_id))} /><span>{account.primary_email || account.imported_email || account.public_id}</span></label>)}<label className="api-group-field"><span>分组范围（逗号分隔）</span><input list="api-groups" value={groups} onChange={(event) => setGroups(event.target.value)} /><datalist id="api-groups">{availableGroups.map((group) => <option key={group} value={group} />)}</datalist></label></>}</fieldset><label><span>到期时间（可选）</span><input type="datetime-local" value={expires} onChange={(event) => setExpires(event.target.value)} /></label><label className="wide-field"><span>允许的 IP/CIDR（每行一个，可选）</span><textarea rows={3} value={cidrs} onChange={(event) => setCIDRs(event.target.value)} placeholder="203.0.113.10/32" /></label></div>
     {error && <p className="form-error">{error}</p>}<div className="form-actions dialog-actions"><button className="secondary-button" type="button" onClick={onClose}>取消</button><button className="primary-button" type="button" disabled={saving || !name.trim() || selectedScopes.length === 0 || !hasAccountScope} onClick={() => void save()}>{saving ? <LoaderCircle className="is-spinning" size={16} /> : <Check size={16} />} 创建 token</button></div>
   </section></div>
 }
