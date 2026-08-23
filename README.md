@@ -133,7 +133,7 @@ MS_CLIENT_ID=
 然后启动固定版本镜像：
 
 ```bash
-docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.1.2
+docker pull ghcr.io/wyk335858575/outlook-mail-manager:1.1.3
 docker compose up -d --no-build app
 docker compose ps
 curl --fail http://127.0.0.1:8080/healthz
@@ -234,6 +234,7 @@ WXPush 已集成在应用中，不需要另行部署 WXPush 服务。新建通�
 ```text
 通知类型：{{title.DATA}}
 寄件人：{{sender.DATA}}
+收件人：{{recipient.DATA}}
 邮件标题：{{subject.DATA}}
 正文：{{body.DATA}}
 ```
@@ -321,7 +322,7 @@ node scripts/version.mjs bump
 
 补充 CHANGELOG 后，在 GitHub Actions 中运行 `prepare release`。工作流会重新执行测试、创建严格连续的 `v${VERSION}` 标签，并触发多架构镜像构建、签名和 GitHub Release。
 
-数据库当前 schema 版本为 22。程序发现旧 schema 时，会先通过 `VACUUM INTO` 创建一致性备份，再在事务中执行迁移。内部开发版本 `0.11.0` 可以直接升级到当前稳定版 `1.1.2`，无需重新创建管理员或清空现有数据。
+数据库当前 schema 版本为 22。程序发现旧 schema 时，会先通过 `VACUUM INTO` 创建一致性备份，再在事务中执行迁移。内部开发版本 `0.11.0` 可以直接升级到当前稳定版 `1.1.3`，无需重新创建管理员或清空现有数据。
 
 Fork 用户必须把 `.env` 中的仓库和镜像地址改为自己的地址，否则签名身份校验会拒绝更新。首次发布 GHCR 镜像后，也需要在 GitHub Packages 中确认镜像包为 Public。
 

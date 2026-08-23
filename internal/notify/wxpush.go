@@ -110,6 +110,10 @@ func (s *Service) sendWXPushTemplate(ctx context.Context, token string, payload 
 	if sender == "" {
 		sender = "邮箱管理台"
 	}
+	recipient := payload.Recipient
+	if recipient == "" {
+		recipient = "邮箱管理台"
+	}
 	subject := payload.Subject
 	if subject == "" {
 		subject = payload.Title
@@ -123,11 +127,12 @@ func (s *Service) sendWXPushTemplate(ctx context.Context, token string, payload 
 		"touser":      secret.WXPushUserID,
 		"template_id": secret.WXPushTemplateID,
 		"data": map[string]any{
-			"title":   map[string]string{"value": payload.Title},
-			"content": map[string]string{"value": payload.Text},
-			"sender":  map[string]string{"value": sender},
-			"subject": map[string]string{"value": subject},
-			"body":    map[string]string{"value": body},
+			"title":     map[string]string{"value": payload.Title},
+			"content":   map[string]string{"value": payload.Text},
+			"sender":    map[string]string{"value": sender},
+			"recipient": map[string]string{"value": recipient},
+			"subject":   map[string]string{"value": subject},
+			"body":      map[string]string{"value": body},
 		},
 	}, &response, nil)
 	if err != nil {

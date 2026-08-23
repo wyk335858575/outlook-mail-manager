@@ -149,6 +149,7 @@ type deliveryPayload struct {
 	Text             string `json:"text"`
 	Account          string `json:"account,omitempty"`
 	Sender           string `json:"sender,omitempty"`
+	Recipient        string `json:"recipient,omitempty"`
 	Subject          string `json:"subject,omitempty"`
 	Body             string `json:"body,omitempty"`
 	Category         string `json:"category,omitempty"`
@@ -582,7 +583,7 @@ func (s *Service) TestConfig(ctx context.Context, input ChannelInput) error {
 		return ErrInvalidChannel
 	}
 	secret := secretFromInput(input)
-	payload := deliveryPayload{EventType: "test", Title: "邮箱管理台测试通知", Text: "发件人：sender@example.com\n主题：通知测试邮件\n正文：这是一条动态正文测试。", Sender: "sender@example.com", Subject: "通知测试邮件", Body: "这是一条动态正文测试。"}
+	payload := deliveryPayload{EventType: "test", Title: "邮箱管理台测试通知", Text: "发件人：sender@example.com\n收件人：recipient@outlook.com\n主题：通知测试邮件\n正文：这是一条动态正文测试。", Sender: "sender@example.com", Recipient: "recipient@outlook.com", Subject: "通知测试邮件", Body: "这是一条动态正文测试。"}
 	if input.Kind == "bark" {
 		if err := validateBarkSecret(secret); err != nil {
 			return err
@@ -835,11 +836,12 @@ func (s *Service) loadMessageContext(ctx context.Context, publicID string) (int6
 	var message messageContext
 	var received string
 	err := s.db.QueryRowContext(ctx, `
-		SELECT m.id, a.public_id, m.category, m.sender_address, m.subject,
+		SELECT m.id, a.public_id, COALESCE(NULLIF(TRIM(a.primary_email), ''), a.imported_email),
+			m.category, m.sender_address, m.subject,
 			COALESCE(m.body_text, ''), COALESCE(m.verification_code, ''), m.received_at_utc
 		FROM messages m JOIN accounts a ON a.id = m.account_id
 		WHERE m.public_id = ? AND m.remote_deleted = 0
-	`, strings.TrimSpace(publicID)).Scan(&id, &message.AccountPublicID, &message.Category,
+	`, strings.TrimSpace(publicID)).Scan(&id, &message.AccountPublicID, &message.Recipient, &message.Category,
 		&message.SenderAddress, &message.Subject, &message.Body, &message.VerificationCode, &received)
 	if errors.Is(err, sql.ErrNoRows) {
 		return 0, messageContext{}, errors.New("message not found")
@@ -887,12 +889,13 @@ func (s *Service) accountNames(ctx context.Context, accountPublicID string, grou
 func mailPayload(message messageContext, includeOTP bool) deliveryPayload {
 	title := "新邮件 · " + categoryLabel(message.Category)
 	sender := safeText(message.SenderAddress, 160)
+	recipient := safeText(message.Recipient, 160)
 	subject := safeText(message.Subject, 240)
 	body := notificationBodyPreview(message.Body)
-	text := "发件人：" + sender + "\n主题：" + subject + "\n正文：" + body
+	text := "发件人：" + sender + "\n收件人：" + recipient + "\n主题：" + subject + "\n正文：" + body
 	payload := deliveryPayload{
 		EventType: "mail", Title: title, Text: text, Account: message.AccountPublicID,
-		Sender: sender, Subject: subject, Body: body,
+		Sender: sender, Recipient: recipient, Subject: subject, Body: body,
 		Category: message.Category, ReceivedAt: formatTime(message.ReceivedAt),
 	}
 	if includeOTP && message.VerificationCode != "" {

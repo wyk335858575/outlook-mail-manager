@@ -7,6 +7,7 @@ import (
 
 type messageContext struct {
 	AccountPublicID  string
+	Recipient        string
 	Groups           []string
 	Tags             []string
 	Category         string

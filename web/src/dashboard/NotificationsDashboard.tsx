@@ -310,15 +310,15 @@ export function notificationChannelGuide(kind: NotificationKind) {
     ],
   } : {
     title: 'WXPush 接入教程',
-    intro: '本项目已内置微信公众号模板消息发送，可推送寄件人、邮件标题和正文预览，无需部署独立 WXPush 服务。',
+    intro: '本项目已内置微信公众号模板消息发送，可推送寄件人、收件邮箱、邮件标题和正文预览，无需部署独立 WXPush 服务。',
     steps: [
       '打开微信公众平台接口测试帐号页面，扫码登录后复制 AppID 和 AppSecret，分别填写 WX_APPID、WX_SECRET。',
       '用接收通知的微信关注测试号，在测试号页面的用户列表复制该用户 OpenID，填写 WX_USERID；一个通道只对应一个 OpenID。',
       '新增测试模板；模板内容不能只写固定文字（例如 123），必须使用下方动态占位符。保存后复制模板 ID，填写 WX_TEMPLATE_ID。',
-      '如沿用旧版两字段模板，{{content.DATA}} 仍会收到寄件人、邮件标题和正文预览的组合内容。',
+      '如沿用旧版两字段模板，{{content.DATA}} 仍会收到寄件人、收件邮箱、邮件标题和正文预览的组合内容。',
       '点击“测试配置”并确认微信收到测试消息；测试成功后才能创建通道。任一凭据修改后需要重新测试。',
     ],
-    template: '通知类型：{{title.DATA}}\n寄件人：{{sender.DATA}}\n邮件标题：{{subject.DATA}}\n正文：{{body.DATA}}',
+    template: '通知类型：{{title.DATA}}\n寄件人：{{sender.DATA}}\n收件人：{{recipient.DATA}}\n邮件标题：{{subject.DATA}}\n正文：{{body.DATA}}',
     links: [
       { href: 'https://mp.weixin.qq.com/debug/cgi-bin/sandbox?t=sandbox/login', label: '打开微信测试号' },
       { href: 'https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Template_Message_Interface.html', label: '查看模板消息文档' },

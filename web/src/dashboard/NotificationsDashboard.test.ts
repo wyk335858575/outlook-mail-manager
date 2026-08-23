@@ -58,6 +58,7 @@ describe('notification channel guide', () => {
 		expect(content).toContain('{{title.DATA}}')
 		expect(content).toContain('{{content.DATA}}')
 		expect(content).toContain('{{sender.DATA}}')
+		expect(content).toContain('{{recipient.DATA}}')
 		expect(content).toContain('{{subject.DATA}}')
 		expect(content).toContain('{{body.DATA}}')
 		expect(content).toContain('固定文字')

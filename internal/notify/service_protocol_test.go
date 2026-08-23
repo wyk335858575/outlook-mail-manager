@@ -58,10 +58,11 @@ func TestNotificationProtocols(t *testing.T) {
 			title, _ := data["title"].(map[string]any)
 			content, _ := data["content"].(map[string]any)
 			sender, _ := data["sender"].(map[string]any)
+			recipient, _ := data["recipient"].(map[string]any)
 			subject, _ := data["subject"].(map[string]any)
 			messageBody, _ := data["body"].(map[string]any)
 			if r.Method != http.MethodPost || body["touser"] != "wx-open-id" || body["template_id"] != "wx-template-id" ||
-				title["value"] != "Mail" || content["value"] != "Test content" || sender["value"] != "sender@example.com" ||
+				title["value"] != "Mail" || content["value"] != "Test content" || sender["value"] != "sender@example.com" || recipient["value"] != "recipient@outlook.com" ||
 				subject["value"] != "Test subject" || messageBody["value"] != "Test body" {
 				t.Fatalf("WXPush template request = headers:%#v body:%#v", r.Header, body)
 			}
@@ -76,7 +77,7 @@ func TestNotificationProtocols(t *testing.T) {
 	defer server.Close()
 	service := &Service{httpClient: server.Client(), telegramBaseURL: server.URL, pushPlusURL: server.URL + "/push", wxPushBaseURL: server.URL, now: func() time.Time { return now }}
 	payload := deliveryPayload{
-		EventType: "message", Title: "Mail", Text: "Test content", Sender: "sender@example.com",
+		EventType: "message", Title: "Mail", Text: "Test content", Sender: "sender@example.com", Recipient: "recipient@outlook.com",
 		Subject: "Test subject", Body: "Test body",
 	}
 
@@ -98,18 +99,21 @@ func TestNotificationProtocols(t *testing.T) {
 
 func TestMailPayloadIncludesBodyPreview(t *testing.T) {
 	payload := mailPayload(messageContext{
-		AccountPublicID: "acc_1", Category: "important", SenderAddress: "sender@example.com",
+		AccountPublicID: "acc_1", Recipient: "recipient@outlook.com", Category: "important", SenderAddress: "sender@example.com",
 		Subject: "Payment received", Body: strings.Repeat("正文", 300),
 		ReceivedAt: time.Date(2026, time.August, 21, 9, 0, 0, 0, time.UTC),
 	}, false)
 
-	if payload.Sender != "sender@example.com" || payload.Subject != "Payment received" {
-		t.Fatalf("mail payload identity = sender:%q subject:%q", payload.Sender, payload.Subject)
+	if payload.Sender != "sender@example.com" || payload.Recipient != "recipient@outlook.com" || payload.Subject != "Payment received" {
+		t.Fatalf("mail payload identity = sender:%q recipient:%q subject:%q", payload.Sender, payload.Recipient, payload.Subject)
 	}
 	if payload.Body == "" || !strings.HasSuffix(payload.Body, "…") || len([]rune(payload.Body)) != 501 {
 		t.Fatalf("mail payload body preview = %q", payload.Body)
 	}
 	if !strings.Contains(payload.Text, "正文："+payload.Body) {
+		t.Fatalf("mail payload text = %q", payload.Text)
+	}
+	if !strings.Contains(payload.Text, "收件人：recipient@outlook.com") {
 		t.Fatalf("mail payload text = %q", payload.Text)
 	}
 }

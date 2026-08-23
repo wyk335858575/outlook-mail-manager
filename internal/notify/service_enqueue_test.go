@@ -3,6 +3,7 @@ package notify
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -30,8 +31,8 @@ func TestEnqueueMessageMatchesPersonalRulesAndDedupesPerChannel(t *testing.T) {
 	defer service.Close()
 	now := formatTime(time.Date(2026, time.August, 21, 10, 0, 0, 0, time.UTC))
 	result, err := store.DB.Exec(`
-		INSERT INTO accounts (public_id, imported_email, status, created_at_utc, updated_at_utc)
-		VALUES ('account_notify', 'notify@example.com', 'active', ?, ?)
+		INSERT INTO accounts (public_id, imported_email, primary_email, status, created_at_utc, updated_at_utc)
+		VALUES ('account_notify', 'notify@example.com', 'primary@outlook.com', 'active', ?, ?)
 	`, now, now)
 	if err != nil {
 		t.Fatalf("insert account: %v", err)
@@ -112,6 +113,9 @@ func TestEnqueueMessageMatchesPersonalRulesAndDedupesPerChannel(t *testing.T) {
 		if channelID == "channel_one" && payload.VerificationCode != "123456" {
 			t.Fatalf("merged payload verification code = %q", payload.VerificationCode)
 		}
+		if payload.Recipient != "primary@outlook.com" || !strings.Contains(payload.Text, "收件人：primary@outlook.com") {
+			t.Fatalf("delivery recipient = %q, text = %q", payload.Recipient, payload.Text)
+		}
 		deliveries++
 	}
 	if err := rows.Err(); err != nil {
@@ -119,6 +123,16 @@ func TestEnqueueMessageMatchesPersonalRulesAndDedupesPerChannel(t *testing.T) {
 	}
 	if deliveries != 2 {
 		t.Fatalf("delivery count = %d, want one per channel", deliveries)
+	}
+	if _, err := store.DB.Exec(`UPDATE accounts SET primary_email = NULL WHERE id = ?`, accountID); err != nil {
+		t.Fatalf("clear primary email: %v", err)
+	}
+	_, fallbackMessage, err := service.loadMessageContext(ctx, "message_personal")
+	if err != nil {
+		t.Fatalf("loadMessageContext() error = %v", err)
+	}
+	if fallbackMessage.Recipient != "notify@example.com" {
+		t.Fatalf("fallback recipient = %q", fallbackMessage.Recipient)
 	}
 
 	if _, err := store.DB.Exec(`
